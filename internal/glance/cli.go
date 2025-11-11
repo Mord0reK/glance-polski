@@ -44,17 +44,17 @@ func parseCliOptions() (*cliOptions, error) {
 	flags.Usage = func() {
 		fmt.Println("Usage: glance [options] command")
 
-		fmt.Println("\nOptions:")
+		fmt.Println("\nOpcje:")
 		flags.PrintDefaults()
 
-		fmt.Println("\nCommands:")
-		fmt.Println("  config:validate       Validate the config file")
-		fmt.Println("  config:print          Print the parsed config file with embedded includes")
-		fmt.Println("  password:hash <pwd>   Hash a password")
-		fmt.Println("  secret:make           Generate a random secret key")
-		fmt.Println("  sensors:print         List all sensors")
-		fmt.Println("  mountpoint:info       Print information about a given mountpoint path")
-		fmt.Println("  diagnose              Run diagnostic checks")
+		fmt.Println("\nPolecenia:")
+		fmt.Println("  config:validate       Sprawdzenie poprawności pliku konfiguracyjnego")
+		fmt.Println("  config:print          Wyświetlenie sparsowanego pliku konfiguracyjnego z wbudowanymi include'ami")
+		fmt.Println("  password:hash <pwd>   Zahashowanie hasła")
+		fmt.Println("  secret:make           Wygenerowanie losowego tajnego klucza")
+		fmt.Println("  sensors:print         Wyświetlenie wszystkich czujników")
+		fmt.Println("  mountpoint:info       Wyświetlenie informacji o danym punkcie montowania")
+		fmt.Println("  diagnose              Uruchomienie kontroli diagnostycznych")
 	}
 
 	configPath := flags.String("config", "glance.yml", "Set config path")
@@ -110,23 +110,23 @@ func cliSensorsPrint() int {
 	tempSensors, err := sensors.SensorsTemperatures()
 	if err != nil {
 		if warns, ok := err.(*sensors.Warnings); ok {
-			fmt.Printf("Could not retrieve information for some sensors (%v):\n", err)
+			fmt.Printf("Nie można było pobrać informacji o niektórych czujnikach (%v):\n", err)
 			for _, w := range warns.List {
 				fmt.Printf(" - %v\n", w)
 			}
 			fmt.Println()
 		} else {
-			fmt.Printf("Failed to retrieve sensor information: %v\n", err)
+			fmt.Printf("Nie udało się pobrać informacji o czujnikach: %v\n", err)
 			return 1
 		}
 	}
 
 	if len(tempSensors) == 0 {
-		fmt.Println("No sensors found")
+		fmt.Println("Nie znaleziono czujników")
 		return 0
 	}
 
-	fmt.Println("Sensors found:")
+	fmt.Println("Znalezione czujniki:")
 	for _, sensor := range tempSensors {
 		fmt.Printf(" %s: %.1f°C\n", sensor.SensorKey, sensor.Temperature)
 	}
@@ -137,7 +137,7 @@ func cliSensorsPrint() int {
 func cliMountpointInfo(requestedPath string) int {
 	usage, err := disk.Usage(requestedPath)
 	if err != nil {
-		fmt.Printf("Failed to retrieve info for path %s: %v\n", requestedPath, err)
+		fmt.Printf("Nie udało się pobrać informacji o ścieżce %s: %v\n", requestedPath, err)
 		if warns, ok := err.(*disk.Warnings); ok {
 			for _, w := range warns.List {
 				fmt.Printf(" - %v\n", w)
@@ -147,9 +147,9 @@ func cliMountpointInfo(requestedPath string) int {
 		return 1
 	}
 
-	fmt.Println("Path:", usage.Path)
-	fmt.Println("FS type:", ternary(usage.Fstype == "", "unknown", usage.Fstype))
-	fmt.Printf("Used percent: %.1f%%\n", usage.UsedPercent)
+	fmt.Println("Ścieżka:", usage.Path)
+	fmt.Println("Typ systemu plików:", ternary(usage.Fstype == "", "unknown", usage.Fstype))
+	fmt.Printf("Wykorzystanie: %.1f%%\n", usage.UsedPercent)
 
 	return 0
 }

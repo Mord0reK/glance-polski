@@ -30,7 +30,7 @@ type weatherWidget struct {
 }
 
 var timeLabels12h = [12]string{"2am", "4am", "6am", "8am", "10am", "12pm", "2pm", "4pm", "6pm", "8pm", "10pm", "12am"}
-var timeLabels24h = [12]string{"02:00", "04:00", "06:00", "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00", "00:00"}
+var timeLabels24h = [12]string{"2:00", "4:00", "6:00", "8:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00", "00:00"}
 
 func (widget *weatherWidget) initialize() error {
 	widget.withTitle("Weather").withCacheOnTheHour()
@@ -295,32 +295,32 @@ func fetchWeatherForOpenMeteoPlace(place *openMeteoPlaceResponseJson, units stri
 }
 
 var weatherCodeTable = map[int]string{
-	0:  "Clear Sky",
-	1:  "Mainly Clear",
-	2:  "Partly Cloudy",
-	3:  "Overcast",
-	45: "Fog",
-	48: "Rime Fog",
-	51: "Drizzle",
-	53: "Drizzle",
-	55: "Drizzle",
-	56: "Drizzle",
-	57: "Drizzle",
-	61: "Rain",
-	63: "Moderate Rain",
-	65: "Heavy Rain",
-	66: "Freezing Rain",
-	67: "Freezing Rain",
-	71: "Snow",
-	73: "Moderate Snow",
-	75: "Heavy Snow",
-	77: "Snow Grains",
-	80: "Rain",
-	81: "Moderate Rain",
-	82: "Heavy Rain",
-	85: "Snow",
-	86: "Snow",
-	95: "Thunderstorm",
-	96: "Thunderstorm",
-	99: "Thunderstorm",
+	0:  "Bezchmurnie",
+	1:  "Głównie bezchmurnie",
+	2:  "Częściowe zachmurzenie",
+	3:  "Pochmurno",
+	45: "Mgła",
+	48: "Mgła szronowa",
+	51: "Mżawka lekka",
+	53: "Mżawka",
+	55: "Mżawka gęsta",
+	56: "Mżawka marznąca lekka",
+	57: "Mżawka marznąca gęsta",
+	61: "Deszcz",
+	63: "Umiarkowany deszcz",
+	65: "Intensywny deszcz",
+	66: "Deszcz marznący lekki",
+	67: "Deszcz marznący intensywny",
+	71: "Śnieg",
+	73: "Umiarkowany śnieg",
+	75: "Intensywny śnieg",
+	77: "Ziarna śniegu",
+	80: "Deszcz",
+	81: "Umiarkowany deszcz",
+	82: "Intensywny deszcz",
+	85: "Śnieg",
+	86: "Śnieg",
+	95: "Burza",
+	96: "Burza",
+	99: "Burza",
 }

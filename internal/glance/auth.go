@@ -51,7 +51,7 @@ type failedAuthAttempt struct {
 
 func generateSessionToken(username string, secret []byte, now time.Time) (string, error) {
 	if len(secret) != AUTH_SECRET_KEY_LENGTH {
-		return "", fmt.Errorf("secret key length is not %d bytes", AUTH_SECRET_KEY_LENGTH)
+		return "", fmt.Errorf("długość tajnego klucza (secret key) jest nieprawidłowa: %d bajtów", AUTH_SECRET_KEY_LENGTH)
 	}
 
 	usernameHash, err := computeUsernameHash(username, secret)
@@ -76,7 +76,7 @@ func generateSessionToken(username string, secret []byte, now time.Time) (string
 
 func computeUsernameHash(username string, secret []byte) ([]byte, error) {
 	if len(secret) != AUTH_SECRET_KEY_LENGTH {
-		return nil, fmt.Errorf("secret key length is not %d bytes", AUTH_SECRET_KEY_LENGTH)
+		return nil, fmt.Errorf("długość tajnego klucza (secret key) jest nieprawidłowa: %d bajtów", AUTH_SECRET_KEY_LENGTH)
 	}
 
 	h := hmac.New(sha256.New, secret[AUTH_TOKEN_SECRET_LENGTH:])
@@ -92,11 +92,11 @@ func verifySessionToken(token string, secretBytes []byte, now time.Time) ([]byte
 	}
 
 	if len(tokenBytes) != AUTH_TOKEN_DATA_LENGTH+32 {
-		return nil, false, fmt.Errorf("token length is invalid")
+		return nil, false, fmt.Errorf("długość tokena jest nieprawidłowa")
 	}
 
 	if len(secretBytes) != AUTH_SECRET_KEY_LENGTH {
-		return nil, false, fmt.Errorf("secret key length is not %d bytes", AUTH_SECRET_KEY_LENGTH)
+		return nil, false, fmt.Errorf("długość tajnego klucza (secret key) jest nieprawidłowa: %d bajtów", AUTH_SECRET_KEY_LENGTH)
 	}
 
 	usernameHashBytes := tokenBytes[0:AUTH_USERNAME_HASH_LENGTH]
@@ -108,12 +108,12 @@ func verifySessionToken(token string, secretBytes []byte, now time.Time) ([]byte
 	expectedSignatureBytes := h.Sum(nil)
 
 	if !hmac.Equal(expectedSignatureBytes, providedSignatureBytes) {
-		return nil, false, fmt.Errorf("signature does not match")
+		return nil, false, fmt.Errorf("podpis (sygnatura) się nie zgadza")
 	}
 
 	expiresTimestamp := int64(binary.LittleEndian.Uint32(timestampBytes))
 	if now.Unix() > expiresTimestamp {
-		return nil, false, fmt.Errorf("token has expired")
+		return nil, false, fmt.Errorf("token wygasł")
 	}
 
 	return usernameHashBytes,
@@ -197,7 +197,7 @@ func (a *application) handleAuthenticationAttempt(w http.ResponseWriter, r *http
 
 	logAuthFailure := func() {
 		log.Printf(
-			"Failed login attempt for user '%s' from %s",
+			"Nieudana próba logowania użytkownika '%s' z %s",
 			creds.Username, ip,
 		)
 	}
@@ -232,7 +232,7 @@ func (a *application) handleAuthenticationAttempt(w http.ResponseWriter, r *http
 
 	token, err := generateSessionToken(creds.Username, a.authSecretKey, time.Now())
 	if err != nil {
-		log.Printf("Could not compute session token during login attempt: %v", err)
+		log.Printf("Nie udało się obliczyć tokena sesji podczas próby logowania: %v", err)
 		time.Sleep(waitOnFailure)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -275,7 +275,7 @@ func (a *application) isAuthorized(w http.ResponseWriter, r *http.Request) bool 
 	if shouldRegenerate {
 		newToken, err := generateSessionToken(username, a.authSecretKey, time.Now())
 		if err != nil {
-			log.Printf("Could not compute session token during regeneration: %v", err)
+			log.Printf("Nie udało się obliczyć tokena sesji podczas regeneracji: %v", err)
 			return false
 		}
 

@@ -10,16 +10,16 @@ import (
 func TestAuthTokenGenerationAndVerification(t *testing.T) {
 	secret, err := makeAuthSecretKey(AUTH_SECRET_KEY_LENGTH)
 	if err != nil {
-		t.Fatalf("Failed to generate secret key: %v", err)
+		t.Fatalf("Nie udało się wygenerować tajnego klucza (secret key): %v", err)
 	}
 
 	secretBytes, err := base64.StdEncoding.DecodeString(secret)
 	if err != nil {
-		t.Fatalf("Failed to decode secret key: %v", err)
+		t.Fatalf("Nie udało się zdekodować tajnego klucza (secret key): %v", err)
 	}
 
 	if len(secretBytes) != AUTH_SECRET_KEY_LENGTH {
-		t.Fatalf("Secret key length is not %d bytes", AUTH_SECRET_KEY_LENGTH)
+		t.Fatalf("Tajny klucz (secret key) ma nieprawidłową długość: %d bajtów", AUTH_SECRET_KEY_LENGTH)
 	}
 
 	now := time.Now()
@@ -27,48 +27,48 @@ func TestAuthTokenGenerationAndVerification(t *testing.T) {
 
 	token, err := generateSessionToken(username, secretBytes, now)
 	if err != nil {
-		t.Fatalf("Failed to generate session token: %v", err)
+		t.Fatalf("Nie udało się wygenerować tokena sesji: %v", err)
 	}
 
 	usernameHashBytes, shouldRegen, err := verifySessionToken(token, secretBytes, now)
 	if err != nil {
-		t.Fatalf("Failed to verify session token: %v", err)
+		t.Fatalf("Nie udało się zweryfikować tokena sesji: %v", err)
 	}
 
 	if shouldRegen {
-		t.Fatal("Token should not need to be regenerated immediately after generation")
+		t.Fatal("Token nie powinien wymagać natychmiastowej regeneracji po wygenerowaniu")
 	}
 
 	computedUsernameHash, err := computeUsernameHash(username, secretBytes)
 	if err != nil {
-		t.Fatalf("Failed to compute username hash: %v", err)
+		t.Fatalf("Nie udało się obliczyć hasha nazwy użytkownika: %v", err)
 	}
 
 	if !bytes.Equal(usernameHashBytes, computedUsernameHash) {
-		t.Fatal("Username hash does not match the expected value")
+		t.Fatal("Hash nazwy użytkownika nie zgadza się z oczekiwaną wartością")
 	}
 
 	// Test token regeneration
 	timeRightAfterRegenPeriod := now.Add(AUTH_TOKEN_VALID_PERIOD - AUTH_TOKEN_REGEN_BEFORE + 2*time.Second)
 	_, shouldRegen, err = verifySessionToken(token, secretBytes, timeRightAfterRegenPeriod)
 	if err != nil {
-		t.Fatalf("Token verification should not fail during regeneration period, err: %v", err)
+		t.Fatalf("Weryfikacja tokena nie powinna nie powieść się w okresie regeneracji, err: %v", err)
 	}
 
 	if !shouldRegen {
-		t.Fatal("Token should have been marked for regeneration")
+		t.Fatal("Token powinien być oznaczony do regeneracji")
 	}
 
 	// Test token expiration
 	_, _, err = verifySessionToken(token, secretBytes, now.Add(AUTH_TOKEN_VALID_PERIOD+2*time.Second))
 	if err == nil {
-		t.Fatal("Expected token verification to fail after token expiration")
+		t.Fatal("Oczekiwano, że weryfikacja tokena nie powiedzie się po wygaśnięciu tokena")
 	}
 
 	// Test tampered token
 	decodedToken, err := base64.StdEncoding.DecodeString(token)
 	if err != nil {
-		t.Fatalf("Failed to decode token: %v", err)
+		t.Fatalf("Nie udało się zdekodować tokena: %v", err)
 	}
 
 	// If any of the bytes are off by 1, the token should be considered invalid
@@ -79,7 +79,7 @@ func TestAuthTokenGenerationAndVerification(t *testing.T) {
 
 		_, _, err = verifySessionToken(base64.StdEncoding.EncodeToString(tampered), secretBytes, now)
 		if err == nil {
-			t.Fatalf("Expected token verification to fail for tampered token at index %d", i)
+			t.Fatalf("Oczekiwano, że weryfikacja tokena nie powiedzie się dla zmienionego tokena na indeksie %d", i)
 		}
 	}
 }

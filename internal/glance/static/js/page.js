@@ -340,8 +340,8 @@ function setupLazyImages() {
 }
 
 function attachExpandToggleButton(collapsibleContainer) {
-    const showMoreText = "Show more";
-    const showLessText = "Show less";
+    const showMoreText = "Pokaż więcej";
+    const showLessText = "Pokaż mniej";
 
     let expanded = false;
     const button = document.createElement("button");
@@ -498,8 +498,8 @@ function afterContentReady(callback) {
     contentReadyCallbacks.push(callback);
 }
 
-const weekDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const weekDayNames = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
+const monthNames = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
 
 function makeSettableTimeElement(element, hourFormat) {
     const fragment = document.createDocumentFragment();
