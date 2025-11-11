@@ -653,6 +653,17 @@ async function setupTodos() {
     }
 }
 
+async function setupRadyjko() {
+    const elems = Array.from(document.getElementsByClassName("widget-type-radyjko"));
+    if (elems.length == 0) return;
+
+    const radyjko = await import ('./radyjko.js');
+
+    for (let i = 0; i < elems.length; i++){
+        radyjko.default(elems[i]);
+    }
+}
+
 function setupTruncatedElementTitles() {
     const elements = document.querySelectorAll(".text-truncate, .single-line-titles .title, .text-truncate-2-lines, .text-truncate-3-lines");
 
@@ -757,6 +768,7 @@ async function setupPage() {
         setupClocks()
         await setupCalendars();
         await setupTodos();
+        await setupRadyjko();
         setupCarousels();
         setupSearchBoxes();
         setupCollapsibleLists();

@@ -34,6 +34,7 @@
   - [DNS Stats](#dns-stats)
   - [Server Stats](#server-stats)
   - [Repository](#repository)
+  - [Radyjko](#radyjko)
   - [Bookmarks](#bookmarks)
   - [Calendar](#calendar)
   - [Calendar (legacy)](#calendar-legacy)
@@ -2529,6 +2530,35 @@ The maximum number of latest open issues to show. Set to `-1` to not show any.
 
 ##### `commits-limit`
 The maximum number of lastest commits to show from the default branch. Set to `-1` to not show any.
+
+### Radyjko
+Display a radio player with a list of streaming radio stations. This widget provides a Spotify/YouTube Music-like interface for listening to Polish and international radio stations.
+
+Example:
+
+```yaml
+- type: radyjko
+```
+
+Preview:
+
+(Player widget with station list, play/pause button, and volume control)
+
+#### Properties
+
+| Name | Type | Required | Default |
+| ---- | ---- | -------- | ------- |
+
+Currently, this widget has no configurable properties. It automatically fetches the list of available radio stations from the configured API proxy and displays them in an intuitive player interface.
+
+#### Features
+
+- **Play/Pause Control**: Click the play button to start/stop playback
+- **Station Selection**: Click on any station in the list to select it and play
+- **Volume Control**: Adjust playback volume using the volume slider
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
+- **HLS Stream Support**: Supports both HLS (m3u8) and standard audio streams
+- **Visual Feedback**: Active station is highlighted for easy identification
 
 ### Bookmarks
 Display a list of links which can be grouped.
