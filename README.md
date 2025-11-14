@@ -1,3 +1,10 @@
+<h1>To jest zmodyfikowana wersja dashboard Glance, z przetłumaczonimi elementami na Język Polski</h1>
+<p>Wersja ta posiada także następujące zmiany</p>
+* Widget radyjko <a href="https://radyjko.mordorek.dev">Radyjko</a>
+* Możliwość przesuwania między lewą częścią, środkową i prawą poprzez przesunięcie na urządzeniach mobilnych
+
+
+
 <p align="center"><img src="docs/logo.png"></p>
 <h1 align="center">Glance</h1>
 <p align="center">
