@@ -11,7 +11,7 @@
     max-height: 100%;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(135deg, hsl(var(--bghs), calc(var(--scheme) (var(--scheme) var(--bgl) + 8%))) 0%, hsl(var(--bghs), var(--bgl)) 100%);
+    background: var(--color-widget-background);
     border-radius: var(--border-radius);
     overflow: hidden;
     box-sizing: border-box;
@@ -26,7 +26,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at 30% 30%, rgba(76, 175, 80, 0.15) 0%, transparent 60%);
+    background: radial-gradient(circle at 30% 30%, hsla(var(--bgh), calc(var(--bgs) + 10%), calc(var(--bgl) + 8%), 0.15) 0%, transparent 60%);
     pointer-events: none;
     z-index: 0;
 }
@@ -37,7 +37,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
+    background: linear-gradient(to bottom, transparent 0%, hsla(var(--bghs), var(--bgl), 0.1) 100%);
     pointer-events: none;
     z-index: 0;
 }
@@ -58,19 +58,20 @@
     width: 140px;
     height: 140px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background: var(--color-widget-background-highlight);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.25), 0 0 1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px hsla(var(--bghs), var(--bgl), 0.15);
     overflow: hidden;
     position: relative;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid var(--color-widget-content-border);
 }
 
 .radyjko-album-art:hover {
     transform: scale(1.02);
-    box-shadow: 0 12px 40px rgba(76, 175, 80, 0.35);
+    box-shadow: 0 6px 20px hsla(var(--bghs), var(--bgl), 0.25);
 }
 
 .radyjko-album-art img {
@@ -121,9 +122,9 @@
 
 .radyjko-btn {
     flex-shrink: 0;
-    background: linear-gradient(45deg, #4CAF50, #45a049);
-    color: white;
-    border: none;
+    background: var(--color-widget-background-highlight);
+    color: var(--color-text-highlight);
+    border: 1px solid var(--color-widget-content-border);
     border-radius: 50%;
     width: 48px;
     height: 48px;
@@ -133,13 +134,14 @@
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 1.6rem;
-    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+    box-shadow: 0 2px 8px hsla(var(--bghs), var(--bgl), 0.1);
     font-weight: 500;
 }
 
 .radyjko-btn:hover {
     transform: scale(1.08);
-    box-shadow: 0 6px 25px rgba(76, 175, 80, 0.35);
+    box-shadow: 0 4px 12px hsla(var(--bghs), var(--bgl), 0.2);
+    background: hsl(var(--bghs), calc(var(--scheme) (var(--scheme) var(--bgl) + 6%)));
 }
 
 .radyjko-btn:active {
@@ -154,7 +156,9 @@
 .radyjko-btn.radyjko-btn-play-main {
     width: 56px;
     height: 56px;
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background: var(--color-primary);
+    color: hsl(var(--bghs), var(--bgl));
+    border-color: var(--color-primary);
     font-size: 2rem;
 }
 
@@ -165,17 +169,18 @@
 
 .radyjko-btn.radyjko-btn-prev,
 .radyjko-btn.radyjko-btn-next {
-    background: rgba(76, 175, 80, 0.2);
-    color: #4CAF50;
-    border: 1px solid rgba(76, 175, 80, 0.4);
+    background: hsl(var(--bghs), calc(var(--scheme) (var(--scheme) var(--bgl) + 4%)));
+    color: var(--color-text-highlight);
+    border: 1px solid hsl(var(--bghs), calc(var(--scheme) (var(--scheme) var(--bgl) + 8%)));
     width: 44px;
     height: 44px;
 }
 
 .radyjko-btn.radyjko-btn-prev:hover,
 .radyjko-btn.radyjko-btn-next:hover {
-    background: rgba(76, 175, 80, 0.3);
-    border-color: rgba(76, 175, 80, 0.6);
+    background: hsl(var(--bghs), calc(var(--scheme) (var(--scheme) var(--bgl) + 8%)));
+    border-color: hsl(var(--bghs), calc(var(--scheme) (var(--scheme) var(--bgl) + 12%)));
+    color: var(--color-text-highlight);
 }
 
 /* Footer controls */
@@ -203,8 +208,9 @@
 .radyjko-volume-control svg {
     width: 20px;
     height: 20px;
-    color: var(--color-text-base);
+    color: var(--color-text-highlight);
     flex-shrink: 0;
+    opacity: 0.8;
 }
 
 .radyjko-volume-slider {
@@ -212,7 +218,7 @@
     height: 4px;
     -webkit-appearance: none;
     appearance: none;
-    background: linear-gradient(to right, hsl(var(--bghs), calc(var(--scheme) (var(--scheme) var(--bgl) + 10%))) 0%, hsl(var(--bghs), calc(var(--scheme) (var(--scheme) var(--bgl) + 10%))) 100%);
+    background: var(--color-widget-content-border);
     border-radius: 2px;
     outline: none;
     cursor: pointer;
@@ -223,34 +229,34 @@
     appearance: none;
     width: 14px;
     height: 14px;
-    background: #4CAF50;
+    background: var(--color-primary);
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 2px 8px hsla(var(--bgh), 50%, 70%, 0.3);
     transition: all 0.2s ease;
 }
 
 .radyjko-volume-slider::-webkit-slider-thumb:hover {
-    background: #45a049;
+    background: var(--color-primary);
     transform: scale(1.2);
-    box-shadow: 0 3px 12px rgba(76, 175, 80, 0.5);
+    box-shadow: 0 3px 12px hsla(var(--bgh), 50%, 70%, 0.5);
 }
 
 .radyjko-volume-slider::-moz-range-thumb {
     width: 14px;
     height: 14px;
-    background: #4CAF50;
+    background: var(--color-primary);
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 2px 8px hsla(var(--bgh), 50%, 70%, 0.3);
     transition: all 0.2s ease;
 }
 
 .radyjko-volume-slider::-moz-range-thumb:hover {
-    background: #45a049;
+    background: var(--color-primary);
     transform: scale(1.2);
-    box-shadow: 0 3px 12px rgba(76, 175, 80, 0.5);
+    box-shadow: 0 3px 12px hsla(var(--bgh), 50%, 70%, 0.5);
 }
 
 .radyjko-volume-slider::-moz-range-track {
@@ -264,8 +270,7 @@
     display: none;
 }
 
-
-
+@media (max-width: 768px) {
     .radyjko-album-art {
         width: 120px;
         height: 120px;

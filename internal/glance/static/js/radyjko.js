@@ -27,10 +27,75 @@ class RadyjkoPlayer {
         this.currentStationIndex = 0;
         this.isPlaying = false;
         this.hls = null;
+        this.hlsLoaded = false;
+        this.hlsLoading = false;
+    }
+
+    async loadHlsJs() {
+        if (this.hlsLoaded) {
+            console.log('HLS.js already loaded');
+            return true;
+        }
+        
+        if (this.hlsLoading) {
+            console.log('HLS.js loading in progress, waiting...');
+            // Wait for existing load to complete
+            return new Promise((resolve) => {
+                const checkInterval = setInterval(() => {
+                    if (this.hlsLoaded) {
+                        clearInterval(checkInterval);
+                        console.log('HLS.js finished loading');
+                        resolve(true);
+                    }
+                }, 100);
+            });
+        }
+        
+        this.hlsLoading = true;
+        console.log('Starting to load HLS.js...');
+        
+        return new Promise((resolve, reject) => {
+            if (typeof window.Hls !== 'undefined') {
+                console.log('HLS.js already available globally');
+                this.hlsLoaded = true;
+                this.hlsLoading = false;
+                resolve(true);
+                return;
+            }
+            
+            const script = document.createElement('script');
+            // Use specific stable version instead of @latest
+            script.src = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js';
+            script.onload = () => {
+                console.log('HLS.js script loaded successfully, version:', window.Hls?.version);
+                console.log('HLS.isSupported:', window.Hls?.isSupported());
+                this.hlsLoaded = true;
+                this.hlsLoading = false;
+                resolve(true);
+            };
+            script.onerror = (error) => {
+                console.error('Failed to load HLS.js script:', error);
+                this.hlsLoading = false;
+                reject(false);
+            };
+            document.head.appendChild(script);
+            console.log('HLS.js script tag added to document head');
+        });
     }
 
     initialize() {
         console.log('Initializing Radyjko player with', this.stations.length, 'stations');
+        
+        // Pre-load HLS.js if any station uses m3u8
+        const hasM3u8Station = this.stations.some(s => s.url && s.url.includes('.m3u8'));
+        if (hasM3u8Station) {
+            console.log('Detected m3u8 stations, pre-loading HLS.js...');
+            this.loadHlsJs().then(() => {
+                console.log('HLS.js pre-loaded successfully');
+            }).catch(err => {
+                console.error('Failed to pre-load HLS.js:', err);
+            });
+        }
         
         // Set up play/pause button
         this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
@@ -44,8 +109,16 @@ class RadyjkoPlayer {
             this.setVolume(e.target.value / 100);
         });
 
-        // Set initial volume
-        this.setVolume(0.7);
+        // Load saved volume or use default
+        const savedVolume = localStorage.getItem('radyjko-volume');
+        if (savedVolume !== null) {
+            const volumeValue = parseFloat(savedVolume);
+            this.volumeSlider.value = volumeValue * 100;
+            this.setVolume(volumeValue);
+            console.log('Loaded saved volume:', volumeValue);
+        } else {
+            this.setVolume(0.7);
+        }
 
         // Audio event listeners
         this.audioPlayer.addEventListener('play', () => this.onAudioPlay());
@@ -94,23 +167,28 @@ class RadyjkoPlayer {
             this.currentStationIcon.style.display = 'block';
         }
         
+        // Pause current playback
+        this.audioPlayer.pause();
+        
         // Destroy previous HLS instance if exists
         if (this.hls) {
             try {
                 this.hls.destroy();
+                console.log('Previous HLS instance destroyed');
             } catch (e) {
                 console.error('Error destroying HLS:', e);
             }
             this.hls = null;
         }
 
-        // Pause current playback
-        this.audioPlayer.pause();
+        // Reset audio element
+        this.audioPlayer.removeAttribute('src');
+        this.audioPlayer.load();
         
         this.loadStationStream(station.url);
     }
 
-    loadStationStream(streamUrl) {
+    async loadStationStream(streamUrl) {
         if (!streamUrl) {
             console.error('No stream URL provided');
             return;
@@ -119,32 +197,117 @@ class RadyjkoPlayer {
         console.log('Stream URL:', streamUrl);
 
         // Check if it's an HLS stream (m3u8)
-        if (streamUrl.includes('.m3u8') && typeof Hls !== 'undefined' && Hls.isSupported()) {
-            console.log('Using HLS for stream');
-            this.hls = new Hls({
-                enableWorker: false,
-                lowLatencyMode: true,
-            });
-            
-            this.hls.loadSource(streamUrl);
-            this.hls.attachMedia(this.audioPlayer);
-            
-            this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                console.log('HLS manifest parsed, levels:', this.hls.levels.length);
-                if (this.isPlaying) {
-                    this.audioPlayer.play().catch(e => {
-                        console.error('Error playing audio after HLS:', e);
+        if (streamUrl.includes('.m3u8')) {
+            // Try to load HLS.js
+            try {
+                const hlsLoadSuccess = await this.loadHlsJs();
+                
+                // Check if HLS.js is available and supported
+                if (hlsLoadSuccess && typeof window.Hls !== 'undefined' && window.Hls.isSupported()) {
+                    console.log('Using HLS.js for m3u8 stream');
+                    this.hls = new window.Hls({
+                        debug: false,
+                        enableWorker: true,
+                        lowLatencyMode: false,
+                        backBufferLength: 90,
+                        maxBufferLength: 30,
+                        maxMaxBufferLength: 600,
+                        maxBufferSize: 60 * 1000 * 1000,
+                        maxBufferHole: 0.5,
+                        manifestLoadingTimeOut: 10000,
+                        manifestLoadingMaxRetry: 4,
+                        manifestLoadingRetryDelay: 1000,
+                        levelLoadingTimeOut: 10000,
+                        levelLoadingMaxRetry: 4,
+                        levelLoadingRetryDelay: 1000,
+                        xhrSetup: function(xhr, url) {
+                            // Handle CORS
+                            xhr.withCredentials = false;
+                        }
                     });
-                }
-            });
+                    
+                    this.hls.loadSource(streamUrl);
+                    this.hls.attachMedia(this.audioPlayer);
+                    
+                    this.hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+                        console.log('HLS manifest parsed successfully, levels:', this.hls.levels.length);
+                        if (this.isPlaying) {
+                            this.audioPlayer.play().catch(e => {
+                                console.error('Error playing audio after HLS:', e);
+                            });
+                        }
+                    });
+                    
+                    this.hls.on(window.Hls.Events.MEDIA_ATTACHED, () => {
+                        console.log('HLS media attached');
+                    });
+                    
+                    this.hls.on(window.Hls.Events.LEVEL_LOADED, (event, data) => {
+                        console.log('HLS level loaded:', data.level);
+                    });
 
-            this.hls.on(Hls.Events.ERROR, (event, data) => {
-                console.error('HLS Error:', data);
-                if (data.fatal) {
-                    this.isPlaying = false;
-                    this.updatePlayButton();
+                    this.hls.on(window.Hls.Events.ERROR, (event, data) => {
+                        console.error('HLS Error:', {
+                            type: data.type,
+                            details: data.details,
+                            fatal: data.fatal,
+                            url: data.url,
+                            response: data.response
+                        });
+                        
+                        if (data.fatal) {
+                            switch(data.type) {
+                                case window.Hls.ErrorTypes.NETWORK_ERROR:
+                                    console.error('Fatal network error encountered, trying to recover...');
+                                    setTimeout(() => {
+                                        if (this.hls) {
+                                            this.hls.startLoad();
+                                        }
+                                    }, 1000);
+                                    break;
+                                case window.Hls.ErrorTypes.MEDIA_ERROR:
+                                    console.error('Fatal media error encountered, trying to recover...');
+                                    if (this.hls) {
+                                        this.hls.recoverMediaError();
+                                    }
+                                    break;
+                                default:
+                                    console.error('Fatal error, cannot recover');
+                                    if (this.hls) {
+                                        this.hls.destroy();
+                                        this.hls = null;
+                                    }
+                                    this.isPlaying = false;
+                                    this.updatePlayButton();
+                                    break;
+                            }
+                        }
+                    });
+                } else if (this.audioPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Native HLS support (Safari)
+                    console.log('Using native HLS support for m3u8 stream');
+                    this.audioPlayer.src = streamUrl;
+                    if (this.isPlaying) {
+                        this.audioPlayer.play().catch(e => {
+                            console.error('Error playing native HLS audio:', e);
+                        });
+                    }
+                } else {
+                    console.error('HLS not supported in this browser');
                 }
-            });
+            } catch (error) {
+                console.error('Error loading HLS.js or setting up stream:', error);
+                // Try native support as fallback
+                if (this.audioPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                    console.log('Falling back to native HLS support');
+                    this.audioPlayer.src = streamUrl;
+                    if (this.isPlaying) {
+                        this.audioPlayer.play().catch(e => {
+                            console.error('Error playing native HLS audio:', e);
+                        });
+                    }
+                }
+            }
         } else if (streamUrl.includes('.aac') || streamUrl.includes('timeradio-p')) {
             // Handle AAC streams
             console.log('Using AAC stream');
@@ -153,6 +316,16 @@ class RadyjkoPlayer {
             if (this.isPlaying) {
                 this.audioPlayer.play().catch(e => {
                     console.error('Error playing AAC audio:', e);
+                });
+            }
+        } else if (streamUrl.includes('stream.open.fm') || streamUrl.includes('radiofreee') || streamUrl.includes('voxfm')) {
+            // Handle Open FM, Radio Freee, and VOX FM streams
+            console.log('Using Open FM/Radio Freee/VOX FM stream (auto-detect format)');
+            this.audioPlayer.src = streamUrl;
+            // Let the browser auto-detect the format
+            if (this.isPlaying) {
+                this.audioPlayer.play().catch(e => {
+                    console.error('Error playing Open FM/Radio/VOX stream:', e);
                 });
             }
         } else {
@@ -197,6 +370,8 @@ class RadyjkoPlayer {
 
     setVolume(value) {
         this.audioPlayer.volume = Math.max(0, Math.min(1, value));
+        // Save volume to localStorage
+        localStorage.setItem('radyjko-volume', this.audioPlayer.volume);
         console.log('Volume set to:', this.audioPlayer.volume);
     }
 
