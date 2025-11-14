@@ -754,6 +754,84 @@ function initThemePicker() {
     })
 }
 
+function setupSwipeNavigation() {
+    const columnInputs = document.querySelectorAll(".mobile-navigation-input");
+    
+    if (columnInputs.length === 0) {
+        return;
+    }
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+    const swipeThreshold = 50; // Minimalna odległość w pikselach, aby uznać to za swipe
+    let isVerticalScroll = false;
+
+    const handleSwipe = () => {
+        const diffX = touchStartX - touchEndX;
+        const diffY = Math.abs(touchStartY - touchEndY);
+        
+        // Jeśli ruch jest bardziej pionowy niż poziomy, nie rób nic
+        if (diffY > Math.abs(diffX)) {
+            return;
+        }
+        
+        // Znajdź aktualnie zaznaczoną stronę
+        let currentIndex = 0;
+        columnInputs.forEach((input, index) => {
+            if (input.checked) {
+                currentIndex = index;
+            }
+        });
+
+        // Swipe w lewo (przeciągnięcie w prawo) = następna strona
+        if (diffX > swipeThreshold && currentIndex < columnInputs.length - 1) {
+            columnInputs[currentIndex + 1].click();
+            return true;
+        }
+
+        // Swipe w prawo (przeciągnięcie w lewo) = poprzednia strona
+        if (diffX < -swipeThreshold && currentIndex > 0) {
+            columnInputs[currentIndex - 1].click();
+            return true;
+        }
+
+        return false;
+    };
+
+    const touchStart = (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+        isVerticalScroll = false;
+    };
+
+    const touchMove = (e) => {
+        const touchX = e.changedTouches[0].screenX;
+        const touchY = e.changedTouches[0].screenY;
+        const diffX = Math.abs(touchStartX - touchX);
+        const diffY = Math.abs(touchStartY - touchY);
+        
+        // Jeśli ruch jest bardziej pionowy, oznacz jako przewijanie
+        if (diffY > diffX * 1.2) {
+            isVerticalScroll = true;
+        }
+    };
+
+    const touchEnd = (e) => {
+        if (!isVerticalScroll) {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe();
+        }
+    };
+
+    // Dodaj event listenery do całego dokumentu, aby działały wszędzie
+    document.addEventListener("touchstart", touchStart, { passive: true });
+    document.addEventListener("touchmove", touchMove, { passive: true });
+    document.addEventListener("touchend", touchEnd, { passive: true });
+}
+
 async function setupPage() {
     initThemePicker();
 
@@ -777,6 +855,7 @@ async function setupPage() {
         setupMasonries();
         setupDynamicRelativeTime();
         setupLazyImages();
+        setupSwipeNavigation();
     } finally {
         pageElement.classList.add("content-ready");
         pageElement.setAttribute("aria-busy", "false");
