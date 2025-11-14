@@ -11,10 +11,18 @@ class RadyjkoPlayer {
         this.prevBtn = element.querySelector('#radyjkoPrevBtn');
         this.nextBtn = element.querySelector('#radyjkoNextBtn');
         this.volumeSlider = element.querySelector('#radyjkoVolume');
-        this.stationsBtn = element.querySelector('#radyjkoStationsBtn');
         this.currentStationName = element.querySelector('#radyjkoCurrentName');
         this.currentStationIcon = element.querySelector('#radyjkoStationImg');
-        this.stationItems = element.querySelectorAll('.radyjko-station-item');
+        
+        // Get stations from hidden data container
+        const stationDataElements = element.querySelectorAll('#radyjkoStationsData .radyjko-station-item');
+        this.stations = Array.from(stationDataElements).map((el) => ({
+            index: parseInt(el.dataset.index),
+            url: el.dataset.url,
+            name: el.dataset.name,
+            icon: el.dataset.icon,
+            shortName: el.dataset.shortname
+        }));
         
         this.currentStationIndex = 0;
         this.isPlaying = false;
@@ -22,6 +30,8 @@ class RadyjkoPlayer {
     }
 
     initialize() {
+        console.log('Initializing Radyjko player with', this.stations.length, 'stations');
+        
         // Set up play/pause button
         this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
         
@@ -37,69 +47,51 @@ class RadyjkoPlayer {
         // Set initial volume
         this.setVolume(0.7);
 
-        // Set up station items in popover
-        this.stationItems.forEach((item) => {
-            item.addEventListener('click', () => {
-                const index = parseInt(item.dataset.stationIndex);
-                this.selectStation(index);
-                if (!this.isPlaying) {
-                    this.play();
-                }
-                // Close popover
-                const popover = this.element.querySelector('[data-popover-html]');
-                if (popover && popover.closest('.popover')) {
-                    const closeBtn = popover.closest('.popover')?.querySelector('[data-popover-close]');
-                    if (closeBtn) closeBtn.click();
-                }
-            });
-        });
-
         // Audio event listeners
         this.audioPlayer.addEventListener('play', () => this.onAudioPlay());
         this.audioPlayer.addEventListener('pause', () => this.onAudioPause());
         this.audioPlayer.addEventListener('error', () => this.onAudioError());
+        this.audioPlayer.addEventListener('canplay', () => this.onCanPlay());
         
-        // Load first station by default
-        this.selectStation(0);
+        // Load first station
+        this.loadStation(0);
+    }
+
+    onCanPlay() {
+        console.log('Audio can play');
     }
 
     previousStation() {
         if (this.currentStationIndex > 0) {
-            this.selectStation(this.currentStationIndex - 1);
+            this.loadStation(this.currentStationIndex - 1);
         }
     }
 
     nextStation() {
-        if (this.currentStationIndex < this.stationItems.length - 1) {
-            this.selectStation(this.currentStationIndex + 1);
+        if (this.currentStationIndex < this.stations.length - 1) {
+            this.loadStation(this.currentStationIndex + 1);
         }
     }
 
-    selectStation(index) {
-        if (index < 0 || index >= this.stationItems.length) return;
+    loadStation(index) {
+        if (index < 0 || index >= this.stations.length) {
+            console.error('Invalid station index:', index);
+            return;
+        }
         
         this.currentStationIndex = index;
-        this.updateActiveStation();
-        this.loadStation();
-    }
-
-    loadStation() {
-        const station = this.getCurrentStation();
-        if (!station) return;
+        const station = this.stations[index];
+        
+        console.log('Loading station:', station);
 
         // Update UI
-        const stationName = station.dataset.stationName;
-        this.currentStationName.textContent = stationName;
+        this.currentStationName.textContent = station.name;
         
         // Update icon
-        const iconUrl = station.dataset.stationIcon;
         if (this.currentStationIcon) {
-            this.currentStationIcon.src = iconUrl;
-            this.currentStationIcon.alt = stationName;
-            // Add error handler for images that fail to load
-            this.currentStationIcon.onerror = () => {
-                this.currentStationIcon.style.display = 'none';
-            };
+            this.currentStationIcon.src = station.icon;
+            this.currentStationIcon.alt = station.name;
+            this.currentStationIcon.style.display = 'block';
         }
         
         // Destroy previous HLS instance if exists
@@ -112,19 +104,36 @@ class RadyjkoPlayer {
             this.hls = null;
         }
 
-        const streamUrl = station.dataset.stationUrl;
+        // Pause current playback
+        this.audioPlayer.pause();
+        
+        this.loadStationStream(station.url);
+    }
+
+    loadStationStream(streamUrl) {
+        if (!streamUrl) {
+            console.error('No stream URL provided');
+            return;
+        }
+
+        console.log('Stream URL:', streamUrl);
 
         // Check if it's an HLS stream (m3u8)
         if (streamUrl.includes('.m3u8') && typeof Hls !== 'undefined' && Hls.isSupported()) {
-            this.hls = new Hls();
+            console.log('Using HLS for stream');
+            this.hls = new Hls({
+                enableWorker: false,
+                lowLatencyMode: true,
+            });
+            
             this.hls.loadSource(streamUrl);
             this.hls.attachMedia(this.audioPlayer);
             
             this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                console.log('HLS manifest parsed, levels:', this.hls.levels.length);
                 if (this.isPlaying) {
                     this.audioPlayer.play().catch(e => {
-                        console.error('Error playing audio:', e);
-                        this.updatePlayButton();
+                        console.error('Error playing audio after HLS:', e);
                     });
                 }
             });
@@ -136,20 +145,30 @@ class RadyjkoPlayer {
                     this.updatePlayButton();
                 }
             });
-        } else {
-            // For non-HLS streams or browsers without HLS support
+        } else if (streamUrl.includes('.aac') || streamUrl.includes('timeradio-p')) {
+            // Handle AAC streams
+            console.log('Using AAC stream');
             this.audioPlayer.src = streamUrl;
-            
+            this.audioPlayer.type = 'audio/aac';
+            if (this.isPlaying) {
+                this.audioPlayer.play().catch(e => {
+                    console.error('Error playing AAC audio:', e);
+                });
+            }
+        } else {
+            // Other formats
+            console.log('Using generic audio stream');
+            this.audioPlayer.src = streamUrl;
             if (this.isPlaying) {
                 this.audioPlayer.play().catch(e => {
                     console.error('Error playing audio:', e);
-                    this.updatePlayButton();
                 });
             }
         }
     }
 
     togglePlayPause() {
+        console.log('Toggle play/pause, currently playing:', this.isPlaying);
         if (this.isPlaying) {
             this.pause();
         } else {
@@ -158,33 +177,45 @@ class RadyjkoPlayer {
     }
 
     play() {
-        this.audioPlayer.play().catch(e => {
-            console.error('Error playing audio:', e);
-        });
+        console.log('Play requested');
+        const playPromise = this.audioPlayer.play();
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    console.log('Audio playback started');
+                })
+                .catch(error => {
+                    console.error('Error playing audio:', error);
+                });
+        }
     }
 
     pause() {
+        console.log('Pause requested');
         this.audioPlayer.pause();
     }
 
     setVolume(value) {
         this.audioPlayer.volume = Math.max(0, Math.min(1, value));
+        console.log('Volume set to:', this.audioPlayer.volume);
     }
 
     onAudioPlay() {
+        console.log('Audio play event fired');
         this.isPlaying = true;
         this.updatePlayButton();
     }
 
     onAudioPause() {
+        console.log('Audio pause event fired');
         this.isPlaying = false;
         this.updatePlayButton();
     }
 
     onAudioError() {
+        console.error('Audio error:', this.audioPlayer.error?.message);
         this.isPlaying = false;
         this.updatePlayButton();
-        console.error('Audio player error:', this.audioPlayer.error?.message);
     }
 
     updatePlayButton() {
@@ -195,17 +226,5 @@ class RadyjkoPlayer {
         this.playPauseBtn.innerHTML = icon;
     }
 
-    updateActiveStation() {
-        this.stationItems.forEach((item, index) => {
-            if (index === this.currentStationIndex) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
-            }
-        });
-    }
 
-    getCurrentStation() {
-        return this.stationItems[this.currentStationIndex];
-    }
 }
