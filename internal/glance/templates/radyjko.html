@@ -59,7 +59,14 @@
     <!-- Hidden stations data for JavaScript -->
     <div id="radyjkoStationsData" style="display: none;">
         {{ range $index, $station := .Stations }}
-        <div class="radyjko-station-item" data-index="{{ $index }}" data-url="{{ $station.URL }}" data-name="{{ $station.Name }}" data-icon="{{ $station.IconURL }}" data-shortname="{{ $station.ShortName }}"></div>
+        <div class="radyjko-station-item" 
+             data-index="{{ $index }}" 
+             data-url="{{ $station.URL }}" 
+             data-name="{{ $station.Name }}" 
+             data-icon="{{ $station.IconURL }}" 
+             data-shortname="{{ $station.ShortName }}"
+             data-isopenfm="{{ $station.IsOpenFM }}"
+             data-openfmid="{{ if $station.OpenFMID }}{{ $station.OpenFMID }}{{ end }}"></div>
         {{ end }}
     </div>
 

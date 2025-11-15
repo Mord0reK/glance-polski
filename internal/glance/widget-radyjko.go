@@ -55,14 +55,6 @@ func (widget *radyjkoWidget) Render() template.HTML {
 	// Compute icon URLs using the asset resolver
 	for i := range widget.Stations {
 		widget.Stations[i].IconURL = widget.Providers.assetResolver("images/radyjko/" + widget.Stations[i].ShortName + ".png")
-
-		// Handle OpenFM stations - construct streaming URL
-		if widget.Stations[i].IsOpenFM == 1 && widget.Stations[i].OpenFMID != nil {
-			widget.Stations[i].URL = fmt.Sprintf(
-				"https://stream-cdn-1.open.fm/OFM%d/ngrp:standard/playlist.m3u8",
-				*widget.Stations[i].OpenFMID,
-			)
-		}
 	}
 	return widget.renderTemplate(widget, radyjkoWidgetTemplate)
 }

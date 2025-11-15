@@ -21,7 +21,9 @@ class RadyjkoPlayer {
             url: el.dataset.url,
             name: el.dataset.name,
             icon: el.dataset.icon,
-            shortName: el.dataset.shortname
+            shortName: el.dataset.shortname,
+            isOpenFM: el.dataset.isopenfm === '1',
+            openFmId: el.dataset.openfmid ? parseInt(el.dataset.openfmid) : null
         }));
         
         this.currentStationIndex = 0;
@@ -126,8 +128,19 @@ class RadyjkoPlayer {
         this.audioPlayer.addEventListener('error', () => this.onAudioError());
         this.audioPlayer.addEventListener('canplay', () => this.onCanPlay());
         
-        // Load first station
-        this.loadStation(0);
+        // Load last selected station or first station
+        const savedStationIndex = localStorage.getItem('radyjko-last-station');
+        if (savedStationIndex !== null) {
+            const stationIndex = parseInt(savedStationIndex);
+            if (stationIndex >= 0 && stationIndex < this.stations.length) {
+                console.log('Loading last selected station:', stationIndex);
+                this.loadStation(stationIndex);
+            } else {
+                this.loadStation(0);
+            }
+        } else {
+            this.loadStation(0);
+        }
     }
 
     onCanPlay() {
@@ -156,6 +169,9 @@ class RadyjkoPlayer {
         const station = this.stations[index];
         
         console.log('Loading station:', station);
+        
+        // Save last selected station to localStorage
+        localStorage.setItem('radyjko-last-station', index);
 
         // Update UI
         this.currentStationName.textContent = station.name;
@@ -181,11 +197,36 @@ class RadyjkoPlayer {
             this.hls = null;
         }
 
-        // Reset audio element
+        // Reset audio element completely
         this.audioPlayer.removeAttribute('src');
+        this.audioPlayer.removeAttribute('type');
         this.audioPlayer.load();
         
-        this.loadStationStream(station.url);
+        // Load stream with proper URL
+        if (station.isOpenFM && station.openFmId) {
+            this.loadOpenFMStation(station.openFmId);
+        } else {
+            this.loadStationStream(station.url);
+        }
+    }
+
+    async loadOpenFMStation(stationId) {
+        console.log('Loading OpenFM station:', stationId);
+        try {
+            // Fetch the actual stream URL from OpenFM API
+            const apiUrl = `https://open.fm/api/user/token?fp=https://stream-cdn-1.open.fm/OFM${stationId}/ngrp:standard/playlist.m3u8`;
+            const response = await fetch(apiUrl, { cache: 'no-store' });
+            const data = await response.json();
+            
+            if (data && data.url) {
+                console.log('OpenFM stream URL retrieved:', data.url);
+                this.loadStationStream(data.url);
+            } else {
+                console.error('Failed to get OpenFM stream URL');
+            }
+        } catch (error) {
+            console.error('Error fetching OpenFM stream:', error);
+        }
     }
 
     async loadStationStream(streamUrl) {
@@ -221,7 +262,6 @@ class RadyjkoPlayer {
                         levelLoadingMaxRetry: 4,
                         levelLoadingRetryDelay: 1000,
                         xhrSetup: function(xhr, url) {
-                            // Handle CORS
                             xhr.withCredentials = false;
                         }
                     });
@@ -230,7 +270,7 @@ class RadyjkoPlayer {
                     this.hls.attachMedia(this.audioPlayer);
                     
                     this.hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
-                        console.log('HLS manifest parsed successfully, levels:', this.hls.levels.length);
+                        console.log('HLS manifest parsed successfully');
                         if (this.isPlaying) {
                             this.audioPlayer.play().catch(e => {
                                 console.error('Error playing audio after HLS:', e);
@@ -238,27 +278,17 @@ class RadyjkoPlayer {
                         }
                     });
                     
-                    this.hls.on(window.Hls.Events.MEDIA_ATTACHED, () => {
-                        console.log('HLS media attached');
-                    });
-                    
-                    this.hls.on(window.Hls.Events.LEVEL_LOADED, (event, data) => {
-                        console.log('HLS level loaded:', data.level);
-                    });
-
                     this.hls.on(window.Hls.Events.ERROR, (event, data) => {
                         console.error('HLS Error:', {
                             type: data.type,
                             details: data.details,
-                            fatal: data.fatal,
-                            url: data.url,
-                            response: data.response
+                            fatal: data.fatal
                         });
                         
                         if (data.fatal) {
                             switch(data.type) {
                                 case window.Hls.ErrorTypes.NETWORK_ERROR:
-                                    console.error('Fatal network error encountered, trying to recover...');
+                                    console.error('Fatal network error, trying to recover...');
                                     setTimeout(() => {
                                         if (this.hls) {
                                             this.hls.startLoad();
@@ -266,7 +296,7 @@ class RadyjkoPlayer {
                                     }, 1000);
                                     break;
                                 case window.Hls.ErrorTypes.MEDIA_ERROR:
-                                    console.error('Fatal media error encountered, trying to recover...');
+                                    console.error('Fatal media error, trying to recover...');
                                     if (this.hls) {
                                         this.hls.recoverMediaError();
                                     }
@@ -297,41 +327,36 @@ class RadyjkoPlayer {
                 }
             } catch (error) {
                 console.error('Error loading HLS.js or setting up stream:', error);
-                // Try native support as fallback
-                if (this.audioPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-                    console.log('Falling back to native HLS support');
-                    this.audioPlayer.src = streamUrl;
-                    if (this.isPlaying) {
-                        this.audioPlayer.play().catch(e => {
-                            console.error('Error playing native HLS audio:', e);
-                        });
-                    }
-                }
             }
         } else if (streamUrl.includes('.aac') || streamUrl.includes('timeradio-p')) {
             // Handle AAC streams
             console.log('Using AAC stream');
             this.audioPlayer.src = streamUrl;
             this.audioPlayer.type = 'audio/aac';
+            this.audioPlayer.load();
             if (this.isPlaying) {
                 this.audioPlayer.play().catch(e => {
                     console.error('Error playing AAC audio:', e);
                 });
             }
-        } else if (streamUrl.includes('stream.open.fm') || streamUrl.includes('radiofreee') || streamUrl.includes('voxfm')) {
-            // Handle Open FM, Radio Freee, and VOX FM streams
-            console.log('Using Open FM/Radio Freee/VOX FM stream (auto-detect format)');
-            this.audioPlayer.src = streamUrl;
-            // Let the browser auto-detect the format
+        } else if (streamUrl.includes('radiofreee') || streamUrl.includes('radio.lublin.pl')) {
+            // Handle Radio Free stream - use proxy to avoid CORS issues
+            console.log('Using Radio Free stream via proxy');
+            const proxyUrl = `/api/audio-proxy?url=${encodeURIComponent(streamUrl)}`;
+            this.audioPlayer.src = proxyUrl;
+            this.audioPlayer.removeAttribute('type');
+            this.audioPlayer.load();
             if (this.isPlaying) {
                 this.audioPlayer.play().catch(e => {
-                    console.error('Error playing Open FM/Radio/VOX stream:', e);
+                    console.error('Error playing Radio Free audio:', e);
                 });
             }
         } else {
-            // Other formats
+            // Other formats - let browser auto-detect
             console.log('Using generic audio stream');
             this.audioPlayer.src = streamUrl;
+            this.audioPlayer.removeAttribute('type');
+            this.audioPlayer.load();
             if (this.isPlaying) {
                 this.audioPlayer.play().catch(e => {
                     console.error('Error playing audio:', e);
