@@ -111,3 +111,183 @@
     border: 2px solid;
     white-space: nowrap;
 }
+
+/* Checkbox styling */
+.vikunja-task-checkbox {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+/* Edit button styling */
+.vikunja-edit-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-base);
+    padding: 0.4rem;
+    border-radius: 0.3rem;
+    transition: background-color 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vikunja-edit-btn:hover {
+    background-color: var(--color-widget-background-highlight);
+    color: var(--color-primary);
+}
+
+/* Modal styling */
+.vikunja-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+}
+
+.vikunja-modal-content {
+    background-color: var(--color-widget-background);
+    border-radius: 0.5rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.vikunja-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-separator);
+}
+
+.vikunja-modal-header h3 {
+    margin: 0;
+    color: var(--color-text-base);
+    font-size: 1.5rem;
+}
+
+.vikunja-modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--color-text-base);
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    line-height: 2rem;
+    text-align: center;
+    transition: color 0.2s;
+}
+
+.vikunja-modal-close:hover {
+    color: var(--color-negative);
+}
+
+.vikunja-modal-body {
+    padding: 1.5rem;
+}
+
+.vikunja-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.vikunja-form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-base);
+    font-weight: 500;
+}
+
+.vikunja-input {
+    width: 100%;
+    padding: 0.7rem;
+    border: 1px solid var(--color-separator);
+    border-radius: 0.3rem;
+    background-color: var(--color-widget-background-highlight);
+    color: var(--color-text-base);
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.vikunja-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.vikunja-labels-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1px solid var(--color-separator);
+    border-radius: 0.3rem;
+    background-color: var(--color-widget-background-highlight);
+}
+
+.vikunja-label-option {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.3rem;
+    transition: background-color 0.2s;
+}
+
+.vikunja-label-option:hover {
+    background-color: var(--color-widget-background);
+}
+
+.vikunja-label-option input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.vikunja-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-top: 1px solid var(--color-separator);
+}
+
+.vikunja-btn {
+    padding: 0.7rem 1.5rem;
+    border: none;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.vikunja-btn:hover {
+    opacity: 0.9;
+}
+
+.vikunja-btn:active {
+    transform: scale(0.98);
+}
+
+.vikunja-btn-cancel {
+    background-color: var(--color-separator);
+    color: var(--color-text-base);
+}
+
+.vikunja-btn-save {
+    background-color: var(--color-primary);
+    color: white;
+}

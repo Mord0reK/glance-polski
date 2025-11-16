@@ -1,11 +1,15 @@
 package glance
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -20,6 +24,7 @@ type vikunjaWidget struct {
 }
 
 type vikunjaTask struct {
+	ID          int
 	Title       string
 	DueDate     time.Time
 	Done        bool
@@ -30,6 +35,7 @@ type vikunjaTask struct {
 }
 
 type vikunjaLabel struct {
+	ID    int
 	Title string
 	Color string
 }
@@ -44,6 +50,7 @@ type vikunjaAPITask struct {
 }
 
 type vikunjaAPILabel struct {
+	ID       int    `json:"id"`
 	Title    string `json:"title"`
 	HexColor string `json:"hex_color"`
 }
@@ -100,6 +107,7 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 		}
 
 		task := vikunjaTask{
+			ID:          apiTask.ID,
 			Title:       apiTask.Title,
 			Done:        apiTask.Done,
 			PercentDone: int(apiTask.PercentDone),
@@ -122,6 +130,7 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 				color = "#" + color
 			}
 			task.Labels[i] = vikunjaLabel{
+				ID:    label.ID,
 				Title: label.Title,
 				Color: color,
 			}
@@ -190,4 +199,181 @@ func formatTimeLeft(now, dueDate time.Time) string {
 
 func (widget *vikunjaWidget) Render() template.HTML {
 	return widget.renderTemplate(widget, vikunjaWidgetTemplate)
+}
+
+func (widget *vikunjaWidget) completeTask(taskID int) error {
+	url := fmt.Sprintf("%s/api/v1/tasks/%d", widget.URL, taskID)
+
+	payload := map[string]interface{}{
+		"done": true,
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	// Vikunja API uses POST for updating tasks (not PUT or PATCH)
+	request, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+	request.Header.Set("Content-Type", "application/json")
+
+	_, err = decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
+	return err
+}
+
+func (widget *vikunjaWidget) updateTaskBasic(taskID int, title string, dueDate string) error {
+	url := fmt.Sprintf("%s/api/v1/tasks/%d", widget.URL, taskID)
+
+	payload := map[string]interface{}{
+		"title": title,
+	}
+
+	if dueDate != "" {
+		payload["due_date"] = dueDate
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	// Vikunja API uses POST for updating tasks (not PUT or PATCH)
+	request, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+	request.Header.Set("Content-Type", "application/json")
+
+	_, err = decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
+	return err
+}
+
+func (widget *vikunjaWidget) updateTaskLabels(taskID int, currentLabels []vikunjaAPILabel, desiredLabelIDs []int) error {
+	// Create a map of current label IDs for easy lookup
+	currentLabelMap := make(map[int]bool)
+	for _, label := range currentLabels {
+		currentLabelMap[label.ID] = true
+	}
+
+	// Create a map of desired label IDs
+	desiredLabelMap := make(map[int]bool)
+	for _, labelID := range desiredLabelIDs {
+		desiredLabelMap[labelID] = true
+	}
+
+	// Add labels that are in desired but not in current
+	for _, labelID := range desiredLabelIDs {
+		if !currentLabelMap[labelID] {
+			if err := widget.addLabelToTask(taskID, labelID); err != nil {
+				return fmt.Errorf("failed to add label %d: %w", labelID, err)
+			}
+		}
+	}
+
+	// Remove labels that are in current but not in desired
+	for _, label := range currentLabels {
+		if !desiredLabelMap[label.ID] {
+			if err := widget.removeLabelFromTask(taskID, label.ID); err != nil {
+				return fmt.Errorf("failed to remove label %d: %w", label.ID, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (widget *vikunjaWidget) addLabelToTask(taskID int, labelID int) error {
+	url := fmt.Sprintf("%s/api/v1/tasks/%d/labels", widget.URL, taskID)
+
+	payload := map[string]interface{}{
+		"label_id": labelID,
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+	request.Header.Set("Content-Type", "application/json")
+
+	// Response is just a confirmation, we don't need to decode it
+	response, err := defaultHTTPClient.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		body, _ := io.ReadAll(response.Body)
+		bodyStr := string(body)
+		
+		// Vikunja returns error code 8001 when label already exists
+		// This is not an error for us - we want the label on the task
+		if response.StatusCode == 400 && (strings.Contains(bodyStr, "8001") || strings.Contains(bodyStr, "already exists")) {
+			// Label already exists, which is fine - we wanted it there anyway
+			return nil
+		}
+		
+		return fmt.Errorf("unexpected status code %d: %s", response.StatusCode, bodyStr)
+	}
+
+	return nil
+}
+
+func (widget *vikunjaWidget) removeLabelFromTask(taskID int, labelID int) error {
+	url := fmt.Sprintf("%s/api/v1/tasks/%d/labels/%d", widget.URL, taskID, labelID)
+
+	request, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return fmt.Errorf("creating DELETE request: %w", err)
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+
+	response, err := defaultHTTPClient.Do(request)
+	if err != nil {
+		return fmt.Errorf("executing DELETE request: %w", err)
+	}
+	defer response.Body.Close()
+
+	body, _ := io.ReadAll(response.Body)
+	bodyStr := string(body)
+
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return fmt.Errorf("DELETE labels status %d: %s", response.StatusCode, bodyStr)
+	}
+
+	// Success - label was removed
+	return nil
+}
+
+func (widget *vikunjaWidget) fetchAllLabels() ([]vikunjaAPILabel, error) {
+	url := widget.URL + "/api/v1/labels"
+
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+
+	labels, err := decodeJsonFromRequest[[]vikunjaAPILabel](defaultHTTPClient, request)
+	if err != nil {
+		return nil, err
+	}
+
+	return labels, nil
 }
