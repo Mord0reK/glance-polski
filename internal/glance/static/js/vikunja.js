@@ -1,5 +1,5 @@
 // Vikunja widget interactivity
-export default function(widget) {
+function initVikunjaWidget(widget) {
     if (!widget) return;
     
     {
@@ -38,15 +38,25 @@ export default function(widget) {
                     // Remove the row with animation
                     row.style.transition = 'opacity 0.3s ease';
                     row.style.opacity = '0';
-                    setTimeout(() => {
-                        row.remove();
-                        // Check if there are no more tasks
-                        const tbody = widget.querySelector('.vikunja-table tbody');
-                        if (!tbody || tbody.children.length === 0) {
-                            const table = widget.querySelector('.vikunja-table');
-                            if (table) {
-                                table.innerHTML = '<div class="flex items-center justify-center padding-block-5"><p>Brak zadań do wykonania</p></div>';
+                    setTimeout(async () => {
+                        // Refresh the widget
+                        try {
+                            const refreshResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/refresh`);
+                            if (refreshResponse.ok) {
+                                const newHTML = await refreshResponse.text();
+                                const widgetContainer = document.querySelector(`.widget-type-vikunja`);
+                                if (widgetContainer) {
+                                    const temp = document.createElement('div');
+                                    temp.innerHTML = newHTML;
+                                    const newWidget = temp.firstElementChild;
+                                    widgetContainer.replaceWith(newWidget);
+                                    initVikunjaWidget(newWidget);
+                                }
                             }
+                        } catch (error) {
+                            console.error('Error refreshing widget:', error);
+                            // Fallback to just removing the row
+                            row.remove();
                         }
                     }, 300);
                 })
@@ -227,21 +237,31 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
                 }
             }
 
-            // Update the UI
-            const titleCell = row.querySelector('.vikunja-title');
-            if (titleCell) {
-                titleCell.textContent = newTitle;
+            // Refresh the widget content
+            const refreshResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/refresh`);
+            
+            if (!refreshResponse.ok) {
+                throw new Error('Failed to refresh widget');
+            }
+            
+            const newHTML = await refreshResponse.text();
+            
+            // Find the widget container and replace its content
+            const widgetContainer = document.querySelector(`.widget-type-vikunja`);
+            if (widgetContainer) {
+                // Create a temporary container to parse the new HTML
+                const temp = document.createElement('div');
+                temp.innerHTML = newHTML;
+                const newWidget = temp.firstElementChild;
+                
+                // Replace the widget
+                widgetContainer.replaceWith(newWidget);
+                
+                // Reinitialize the widget
+                initVikunjaWidget(newWidget);
             }
 
-            const editBtn = row.querySelector('.vikunja-edit-btn');
-            if (editBtn) {
-                editBtn.dataset.taskTitle = newTitle;
-                if (newDueDate) {
-                    editBtn.dataset.taskDueDate = newDueDate.replace('T', ' ');
-                }
-            }
-
-            location.reload();
+            closeModal();
         } catch (error) {
             console.error('Error updating task:', error);
             alert('Nie udało się zaaktualizować zadania: ' + error.message);
@@ -259,3 +279,5 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
         }
     });
 }
+
+export default initVikunjaWidget;
