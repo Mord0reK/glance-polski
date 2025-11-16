@@ -235,15 +235,9 @@ func (widget *vikunjaWidget) updateTask(taskID int, title string, dueDate string
 		payload["due_date"] = dueDate
 	}
 
-	// Always send labels array, even if empty, to properly update label assignments
-	// Vikunja API expects full label objects when updating
-	labels := make([]map[string]interface{}, len(labelIDs))
-	for i, labelID := range labelIDs {
-		labels[i] = map[string]interface{}{
-			"id": labelID,
-		}
-	}
-	payload["labels"] = labels
+	// Vikunja API expects label_ids as an array of integers when updating tasks
+	// Not the full label objects with id/title/color
+	payload["label_ids"] = labelIDs
 
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
