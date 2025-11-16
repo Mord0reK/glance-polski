@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"sort"
 	"time"
@@ -225,6 +226,7 @@ func (widget *vikunjaWidget) completeTask(taskID int) error {
 }
 
 func (widget *vikunjaWidget) updateTask(taskID int, title string, dueDate string, labelIDs []int) error {
+	// First, update the task basic properties (title, due_date)
 	url := fmt.Sprintf("%s/api/v1/tasks/%d", widget.URL, taskID)
 
 	payload := map[string]interface{}{
@@ -234,10 +236,6 @@ func (widget *vikunjaWidget) updateTask(taskID int, title string, dueDate string
 	if dueDate != "" {
 		payload["due_date"] = dueDate
 	}
-
-	// Vikunja API expects label_ids as an array of integers when updating tasks
-	// Not the full label objects with id/title/color
-	payload["label_ids"] = labelIDs
 
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
@@ -253,8 +251,108 @@ func (widget *vikunjaWidget) updateTask(taskID int, title string, dueDate string
 	request.Header.Set("Authorization", "Bearer "+widget.Token)
 	request.Header.Set("Content-Type", "application/json")
 
-	_, err = decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
-	return err
+	task, err := decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
+	if err != nil {
+		return err
+	}
+
+	// Second, handle labels separately using the dedicated labels endpoint
+	// Vikunja requires individual PUT requests to add labels
+	// and DELETE requests to remove labels
+	return widget.updateTaskLabels(taskID, task.Labels, labelIDs)
+}
+
+func (widget *vikunjaWidget) updateTaskLabels(taskID int, currentLabels []vikunjaAPILabel, desiredLabelIDs []int) error {
+	// Create a map of current label IDs for easy lookup
+	currentLabelMap := make(map[int]bool)
+	for _, label := range currentLabels {
+		currentLabelMap[label.ID] = true
+	}
+
+	// Create a map of desired label IDs
+	desiredLabelMap := make(map[int]bool)
+	for _, labelID := range desiredLabelIDs {
+		desiredLabelMap[labelID] = true
+	}
+
+	// Add labels that are in desired but not in current
+	for _, labelID := range desiredLabelIDs {
+		if !currentLabelMap[labelID] {
+			if err := widget.addLabelToTask(taskID, labelID); err != nil {
+				return fmt.Errorf("failed to add label %d: %w", labelID, err)
+			}
+		}
+	}
+
+	// Remove labels that are in current but not in desired
+	for _, label := range currentLabels {
+		if !desiredLabelMap[label.ID] {
+			if err := widget.removeLabelFromTask(taskID, label.ID); err != nil {
+				return fmt.Errorf("failed to remove label %d: %w", label.ID, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (widget *vikunjaWidget) addLabelToTask(taskID int, labelID int) error {
+	url := fmt.Sprintf("%s/api/v1/tasks/%d/labels", widget.URL, taskID)
+
+	payload := map[string]interface{}{
+		"label_id": labelID,
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+	request.Header.Set("Content-Type", "application/json")
+
+	// Response is just a confirmation, we don't need to decode it
+	response, err := defaultHTTPClient.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		body, _ := io.ReadAll(response.Body)
+		return fmt.Errorf("unexpected status code %d: %s", response.StatusCode, string(body))
+	}
+
+	return nil
+}
+
+func (widget *vikunjaWidget) removeLabelFromTask(taskID int, labelID int) error {
+	url := fmt.Sprintf("%s/api/v1/tasks/%d/labels/%d", widget.URL, taskID, labelID)
+
+	request, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+
+	response, err := defaultHTTPClient.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		body, _ := io.ReadAll(response.Body)
+		return fmt.Errorf("unexpected status code %d: %s", response.StatusCode, string(body))
+	}
+
+	return nil
 }
 
 func (widget *vikunjaWidget) fetchAllLabels() ([]vikunjaAPILabel, error) {
