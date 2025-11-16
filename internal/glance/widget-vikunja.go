@@ -211,8 +211,8 @@ func (widget *vikunjaWidget) completeTask(taskID int) error {
 		return err
 	}
 
-	// Vikunja API uses PUT for updating tasks
-	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
+	// Vikunja API uses POST for updating tasks (not PUT or PATCH)
+	request, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
 	}
@@ -244,8 +244,8 @@ func (widget *vikunjaWidget) updateTask(taskID int, title string, dueDate string
 		return err
 	}
 
-	// Vikunja API uses PUT for updating tasks
-	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
+	// Vikunja API uses POST for updating tasks (not PUT or PATCH)
+	request, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
 	}
