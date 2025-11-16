@@ -211,7 +211,8 @@ func (widget *vikunjaWidget) completeTask(taskID int) error {
 		return err
 	}
 
-	request, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	// Vikunja API uses PUT for updating tasks
+	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
 	}
@@ -234,23 +235,23 @@ func (widget *vikunjaWidget) updateTask(taskID int, title string, dueDate string
 		payload["due_date"] = dueDate
 	}
 
-	if labelIDs != nil {
-		// Vikunja expects label objects with IDs
-		labels := make([]map[string]interface{}, len(labelIDs))
-		for i, labelID := range labelIDs {
-			labels[i] = map[string]interface{}{
-				"id": labelID,
-			}
+	// Always send labels array, even if empty, to properly update label assignments
+	// Vikunja API expects full label objects when updating
+	labels := make([]map[string]interface{}, len(labelIDs))
+	for i, labelID := range labelIDs {
+		labels[i] = map[string]interface{}{
+			"id": labelID,
 		}
-		payload["labels"] = labels
 	}
+	payload["labels"] = labels
 
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 
-	request, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	// Vikunja API uses PUT for updating tasks
+	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
 	}
