@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -325,7 +326,16 @@ func (widget *vikunjaWidget) addLabelToTask(taskID int, labelID int) error {
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		body, _ := io.ReadAll(response.Body)
-		return fmt.Errorf("unexpected status code %d: %s", response.StatusCode, string(body))
+		bodyStr := string(body)
+		
+		// Vikunja returns error code 8001 when label already exists
+		// This is not an error for us - we want the label on the task
+		if response.StatusCode == 400 && (strings.Contains(bodyStr, "8001") || strings.Contains(bodyStr, "already exists")) {
+			// Label already exists, which is fine - we wanted it there anyway
+			return nil
+		}
+		
+		return fmt.Errorf("unexpected status code %d: %s", response.StatusCode, bodyStr)
 	}
 
 	return nil
