@@ -83,6 +83,8 @@ func newWidget(widgetType string) (widget, error) {
 		w = &todoWidget{}
 	case "radyjko":
 		w = &radyjkoWidget{}
+	case "vikunja":
+		w = &vikunjaWidget{}
 	default:
 		return nil, fmt.Errorf("unknown widget type: %s", widgetType)
 	}

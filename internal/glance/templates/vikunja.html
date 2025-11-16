@@ -1,0 +1,40 @@
+{{ template "widget-base.html" . }}
+
+{{ define "widget-content" }}
+{{ if .Tasks }}
+<table class="vikunja-table">
+    <thead>
+        <tr>
+            <th>Koniec za</th>
+            <th>Treść zadania</th>
+            <th>Etykiety</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ range .Tasks }}
+        <tr>
+            <td class="vikunja-time-left">
+                {{ if .TimeLeft }}{{ .TimeLeft }}{{ else }}-{{ end }}
+            </td>
+            <td class="vikunja-title">{{ .Title }}</td>
+            <td class="vikunja-labels">
+                {{ if .Labels }}
+                <div class="label-container">
+                    {{ range .Labels }}
+                    <span class="label" style="border-color: {{ .Color }}; color: {{ .Color }};">{{ .Title }}</span>
+                    {{ end }}
+                </div>
+                {{ else }}
+                -
+                {{ end }}
+            </td>
+        </tr>
+        {{ end }}
+    </tbody>
+</table>
+{{ else }}
+<div class="flex items-center justify-center padding-block-5">
+    <p>Brak zadań do wykonania</p>
+</div>
+{{ end }}
+{{ end }}
