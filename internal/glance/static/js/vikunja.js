@@ -23,7 +23,7 @@ export default function(widget) {
                 }
 
                 // Call API to complete task
-                fetch(`/api/vikunja/${widgetID}/complete-task`, {
+                fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/complete-task`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
     // Fetch and display labels
     labelsContainer.innerHTML = '<p>Ładowanie etykiet...</p>';
     
-    fetch(`/api/vikunja/${widgetID}/labels`)
+    fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/labels`)
         .then(response => response.json())
         .then(labels => {
             labelsContainer.innerHTML = '';
@@ -164,7 +164,7 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
         }
 
         // Call API to update task
-        fetch(`/api/vikunja/${widgetID}/update-task`, {
+        fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/update-task`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
