@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sort"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type vikunjaWidget struct {
 	widgetBase `yaml:",inline"`
 	URL        string `yaml:"url"`
 	Token      string `yaml:"token"`
+	Limit      int    `yaml:"limit"`
 	Tasks      []vikunjaTask
 }
 
@@ -55,6 +57,10 @@ func (widget *vikunjaWidget) initialize() error {
 
 	if widget.Token == "" {
 		return fmt.Errorf("token is required")
+	}
+
+	if widget.Limit <= 0 {
+		widget.Limit = 10
 	}
 
 	return nil
@@ -122,6 +128,28 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 		}
 
 		tasks = append(tasks, task)
+	}
+
+	// Sortowanie zadań po dacie - zadania bez daty na końcu
+	sort.Slice(tasks, func(i, j int) bool {
+		// Jeśli oba zadania nie mają daty, zachowaj kolejność
+		if tasks[i].DueDate.IsZero() && tasks[j].DueDate.IsZero() {
+			return false
+		}
+		// Zadania bez daty idą na koniec
+		if tasks[i].DueDate.IsZero() {
+			return false
+		}
+		if tasks[j].DueDate.IsZero() {
+			return true
+		}
+		// Sortuj po dacie rosnąco (wcześniejsze daty pierwsze)
+		return tasks[i].DueDate.Before(tasks[j].DueDate)
+	})
+
+	// Obetnij do limitu po posortowaniu
+	if len(tasks) > widget.Limit {
+		tasks = tasks[:widget.Limit]
 	}
 
 	return tasks, nil
