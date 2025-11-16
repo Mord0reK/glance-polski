@@ -1,6 +1,7 @@
 <h1>To jest zmodyfikowana wersja dashboard Glance, z przetłumaczonimi elementami na Język Polski</h1>
 <p>Wersja ta posiada także następujące zmiany</p>
 * Widget radyjko <a href="https://radyjko.mordorek.dev">Radyjko</a><br>
+* Widget Vikunja (natywny)<br>
 * Możliwość przesuwania między lewą częścią, środkową i prawą poprzez przesunięcie na urządzeniach mobilnych
 
 <h1>Poniżej znajduje się reszta oryginalnego pliku README.md z oficjalnego repozytorium glanceapp/glance</h1>
