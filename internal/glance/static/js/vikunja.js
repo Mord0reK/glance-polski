@@ -17,10 +17,10 @@ export default function(widget) {
                 const row = this.closest('tr');
                 const taskID = parseInt(row.dataset.taskId);
 
-                if (!confirm('Czy na pewno chcesz oznaczyć to zadanie jako wykonane?')) {
-                    this.checked = false;
-                    return;
-                }
+                // if (!confirm('Czy na pewno chcesz oznaczyć to zadanie jako wykonane?')) {
+                //    this.checked = false;
+                //    return;
+                //}
 
                 // Call API to complete task
                 fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/complete-task`, {
@@ -241,8 +241,6 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
                 }
             }
 
-            // Refresh page to show updated labels
-            alert('Zadanie zostało zaktualizowane. Strona zostanie odświeżona.');
             location.reload();
         } catch (error) {
             console.error('Error updating task:', error);
