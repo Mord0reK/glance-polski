@@ -1,7 +1,9 @@
 package glance
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -20,6 +22,7 @@ type vikunjaWidget struct {
 }
 
 type vikunjaTask struct {
+	ID          int
 	Title       string
 	DueDate     time.Time
 	Done        bool
@@ -30,6 +33,7 @@ type vikunjaTask struct {
 }
 
 type vikunjaLabel struct {
+	ID    int
 	Title string
 	Color string
 }
@@ -44,6 +48,7 @@ type vikunjaAPITask struct {
 }
 
 type vikunjaAPILabel struct {
+	ID       int    `json:"id"`
 	Title    string `json:"title"`
 	HexColor string `json:"hex_color"`
 }
@@ -100,6 +105,7 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 		}
 
 		task := vikunjaTask{
+			ID:          apiTask.ID,
 			Title:       apiTask.Title,
 			Done:        apiTask.Done,
 			PercentDone: int(apiTask.PercentDone),
@@ -122,6 +128,7 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 				color = "#" + color
 			}
 			task.Labels[i] = vikunjaLabel{
+				ID:    label.ID,
 				Title: label.Title,
 				Color: color,
 			}
@@ -190,4 +197,85 @@ func formatTimeLeft(now, dueDate time.Time) string {
 
 func (widget *vikunjaWidget) Render() template.HTML {
 	return widget.renderTemplate(widget, vikunjaWidgetTemplate)
+}
+
+func (widget *vikunjaWidget) completeTask(taskID int) error {
+	url := fmt.Sprintf("%s/api/v1/tasks/%d", widget.URL, taskID)
+
+	payload := map[string]interface{}{
+		"done": true,
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	request, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+	request.Header.Set("Content-Type", "application/json")
+
+	_, err = decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
+	return err
+}
+
+func (widget *vikunjaWidget) updateTask(taskID int, title string, dueDate string, labelIDs []int) error {
+	url := fmt.Sprintf("%s/api/v1/tasks/%d", widget.URL, taskID)
+
+	payload := map[string]interface{}{
+		"title": title,
+	}
+
+	if dueDate != "" {
+		payload["due_date"] = dueDate
+	}
+
+	if labelIDs != nil {
+		// Vikunja expects label objects with IDs
+		labels := make([]map[string]interface{}, len(labelIDs))
+		for i, labelID := range labelIDs {
+			labels[i] = map[string]interface{}{
+				"id": labelID,
+			}
+		}
+		payload["labels"] = labels
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	request, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+	request.Header.Set("Content-Type", "application/json")
+
+	_, err = decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
+	return err
+}
+
+func (widget *vikunjaWidget) fetchAllLabels() ([]vikunjaAPILabel, error) {
+	url := widget.URL + "/api/v1/labels"
+
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+
+	labels, err := decodeJsonFromRequest[[]vikunjaAPILabel](defaultHTTPClient, request)
+	if err != nil {
+		return nil, err
+	}
+
+	return labels, nil
 }

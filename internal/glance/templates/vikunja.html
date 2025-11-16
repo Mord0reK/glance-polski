@@ -2,17 +2,22 @@
 
 {{ define "widget-content" }}
 {{ if .Tasks }}
-<table class="vikunja-table">
+<table class="vikunja-table" data-widget-id="{{ .GetID }}">
     <thead>
         <tr>
+            <th style="width: 40px;"></th>
             <th>Koniec za</th>
             <th>Treść zadania</th>
             <th>Etykiety</th>
+            <th style="width: 40px;"></th>
         </tr>
     </thead>
     <tbody>
         {{ range .Tasks }}
-        <tr>
+        <tr data-task-id="{{ .ID }}">
+            <td>
+                <input type="checkbox" class="vikunja-task-checkbox" title="Oznacz jako wykonane">
+            </td>
             <td class="vikunja-time-left">
                 {{ if .TimeLeft }}{{ .TimeLeft }}{{ else }}-{{ end }}
             </td>
@@ -21,12 +26,20 @@
                 {{ if .Labels }}
                 <div class="label-container">
                     {{ range .Labels }}
-                    <span class="label" style="border-color: {{ .Color }}; color: {{ .Color }};">{{ .Title }}</span>
+                    <span class="label" style="border-color: {{ .Color }}; color: {{ .Color }};" data-label-id="{{ .ID }}">{{ .Title }}</span>
                     {{ end }}
                 </div>
                 {{ else }}
                 -
                 {{ end }}
+            </td>
+            <td>
+                <button class="vikunja-edit-btn" title="Edytuj zadanie" data-task-title="{{ .Title }}" data-task-due-date="{{ .DueDateStr }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 16px; height: 16px;">
+                        <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
+                        <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
+                    </svg>
+                </button>
             </td>
         </tr>
         {{ end }}
@@ -37,4 +50,34 @@
     <p>Brak zadań do wykonania</p>
 </div>
 {{ end }}
+
+<!-- Modal do edycji zadania -->
+<div id="vikunja-edit-modal" class="vikunja-modal" style="display: none;">
+    <div class="vikunja-modal-content">
+        <div class="vikunja-modal-header">
+            <h3>Edytuj zadanie</h3>
+            <button class="vikunja-modal-close">&times;</button>
+        </div>
+        <div class="vikunja-modal-body">
+            <div class="vikunja-form-group">
+                <label for="vikunja-edit-title">Tytuł zadania:</label>
+                <input type="text" id="vikunja-edit-title" class="vikunja-input" placeholder="Tytuł zadania">
+            </div>
+            <div class="vikunja-form-group">
+                <label for="vikunja-edit-due-date">Termin:</label>
+                <input type="datetime-local" id="vikunja-edit-due-date" class="vikunja-input">
+            </div>
+            <div class="vikunja-form-group">
+                <label>Etykiety:</label>
+                <div id="vikunja-labels-container" class="vikunja-labels-selector">
+                    <!-- Etykiety będą załadowane dynamicznie -->
+                </div>
+            </div>
+        </div>
+        <div class="vikunja-modal-footer">
+            <button class="vikunja-btn vikunja-btn-cancel">Anuluj</button>
+            <button class="vikunja-btn vikunja-btn-save">Zapisz</button>
+        </div>
+    </div>
+</div>
 {{ end }}
