@@ -359,7 +359,16 @@ func (widget *vikunjaWidget) removeLabelFromTask(taskID int, labelID int) error 
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		body, _ := io.ReadAll(response.Body)
-		return fmt.Errorf("unexpected status code %d: %s", response.StatusCode, string(body))
+		bodyStr := string(body)
+		
+		// If the label doesn't exist or was already removed, that's fine
+		// We want the label off the task, and it is
+		if response.StatusCode == 404 || response.StatusCode == 400 {
+			// Label doesn't exist on task, which is the desired state
+			return nil
+		}
+		
+		return fmt.Errorf("unexpected status code %d: %s", response.StatusCode, bodyStr)
 	}
 
 	return nil
