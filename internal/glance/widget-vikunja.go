@@ -346,21 +346,21 @@ func (widget *vikunjaWidget) removeLabelFromTask(taskID int, labelID int) error 
 
 	request, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating DELETE request: %w", err)
 	}
 
 	request.Header.Set("Authorization", "Bearer "+widget.Token)
 
 	response, err := defaultHTTPClient.Do(request)
 	if err != nil {
-		return err
+		return fmt.Errorf("executing DELETE request: %w", err)
 	}
 	defer response.Body.Close()
 
+	body, _ := io.ReadAll(response.Body)
+	bodyStr := string(body)
+
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		body, _ := io.ReadAll(response.Body)
-		bodyStr := string(body)
-		
 		// If the label doesn't exist or was already removed, that's fine
 		// We want the label off the task, and it is
 		if response.StatusCode == 404 || response.StatusCode == 400 {
@@ -368,9 +368,10 @@ func (widget *vikunjaWidget) removeLabelFromTask(taskID int, labelID int) error 
 			return nil
 		}
 		
-		return fmt.Errorf("unexpected status code %d: %s", response.StatusCode, bodyStr)
+		return fmt.Errorf("DELETE labels unexpected status code %d: %s", response.StatusCode, bodyStr)
 	}
 
+	// Success - label was removed
 	return nil
 }
 
