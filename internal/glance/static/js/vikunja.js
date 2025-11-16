@@ -143,7 +143,7 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
         saveBtn.removeEventListener('click', saveTask);
     }
 
-    function saveTask() {
+    async function saveTask() {
         const newTitle = titleInput.value.trim();
         const newDueDate = dueDateInput.value;
         
@@ -163,31 +163,76 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
             formattedDueDate = date.toISOString();
         }
 
-        // Call API to update task
-        fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/update-task`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                task_id: taskID,
-                title: newTitle,
-                due_date: formattedDueDate,
-                label_ids: selectedLabels
-            })
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Failed to update task');
-            return response.json();
-        })
-        .then(data => {
-            // Update the row with new data
+        try {
+            // Step 1: Update title and due date
+            const updateResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/update-task`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    task_id: taskID,
+                    title: newTitle,
+                    due_date: formattedDueDate
+                })
+            });
+
+            if (!updateResponse.ok) {
+                throw new Error('Failed to update task');
+            }
+
+            // Step 2: Update labels
+            // Get current label IDs from the row
+            const currentLabels = Array.from(row.querySelectorAll('.label')).map(label => 
+                parseInt(label.dataset.labelId)
+            );
+
+            // Determine which labels to add and remove
+            const labelsToAdd = selectedLabels.filter(id => !currentLabels.includes(id));
+            const labelsToRemove = currentLabels.filter(id => !selectedLabels.includes(id));
+
+            // Add new labels
+            for (const labelID of labelsToAdd) {
+                const addResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/add-label`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        task_id: taskID,
+                        label_id: labelID
+                    })
+                });
+
+                if (!addResponse.ok) {
+                    throw new Error(`Failed to add label ${labelID}`);
+                }
+            }
+
+            // Remove old labels
+            for (const labelID of labelsToRemove) {
+                const removeResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/remove-label`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        task_id: taskID,
+                        label_id: labelID
+                    })
+                });
+
+                if (!removeResponse.ok) {
+                    throw new Error(`Failed to remove label ${labelID}`);
+                }
+            }
+
+            // Update the UI
             const titleCell = row.querySelector('.vikunja-title');
             if (titleCell) {
                 titleCell.textContent = newTitle;
             }
 
-            // Update the edit button's data attributes
             const editBtn = row.querySelector('.vikunja-edit-btn');
             if (editBtn) {
                 editBtn.dataset.taskTitle = newTitle;
@@ -196,23 +241,13 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
                 }
             }
 
-            // Update labels (simplified - would need full refresh for accurate display)
-            const labelsCell = row.querySelector('.vikunja-labels');
-            if (labelsCell && selectedLabels.length > 0) {
-                const labelContainer = labelsCell.querySelector('.label-container');
-                if (labelContainer) {
-                    // For now, just show that labels were updated
-                    // A full page refresh would show the actual labels
-                    alert('Zadanie zostało zaktualizowane. Odśwież stronę, aby zobaczyć wszystkie zmiany.');
-                }
-            }
-
-            closeModal();
-        })
-        .catch(error => {
+            // Refresh page to show updated labels
+            alert('Zadanie zostało zaktualizowane. Strona zostanie odświeżona.');
+            location.reload();
+        } catch (error) {
             console.error('Error updating task:', error);
-            alert('Nie udało się zaktualizować zadania');
-        });
+            alert('Nie udało się zaaktualizować zadania: ' + error.message);
+        }
     }
 
     closeBtn.addEventListener('click', closeModal);

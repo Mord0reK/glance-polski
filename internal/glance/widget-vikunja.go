@@ -226,8 +226,7 @@ func (widget *vikunjaWidget) completeTask(taskID int) error {
 	return err
 }
 
-func (widget *vikunjaWidget) updateTask(taskID int, title string, dueDate string, labelIDs []int) error {
-	// First, update the task basic properties (title, due_date)
+func (widget *vikunjaWidget) updateTaskBasic(taskID int, title string, dueDate string) error {
 	url := fmt.Sprintf("%s/api/v1/tasks/%d", widget.URL, taskID)
 
 	payload := map[string]interface{}{
@@ -252,15 +251,8 @@ func (widget *vikunjaWidget) updateTask(taskID int, title string, dueDate string
 	request.Header.Set("Authorization", "Bearer "+widget.Token)
 	request.Header.Set("Content-Type", "application/json")
 
-	task, err := decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
-	if err != nil {
-		return err
-	}
-
-	// Second, handle labels separately using the dedicated labels endpoint
-	// Vikunja requires individual PUT requests to add labels
-	// and DELETE requests to remove labels
-	return widget.updateTaskLabels(taskID, task.Labels, labelIDs)
+	_, err = decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
+	return err
 }
 
 func (widget *vikunjaWidget) updateTaskLabels(taskID int, currentLabels []vikunjaAPILabel, desiredLabelIDs []int) error {
