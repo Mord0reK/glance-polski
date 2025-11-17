@@ -394,6 +394,14 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 	// Use the configured project ID for creating tasks
 	url := fmt.Sprintf("%s/api/v1/projects/%d/tasks", widget.URL, widget.ProjectID)
 
+	// Build labels array - Vikunja expects label objects with "id" field
+	labels := make([]map[string]interface{}, 0)
+	for _, labelID := range labelIDs {
+		labels = append(labels, map[string]interface{}{
+			"id": labelID,
+		})
+	}
+
 	// Build payload matching Vikunja API structure
 	// Based on Vikunja API documentation and user-provided payload structure
 	payload := map[string]interface{}{
@@ -401,7 +409,7 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 		"description": "",
 		"done":        false,
 		"priority":    0,
-		"labels":      []interface{}{}, // Empty array, labels will be added separately
+		"labels":      labels,
 		"project_id":  widget.ProjectID,
 	}
 
@@ -428,24 +436,6 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 	task, err := decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
 	if err != nil {
 		return nil, err
-	}
-
-	// Add labels to the task after creation
-	// Labels must be added separately via the labels endpoint
-	var labelErrors []error
-	for _, labelID := range labelIDs {
-		if err := widget.addLabelToTask(task.ID, labelID); err != nil {
-			labelErrors = append(labelErrors, fmt.Errorf("label %d: %w", labelID, err))
-		}
-	}
-
-	// If all labels failed to add, we still return the task but note the error
-	// The task was created successfully, just without labels
-	if len(labelErrors) > 0 && len(labelErrors) == len(labelIDs) {
-		// All labels failed - this might indicate a problem but task is still created
-		for _, lerr := range labelErrors {
-			fmt.Printf("Warning: %v\n", lerr)
-		}
 	}
 
 	return &task, nil
