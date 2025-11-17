@@ -394,12 +394,22 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 	// Use the configured project ID for creating tasks
 	url := fmt.Sprintf("%s/api/v1/projects/%d/tasks", widget.URL, widget.ProjectID)
 
+	// Build payload matching Vikunja API structure
+	// Based on Vikunja API documentation and user-provided payload structure
 	payload := map[string]interface{}{
-		"title": title,
+		"title":       title,
+		"description": "",
+		"done":        false,
+		"priority":    0,
+		"labels":      []interface{}{}, // Empty array, labels will be added separately
+		"project_id":  widget.ProjectID,
 	}
 
+	// Add due_date if provided
 	if dueDate != "" {
 		payload["due_date"] = dueDate
+	} else {
+		payload["due_date"] = nil
 	}
 
 	jsonData, err := json.Marshal(payload)
