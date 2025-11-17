@@ -418,8 +418,6 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 		return nil, err
 	}
 
-	fmt.Printf("Creating task with payload: %s\n", string(jsonData))
-
 	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
@@ -433,17 +431,12 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 		return nil, err
 	}
 
-	fmt.Printf("Task created with ID: %d, now adding %d labels\n", task.ID, len(labelIDs))
-
 	// Add labels to the task separately
 	// This must be done after task creation via a separate API call
 	for _, labelID := range labelIDs {
-		fmt.Printf("Attempting to add label %d to task %d\n", labelID, task.ID)
 		if err := widget.addLabelToTask(task.ID, labelID); err != nil {
-			// Log the error with full details but don't fail the task creation
-			fmt.Printf("ERROR: Failed to add label %d to task %d: %v\n", labelID, task.ID, err)
-		} else {
-			fmt.Printf("Successfully added label %d to task %d\n", labelID, task.ID)
+			// Silently continue if label addition fails - task is already created
+			continue
 		}
 	}
 
