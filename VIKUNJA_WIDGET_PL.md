@@ -39,7 +39,19 @@ Aby oznaczyć zadanie jako wykonane:
 2. Potwierdź operację w wyświetlonym dialogu
 3. Zadanie zostanie automatycznie usunięte z listy po oznaczeniu jako wykonane
 
-### 3. Edycja zadania ✏️
+### 3. Dodawanie nowego zadania ➕
+
+Aby dodać nowe zadanie:
+1. Kliknij przycisk "+" (plus) w prawym górnym rogu widgetu
+2. Otworzy się okno modalne z formularzem tworzenia zadania
+3. Wprowadź:
+   - **Tytuł zadania**: Nazwa nowego zadania (wymagane)
+   - **Termin**: Data i godzina wykonania zadania (opcjonalnie)
+   - **Etykiety**: Zaznacz etykiety, które chcesz przypisać do zadania (opcjonalnie)
+4. Kliknij "Utwórz" aby utworzyć zadanie lub "Anuluj" aby anulować
+5. Widget automatycznie odświeży się i wyświetli nowo utworzone zadanie
+
+### 4. Edycja zadania ✏️
 
 Aby edytować zadanie:
 1. Kliknij przycisk edycji (ikona ołówka) obok zadania
@@ -64,12 +76,13 @@ Aby edytować zadanie:
 2. Sprawdź czy token API jest ważny
 3. Sprawdź w konsoli przeglądarki czy nie ma błędów połączenia
 
-### Nie mogę oznaczyć zadania jako wykonane
+### Nie mogę oznaczyć zadania jako wykonane lub utworzyć nowego zadania
 
 1. Sprawdź czy token API ma odpowiednie uprawnienia do modyfikacji zadań
 2. Sprawdź w konsoli przeglądarki czy operacja nie zwraca błędów
+3. Upewnij się, że Twoja instancja Vikunja jest dostępna i działa poprawnie
 
-### Etykiety nie są wyświetlane w oknie edycji
+### Etykiety nie są wyświetlane w oknie edycji lub tworzenia
 
 1. Sprawdź czy w Twojej instancji Vikunja są utworzone jakiekolwiek etykiety
 2. Sprawdź czy token API ma uprawnienia do odczytu etykiet
