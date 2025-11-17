@@ -73,7 +73,7 @@ func decodeJsonFromRequest[T any](client requestDoer, request *http.Request) (T,
 		return result, err
 	}
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		truncatedBody, _ := limitStringLength(string(body), 256)
 
 		return result, fmt.Errorf(
