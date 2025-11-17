@@ -393,12 +393,12 @@ function openCreateModal(widgetID) {
 
             if (!createResponse.ok) {
                 const errorText = await createResponse.text();
-                console.error('Create task failed:', createResponse.status, errorText);
-                throw new Error(`Nie udało się utworzyć zadania: ${errorText || createResponse.statusText}`);
+                console.error('Create task failed with status:', createResponse.status, 'Error:', errorText);
+                throw new Error(`Błąd ${createResponse.status}: ${errorText || createResponse.statusText}`);
             }
 
             const createdTask = await createResponse.json();
-            console.log('Task created successfully:', createdTask);
+            console.log('Task created successfully with status:', createResponse.status, 'Task:', createdTask);
 
             // Refresh the widget content
             const refreshResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/refresh`);

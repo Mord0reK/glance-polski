@@ -394,22 +394,15 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 	// Use the configured project ID for creating tasks
 	url := fmt.Sprintf("%s/api/v1/projects/%d/tasks", widget.URL, widget.ProjectID)
 
-	// Build labels array - Vikunja expects label objects with "id" field
-	labels := make([]map[string]interface{}, 0)
-	for _, labelID := range labelIDs {
-		labels = append(labels, map[string]interface{}{
-			"id": labelID,
-		})
-	}
-
 	// Build payload matching Vikunja API structure
 	// Based on Vikunja API documentation and user-provided payload structure
+	// Note: labels are added separately after task creation
 	payload := map[string]interface{}{
 		"title":       title,
 		"description": "",
 		"done":        false,
 		"priority":    0,
-		"labels":      labels,
+		"labels":      []interface{}{}, // Empty - labels added separately
 		"project_id":  widget.ProjectID,
 	}
 
@@ -425,6 +418,8 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 		return nil, err
 	}
 
+	fmt.Printf("Creating task with payload: %s\n", string(jsonData))
+
 	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
@@ -436,6 +431,20 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 	task, err := decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
 	if err != nil {
 		return nil, err
+	}
+
+	fmt.Printf("Task created with ID: %d, now adding %d labels\n", task.ID, len(labelIDs))
+
+	// Add labels to the task separately
+	// This must be done after task creation via a separate API call
+	for _, labelID := range labelIDs {
+		fmt.Printf("Attempting to add label %d to task %d\n", labelID, task.ID)
+		if err := widget.addLabelToTask(task.ID, labelID); err != nil {
+			// Log the error with full details but don't fail the task creation
+			fmt.Printf("ERROR: Failed to add label %d to task %d: %v\n", labelID, task.ID, err)
+		} else {
+			fmt.Printf("Successfully added label %d to task %d\n", labelID, task.ID)
+		}
 	}
 
 	return &task, nil
