@@ -1,38 +1,42 @@
-/* Make widget-type-vikunja a positioning context */
-.widget-type-vikunja {
-    position: relative;
-}
-
-/* Header action buttons */
-.vikunja-widget-header-actions {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    z-index: 10;
-}
-
+/* Add button in table header */
 .vikunja-add-btn {
-    background-color: var(--color-primary);
+    background: none;
     border: none;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
     cursor: pointer;
-    color: white;
+    color: var(--color-text-base);
+    padding: 0.4rem;
+    border-radius: 0.3rem;
+    transition: background-color 0.2s, color 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s, opacity 0.2s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .vikunja-add-btn:hover {
-    transform: scale(1.1);
-    opacity: 0.9;
+    background-color: var(--color-widget-background-highlight);
+    color: var(--color-primary);
 }
 
-.vikunja-add-btn:active {
-    transform: scale(0.95);
+/* Empty state styling */
+.vikunja-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    gap: 1rem;
+}
+
+.vikunja-add-btn-empty {
+    padding: 0.7rem 1.5rem;
+    background-color: var(--color-primary);
+    color: white;
+    border-radius: 0.5rem;
+}
+
+.vikunja-add-btn-empty:hover {
+    background-color: var(--color-primary);
+    opacity: 0.9;
 }
 
 .vikunja-table {

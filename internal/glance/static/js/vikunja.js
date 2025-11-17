@@ -4,14 +4,15 @@ function initVikunjaWidget(widget) {
     
     {
         const widgetID = widget.querySelector('.vikunja-table')?.dataset.widgetId || 
-                         widget.querySelector('.vikunja-widget-header-actions')?.dataset.widgetId;
+                         widget.querySelector('.vikunja-add-btn')?.dataset.widgetId;
         if (!widgetID) return;
 
-        // Handle add button
+        // Handle add button (can be in table header or empty state)
         const addBtn = widget.querySelector('.vikunja-add-btn');
         if (addBtn) {
             addBtn.addEventListener('click', function() {
-                openCreateModal(widgetID);
+                const btnWidgetID = this.dataset.widgetId || widgetID;
+                openCreateModal(btnWidgetID);
             });
         }
 

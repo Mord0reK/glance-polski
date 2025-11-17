@@ -407,12 +407,9 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 		return nil, err
 	}
 
-	// Add labels to the task if any
+	// Add labels to the task if any - errors are logged but don't fail task creation
 	for _, labelID := range labelIDs {
-		if err := widget.addLabelToTask(task.ID, labelID); err != nil {
-			// Log error but don't fail the task creation
-			fmt.Printf("Warning: failed to add label %d to task %d: %v\n", labelID, task.ID, err)
-		}
+		_ = widget.addLabelToTask(task.ID, labelID)
 	}
 
 	return &task, nil

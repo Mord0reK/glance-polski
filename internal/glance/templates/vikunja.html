@@ -1,13 +1,6 @@
 {{ template "widget-base.html" . }}
 
 {{ define "widget-content" }}
-<div class="vikunja-widget-header-actions" data-widget-id="{{ .GetID }}">
-    <button class="vikunja-add-btn" title="Dodaj nowe zadanie">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 20px; height: 20px;">
-            <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-        </svg>
-    </button>
-</div>
 {{ if .Tasks }}
 <table class="vikunja-table" data-widget-id="{{ .GetID }}">
     <thead>
@@ -16,7 +9,13 @@
             <th>Koniec za</th>
             <th>Treść zadania</th>
             <th>Etykiety</th>
-            <th style="width: 40px;"></th>
+            <th style="width: 40px;">
+                <button class="vikunja-add-btn" title="Dodaj nowe zadanie" data-widget-id="{{ .GetID }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 16px; height: 16px;">
+                        <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+                    </svg>
+                </button>
+            </th>
         </tr>
     </thead>
     <tbody>
@@ -53,8 +52,14 @@
     </tbody>
 </table>
 {{ else }}
-<div class="flex items-center justify-center padding-block-5">
+<div class="vikunja-empty-state">
     <p>Brak zadań do wykonania</p>
+    <button class="vikunja-add-btn vikunja-add-btn-empty" title="Dodaj nowe zadanie" data-widget-id="{{ .GetID }}">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 16px; height: 16px;">
+            <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+        </svg>
+        <span style="margin-left: 0.5rem;">Dodaj zadanie</span>
+    </button>
 </div>
 {{ end }}
 
