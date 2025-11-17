@@ -1,3 +1,8 @@
+/* Make widget-type-vikunja a positioning context */
+.widget-type-vikunja {
+    position: relative;
+}
+
 /* Header action buttons */
 .vikunja-widget-header-actions {
     position: absolute;
