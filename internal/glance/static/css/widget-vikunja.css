@@ -1,3 +1,44 @@
+/* Add button in table header */
+.vikunja-add-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-base);
+    padding: 0.4rem;
+    border-radius: 0.3rem;
+    transition: background-color 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vikunja-add-btn:hover {
+    background-color: var(--color-widget-background-highlight);
+    color: var(--color-primary);
+}
+
+/* Empty state styling */
+.vikunja-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    gap: 1rem;
+}
+
+.vikunja-add-btn-empty {
+    padding: 0.7rem 1.5rem;
+    background-color: var(--color-primary);
+    color: white;
+    border-radius: 0.5rem;
+}
+
+.vikunja-add-btn-empty:hover {
+    background-color: var(--color-primary);
+    opacity: 0.9;
+}
+
 .vikunja-table {
     width: 100%;
     border-collapse: collapse;

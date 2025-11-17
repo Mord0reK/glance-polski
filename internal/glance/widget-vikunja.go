@@ -20,6 +20,7 @@ type vikunjaWidget struct {
 	URL        string `yaml:"url"`
 	Token      string `yaml:"token"`
 	Limit      int    `yaml:"limit"`
+	ProjectID  int    `yaml:"project-id"` // Project ID for creating new tasks
 	Tasks      []vikunjaTask
 }
 
@@ -68,6 +69,10 @@ func (widget *vikunjaWidget) initialize() error {
 
 	if widget.Limit <= 0 {
 		widget.Limit = 10
+	}
+
+	if widget.ProjectID <= 0 {
+		widget.ProjectID = 1 // Default to project 1 if not specified
 	}
 
 	return nil
@@ -199,6 +204,13 @@ func formatTimeLeft(now, dueDate time.Time) string {
 
 func (widget *vikunjaWidget) Render() template.HTML {
 	return widget.renderTemplate(widget, vikunjaWidgetTemplate)
+}
+
+func (widget *vikunjaWidget) GetSoundPath() string {
+	if widget.Providers != nil && widget.Providers.assetResolver != nil {
+		return widget.Providers.assetResolver("sound/pop.mp3")
+	}
+	return "/static/sound/pop.mp3"
 }
 
 func (widget *vikunjaWidget) completeTask(taskID int) error {
@@ -376,4 +388,57 @@ func (widget *vikunjaWidget) fetchAllLabels() ([]vikunjaAPILabel, error) {
 	}
 
 	return labels, nil
+}
+
+func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs []int) (*vikunjaAPITask, error) {
+	// Use the configured project ID for creating tasks
+	url := fmt.Sprintf("%s/api/v1/projects/%d/tasks", widget.URL, widget.ProjectID)
+
+	// Build payload matching Vikunja API structure
+	// Based on Vikunja API documentation and user-provided payload structure
+	// Note: labels are added separately after task creation
+	payload := map[string]interface{}{
+		"title":       title,
+		"description": "",
+		"done":        false,
+		"priority":    0,
+		"labels":      []interface{}{}, // Empty - labels added separately
+		"project_id":  widget.ProjectID,
+	}
+
+	// Add due_date if provided
+	if dueDate != "" {
+		payload["due_date"] = dueDate
+	} else {
+		payload["due_date"] = nil
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+	request.Header.Set("Content-Type", "application/json")
+
+	task, err := decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add labels to the task separately
+	// This must be done after task creation via a separate API call
+	for _, labelID := range labelIDs {
+		if err := widget.addLabelToTask(task.ID, labelID); err != nil {
+			// Silently continue if label addition fails - task is already created
+			continue
+		}
+	}
+
+	return &task, nil
 }
