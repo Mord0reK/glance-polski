@@ -377,3 +377,43 @@ func (widget *vikunjaWidget) fetchAllLabels() ([]vikunjaAPILabel, error) {
 
 	return labels, nil
 }
+
+func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs []int) (*vikunjaAPITask, error) {
+	url := widget.URL + "/api/v1/projects/1/tasks"
+
+	payload := map[string]interface{}{
+		"title": title,
+	}
+
+	if dueDate != "" {
+		payload["due_date"] = dueDate
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+	request.Header.Set("Content-Type", "application/json")
+
+	task, err := decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add labels to the task if any
+	for _, labelID := range labelIDs {
+		if err := widget.addLabelToTask(task.ID, labelID); err != nil {
+			// Log error but don't fail the task creation
+			fmt.Printf("Warning: failed to add label %d to task %d: %v\n", labelID, task.ID, err)
+		}
+	}
+
+	return &task, nil
+}

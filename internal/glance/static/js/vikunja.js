@@ -3,8 +3,17 @@ function initVikunjaWidget(widget) {
     if (!widget) return;
     
     {
-        const widgetID = widget.querySelector('.vikunja-table')?.dataset.widgetId;
+        const widgetID = widget.querySelector('.vikunja-table')?.dataset.widgetId || 
+                         widget.querySelector('.vikunja-widget-header-actions')?.dataset.widgetId;
         if (!widgetID) return;
+
+        // Handle add button
+        const addBtn = widget.querySelector('.vikunja-add-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', function() {
+                openCreateModal(widgetID);
+            });
+        }
 
         // Handle task completion checkboxes
         widget.querySelectorAll('.vikunja-task-checkbox').forEach(checkbox => {
@@ -280,6 +289,147 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
     closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
     saveBtn.addEventListener('click', saveTask);
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+}
+
+function openCreateModal(widgetID) {
+    const modal = document.getElementById('vikunja-create-modal');
+    const titleInput = document.getElementById('vikunja-create-title');
+    const dueDateInput = document.getElementById('vikunja-create-due-date');
+    const labelsContainer = document.getElementById('vikunja-create-labels-container');
+
+    // Clear the form
+    titleInput.value = '';
+    dueDateInput.value = '';
+
+    // Fetch and display labels
+    labelsContainer.innerHTML = '<p>Ładowanie etykiet...</p>';
+    
+    fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/labels`)
+        .then(response => response.json())
+        .then(labels => {
+            labelsContainer.innerHTML = '';
+            
+            if (labels && labels.length > 0) {
+                labels.forEach(label => {
+                    const labelCheckbox = document.createElement('label');
+                    labelCheckbox.className = 'vikunja-label-option';
+                    
+                    const color = label.hex_color && label.hex_color[0] !== '#' 
+                        ? '#' + label.hex_color 
+                        : label.hex_color || '#666';
+                    
+                    labelCheckbox.innerHTML = `
+                        <input type="checkbox" value="${label.id}">
+                        <span class="label" style="border-color: ${color}; color: ${color};">${label.title}</span>
+                    `;
+                    
+                    labelsContainer.appendChild(labelCheckbox);
+                });
+            } else {
+                labelsContainer.innerHTML = '<p>Brak dostępnych etykiet</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching labels:', error);
+            labelsContainer.innerHTML = '<p>Nie udało się załadować etykiet</p>';
+        });
+
+    modal.style.display = 'flex';
+
+    // Handle close button
+    const closeBtn = modal.querySelector('.vikunja-modal-close');
+    const cancelBtn = modal.querySelector('.vikunja-btn-cancel');
+    const createBtn = modal.querySelector('.vikunja-btn-create');
+
+    function closeModal() {
+        modal.style.display = 'none';
+        // Remove event listeners
+        closeBtn.removeEventListener('click', closeModal);
+        cancelBtn.removeEventListener('click', closeModal);
+        createBtn.removeEventListener('click', createTask);
+    }
+
+    async function createTask() {
+        const title = titleInput.value.trim();
+        const dueDate = dueDateInput.value;
+        
+        // Get selected label IDs
+        const selectedLabels = Array.from(labelsContainer.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(checkbox => parseInt(checkbox.value));
+
+        if (!title) {
+            alert('Tytuł zadania nie może być pusty');
+            return;
+        }
+
+        // Convert datetime-local format to RFC3339
+        let formattedDueDate = '';
+        if (dueDate) {
+            const date = new Date(dueDate);
+            formattedDueDate = date.toISOString();
+        }
+
+        try {
+            // Create the task
+            const createResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/create-task`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: title,
+                    due_date: formattedDueDate,
+                    label_ids: selectedLabels
+                })
+            });
+
+            if (!createResponse.ok) {
+                throw new Error('Failed to create task');
+            }
+
+            const createdTask = await createResponse.json();
+
+            // Refresh the widget content
+            const refreshResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/refresh`);
+            
+            if (!refreshResponse.ok) {
+                throw new Error('Failed to refresh widget');
+            }
+            
+            const newHTML = await refreshResponse.text();
+            
+            // Find the widget container and replace its content
+            const widgetContainer = document.querySelector(`.widget-type-vikunja`);
+            if (widgetContainer) {
+                // Create a temporary container to parse the new HTML
+                const temp = document.createElement('div');
+                temp.innerHTML = newHTML;
+                const newWidget = temp.firstElementChild;
+                
+                // Replace the widget
+                widgetContainer.replaceWith(newWidget);
+                
+                // Reinitialize the widget
+                initVikunjaWidget(newWidget);
+            }
+
+            closeModal();
+        } catch (error) {
+            console.error('Error creating task:', error);
+            alert('Nie udało się utworzyć zadania: ' + error.message);
+        }
+    }
+
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    createBtn.addEventListener('click', createTask);
 
     // Close modal when clicking outside
     modal.addEventListener('click', function(e) {

@@ -1,6 +1,13 @@
 {{ template "widget-base.html" . }}
 
 {{ define "widget-content" }}
+<div class="vikunja-widget-header-actions" data-widget-id="{{ .GetID }}">
+    <button class="vikunja-add-btn" title="Dodaj nowe zadanie">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 20px; height: 20px;">
+            <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+        </svg>
+    </button>
+</div>
 {{ if .Tasks }}
 <table class="vikunja-table" data-widget-id="{{ .GetID }}">
     <thead>
@@ -50,6 +57,36 @@
     <p>Brak zadań do wykonania</p>
 </div>
 {{ end }}
+
+<!-- Modal do dodawania nowego zadania -->
+<div id="vikunja-create-modal" class="vikunja-modal" style="display: none;">
+    <div class="vikunja-modal-content">
+        <div class="vikunja-modal-header">
+            <h3>Dodaj nowe zadanie</h3>
+            <button class="vikunja-modal-close">&times;</button>
+        </div>
+        <div class="vikunja-modal-body">
+            <div class="vikunja-form-group">
+                <label for="vikunja-create-title">Tytuł zadania:</label>
+                <input type="text" id="vikunja-create-title" class="vikunja-input" placeholder="Tytuł zadania">
+            </div>
+            <div class="vikunja-form-group">
+                <label for="vikunja-create-due-date">Termin:</label>
+                <input type="datetime-local" id="vikunja-create-due-date" class="vikunja-input">
+            </div>
+            <div class="vikunja-form-group">
+                <label>Etykiety:</label>
+                <div id="vikunja-create-labels-container" class="vikunja-labels-selector">
+                    <!-- Etykiety będą załadowane dynamicznie -->
+                </div>
+            </div>
+        </div>
+        <div class="vikunja-modal-footer">
+            <button class="vikunja-btn vikunja-btn-cancel">Anuluj</button>
+            <button class="vikunja-btn vikunja-btn-create">Utwórz</button>
+        </div>
+    </div>
+</div>
 
 <!-- Modal do edycji zadania -->
 <div id="vikunja-edit-modal" class="vikunja-modal" style="display: none;">

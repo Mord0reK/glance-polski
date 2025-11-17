@@ -457,6 +457,7 @@ func (a *application) server() (func() error, func() error) {
 	mux.HandleFunc("POST /api/vikunja/{widgetID}/remove-label", a.handleVikunjaRemoveLabel)
 	mux.HandleFunc("GET /api/vikunja/{widgetID}/labels", a.handleVikunjaGetLabels)
 	mux.HandleFunc("GET /api/vikunja/{widgetID}/refresh", a.handleVikunjaRefresh)
+	mux.HandleFunc("POST /api/vikunja/{widgetID}/create-task", a.handleVikunjaCreateTask)
 
 	if a.RequiresAuth {
 		mux.HandleFunc("GET /login", a.handleLoginPageRequest)
@@ -765,4 +766,51 @@ func (a *application) handleVikunjaRefresh(w http.ResponseWriter, r *http.Reques
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
+}
+
+func (a *application) handleVikunjaCreateTask(w http.ResponseWriter, r *http.Request) {
+	widgetIDStr := r.PathValue("widgetID")
+	widgetID, err := strconv.ParseUint(widgetIDStr, 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid widget ID"))
+		return
+	}
+
+	widget, exists := a.widgetByID[widgetID]
+	if !exists {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Widget not found"))
+		return
+	}
+
+	vikunjaWidget, ok := widget.(*vikunjaWidget)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Widget is not a Vikunja widget"))
+		return
+	}
+
+	var request struct {
+		Title    string `json:"title"`
+		DueDate  string `json:"due_date"`
+		LabelIDs []int  `json:"label_ids"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid request body"))
+		return
+	}
+
+	task, err := vikunjaWidget.createTask(request.Title, request.DueDate, request.LabelIDs)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(task)
 }
