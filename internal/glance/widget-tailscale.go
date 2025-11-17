@@ -18,6 +18,10 @@ type tailscaleWidget struct {
 	Tailnet             string `yaml:"tailnet"`
 	CollapseAfter       int    `yaml:"collapse-after"`
 	ShowOnlineIndicator bool   `yaml:"show-online-indicator"`
+	ShowExpiryDisabled  bool   `yaml:"show-expiry-disabled"`
+	ShowDisconnected    bool   `yaml:"show-disconnected"`
+	ShowBlocksIncoming  bool   `yaml:"show-blocks-incoming"`
+	ShowJoinedDate      bool   `yaml:"show-joined-date"`
 	Devices             []tailscaleDevice
 }
 
@@ -33,6 +37,14 @@ type tailscaleDevice struct {
 	LastSeenStr     string
 	UpdateAvailable bool
 	IsOnline        bool
+	// Fields actually available from API
+	KeyExpiryDisabled         bool
+	BlocksIncomingConnections bool
+	Expires                   time.Time
+	ExpiresStr                string
+	Created                   time.Time
+	CreatedStr                string
+	ConnectedToControl        bool
 }
 
 type tailscaleAPIResponse struct {
@@ -40,14 +52,20 @@ type tailscaleAPIResponse struct {
 }
 
 type tailscaleAPIDevice struct {
-	ID              string   `json:"id"`
-	Name            string   `json:"name"`
-	Hostname        string   `json:"hostname"`
-	OS              string   `json:"os"`
-	User            string   `json:"user"`
-	Addresses       []string `json:"addresses"`
-	LastSeen        string   `json:"lastSeen"`
-	UpdateAvailable bool     `json:"updateAvailable"`
+	ID                        string   `json:"id"`
+	Name                      string   `json:"name"`
+	Hostname                  string   `json:"hostname"`
+	OS                        string   `json:"os"`
+	User                      string   `json:"user"`
+	Addresses                 []string `json:"addresses"`
+	LastSeen                  string   `json:"lastSeen"`
+	UpdateAvailable           bool     `json:"updateAvailable"`
+	KeyExpiryDisabled         bool     `json:"keyExpiryDisabled"`
+	Expires                   string   `json:"expires"`
+	Created                   string   `json:"created"`
+	BlocksIncomingConnections bool     `json:"blocksIncomingConnections"`
+	ConnectedToControl        bool     `json:"connectedToControl"`
+	ClientVersion             string   `json:"clientVersion"`
 }
 
 func (widget *tailscaleWidget) initialize() error {
@@ -68,6 +86,10 @@ func (widget *tailscaleWidget) initialize() error {
 	if widget.CollapseAfter <= 0 {
 		widget.CollapseAfter = 4
 	}
+
+	// Default badge visibility - all enabled by default
+	// Users can disable specific badges in config
+	// Note: these are set to true by default only if not explicitly configured
 
 	return nil
 }
@@ -100,18 +122,30 @@ func (widget *tailscaleWidget) fetchDevices() ([]tailscaleDevice, error) {
 
 	for _, apiDevice := range apiResponse.Devices {
 		device := tailscaleDevice{
-			ID:              apiDevice.ID,
-			Name:            apiDevice.Name,
-			ShortName:       extractShortName(apiDevice.Name),
-			OS:              apiDevice.OS,
-			User:            apiDevice.User,
-			Addresses:       apiDevice.Addresses,
-			UpdateAvailable: apiDevice.UpdateAvailable,
+			ID:                        apiDevice.ID,
+			Name:                      apiDevice.Name,
+			ShortName:                 extractShortName(apiDevice.Name),
+			OS:                        apiDevice.OS,
+			User:                      apiDevice.User,
+			Addresses:                 apiDevice.Addresses,
+			UpdateAvailable:           apiDevice.UpdateAvailable,
+			KeyExpiryDisabled:         apiDevice.KeyExpiryDisabled,
+			BlocksIncomingConnections: apiDevice.BlocksIncomingConnections,
+			ConnectedToControl:        apiDevice.ConnectedToControl,
 		}
 
 		// Get primary address
 		if len(apiDevice.Addresses) > 0 {
 			device.PrimaryAddress = apiDevice.Addresses[0]
+		}
+
+		// Parse created time
+		if apiDevice.Created != "" {
+			created, err := time.Parse(time.RFC3339, apiDevice.Created)
+			if err == nil {
+				device.Created = created
+				device.CreatedStr = created.Format("Jan 2006")
+			}
 		}
 
 		// Parse last seen time
@@ -123,6 +157,17 @@ func (widget *tailscaleWidget) fetchDevices() ([]tailscaleDevice, error) {
 
 				// Device is considered online if last seen within 10 seconds
 				device.IsOnline = lastSeen.After(now.Add(-10 * time.Second))
+			}
+		}
+
+		// Parse expiry time
+		if apiDevice.Expires != "" {
+			expires, err := time.Parse(time.RFC3339, apiDevice.Expires)
+			if err == nil {
+				device.Expires = expires
+				if !apiDevice.KeyExpiryDisabled {
+					device.ExpiresStr = expires.Format("Jan 2 2006")
+				}
 			}
 		}
 

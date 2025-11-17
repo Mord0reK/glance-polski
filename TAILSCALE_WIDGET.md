@@ -13,6 +13,11 @@ Natywny widget Tailscale dla Glance oferujący większe możliwości i łatwiejs
   - Aktualizacji dostępnych (niebieski punkt)
   - Status online/offline (zielony/czerwony punkt)
   - Informacje o ostatniej aktywności
+- ✅ **Znaczniki funkcji urządzenia (dane z API):**
+  - **Expiry disabled** - czy klucz nie wygasa (cyjanowy #17a2b8)
+  - **Disconnected** - urządzenie nie połączone z panelem kontrolnym (czerwony #dc3545)
+  - **Blocks Incoming** - blokuje przychodzące połączenia (żółty #ffc107)
+  - **Joined [data]** - kiedy urządzenie dołączyło do sieci (szary #6c757d)
 - ✅ Efekty hover pokazujące adres IP urządzenia
 - ✅ **Łatwe kopiowanie IP jednym kliknięciem** (kliknij bezpośrednio na IP)
 - ✅ Wizualny feedback przy kopiowaniu (tło zmienia się na zielone z ✓)
@@ -32,7 +37,7 @@ Natywny widget Tailscale dla Glance oferujący większe możliwości i łatwiejs
 ### Minimalna konfiguracja:
 ```yaml
 - type: tailscale
-  token: your-tailscale-api-token
+  token: twoj_token
 ```
 
 ### Pełna konfiguracja:
@@ -40,44 +45,263 @@ Natywny widget Tailscale dla Glance oferujący większe możliwości i łatwiejs
 - type: tailscale
   title: Tailscale                                         # Opcjonalny, domyślnie "Tailscale"
   title-url: https://login.tailscale.com/admin/machines    # Opcjonalny
-  token: your-tailscale-api-token                          # Wymagany
+  token: twoj_token                         # Wymagany
   tailnet: "-"                                             # Opcjonalny, domyślnie "-" (current tailnet)
   url: https://api.tailscale.com/api/v2/tailnet/-/devices  # Opcjonalny, można nadpisać URL API
   cache: 10m                                               # Opcjonalny, domyślnie 10m
-  collapse-after: 4                                        # Opcjonalny, domyślnie 4
-  show-online-indicator: false                             # Opcjonalny, domyślnie false
+  collapse-after: 4                                        # Opcjonalny, zwija listę po N urządzeniach
+  show-online-indicator: true                              # Opcjonalny, domyślnie false
+  
+  # Kontrola wyświetlania znaczników (domyślnie wszystkie false)
+  show-expiry-disabled: true   # 🔵 Pokaż "Expiry disabled"
+  show-disconnected: true      # 🔴 Pokaż "Disconnected"  
+  show-blocks-incoming: true   # 🟡 Pokaż "Blocks Incoming"
+  show-joined-date: true       # ⚫ Pokaż datę dołączenia
 ```
 
-## Parametry
+---
 
-### `token` (wymagany)
-Token API Tailscale. Możesz wygenerować go w panelu administracyjnym Tailscale:
-- Przejdź do https://login.tailscale.com/admin/settings/keys
-- Kliknij "Generate API access token"
-- Skopiuj token i użyj go w konfiguracji
+## Szczegółowy opis opcji konfiguracji
 
-### `tailnet` (opcjonalny)
-Nazwa tailnet. Domyślnie "-" oznacza bieżący tailnet. Możesz podać konkretną nazwę, jeśli masz dostęp do wielu tailnetów.
+### 🔐 `token` (WYMAGANE)
+```yaml
+token: twoj_token
+```
+- **Typ:** `string`
+- **Wymagane:** ✅ TAK
+- **Opis:** Token API z Tailscale z uprawnieniami do odczytu urządzeń
+- **Jak uzyskać:**
+  1. Przejdź do https://login.tailscale.com/admin/settings/keys
+  2. Kliknij "Generate API key"
+  3. Wybierz uprawnienia: **Devices: Read only**
+  4. Skopiuj wygenerowany token
 
-### `url` (opcjonalny)
-Niestandardowy URL API. Domyślnie widget używa oficjalnego API Tailscale.
+### 📝 `title`
+```yaml
+title: "Moje urządzenia Tailscale"
+```
+- **Typ:** `string`
+- **Wymagane:** ❌ Nie
+- **Domyślnie:** `"Tailscale"`
+- **Opis:** Tytuł widgetu wyświetlany u góry
 
-### `cache` (opcjonalny)
-Czas cache'owania danych. Domyślnie 10 minut. Przykłady: `5m`, `1h`, `30s`.
+### 🔗 `title-url`
+```yaml
+title-url: https://login.tailscale.com/admin/machines
+```
+- **Typ:** `string`
+- **Wymagane:** ❌ Nie
+- **Domyślnie:** brak (tytuł nie jest klikalny)
+- **Opis:** Link pod tytułem widgetu - przydatny do szybkiego przejścia do panelu Tailscale
 
-### `collapse-after` (opcjonalny)
-Liczba urządzeń widocznych przed przyciskiem "SHOW MORE". Domyślnie 4. Ustaw na `-1`, aby nigdy nie zwijać listy.
+### 🌐 `tailnet`
+```yaml
+tailnet: "example-tailnet.ts.net"
+```
+- **Typ:** `string`
+- **Wymagane:** ❌ Nie
+- **Domyślnie:** `"-"` (current tailnet)
+- **Opis:** ID tailnet z którego pobierać urządzenia. Wartość `-` oznacza current tailnet powiązany z tokenem.
 
-### `show-online-indicator` (opcjonalny)
-Czy pokazywać zielony wskaźnik dla urządzeń online. Domyślnie `false` (pokazywany jest tylko czerwony wskaźnik dla urządzeń offline).
+### 🔌 `url`
+```yaml
+url: https://api.tailscale.com/api/v2/tailnet/-/devices
+```
+- **Typ:** `string`
+- **Wymagane:** ❌ Nie
+- **Domyślnie:** automatycznie generowane na podstawie `tailnet`
+- **Opis:** Pełny URL API Tailscale. Użyj tylko jeśli chcesz nadpisać domyślne zachowanie.
+
+### ⏱️ `cache`
+```yaml
+cache: 10m
+```
+- **Typ:** `duration`
+- **Wymagane:** ❌ Nie
+- **Domyślnie:** `10m`
+- **Opis:** Jak długo cache'ować dane z API przed ponownym pobraniem
+- **Przykłady:**
+  - `30s` - 30 sekund
+  - `5m` - 5 minut
+  - `1h` - 1 godzina
+  - `1d` - 1 dzień
+
+### 📦 `collapse-after`
+```yaml
+collapse-after: 4
+```
+- **Typ:** `int`
+- **Wymagane:** ❌ Nie
+- **Domyślnie:** `4`
+- **Opis:** Po ilu urządzeniach lista ma być zwinięta (z przyciskiem "Rozwiń")
+- **Wartości:**
+  - `0` - wyłączone (zawsze pokazuj wszystkie)
+  - `> 0` - zwiń po N urządzeniach
+
+### 🟢 `show-online-indicator`
+```yaml
+show-online-indicator: true
+```
+- **Typ:** `bool`
+- **Wymagane:** ❌ Nie
+- **Domyślnie:** `false`
+- **Opis:** Czy pokazywać zielony (online) / czerwony (offline) punkt przy nazwie urządzenia
+- **Uwaga:** Urządzenie jest uznawane za online jeśli `lastSeen` < 10 sekund temu
+
+---
+
+## 🏷️ Kontrola znaczników (Badges)
+
+Wszystkie znaczniki są **domyślnie wyłączone**. Musisz je włączyć jawnie w konfiguracji.
+
+### 🔵 `show-expiry-disabled`
+```yaml
+show-expiry-disabled: true
+```
+- **Typ:** `bool`
+- **Domyślnie:** `false`
+- **Pokazuje:** Cyjanowy znacznik "Expiry disabled"
+- **Kiedy:** Gdy `keyExpiryDisabled: true` w API
+- **Znaczenie:** Klucz autoryzacyjny urządzenia nie wygasa automatycznie (nie wymaga re-autoryzacji co 180 dni)
+
+### 🔴 `show-disconnected`
+```yaml
+show-disconnected: true
+```
+- **Typ:** `bool`
+- **Domyślnie:** `false`
+- **Pokazuje:** Czerwony znacznik "Disconnected"
+- **Kiedy:** Gdy `connectedToControl: false` w API
+- **Znaczenie:** Urządzenie nie jest połączone z panelem kontrolnym Tailscale (wyłączone, brak internetu, lub problem z połączeniem)
+
+### 🟡 `show-blocks-incoming`
+```yaml
+show-blocks-incoming: true
+```
+- **Typ:** `bool`
+- **Domyślnie:** `false`
+- **Pokazuje:** Żółty znacznik "Blocks Incoming"
+- **Kiedy:** Gdy `blocksIncomingConnections: true` w API
+- **Znaczenie:** Urządzenie blokuje wszystkie przychodzące połączenia (shields-up mode)
+- **Jak włączyć:** `tailscale up --shields-up`
+
+### ⚫ `show-joined-date`
+```yaml
+show-joined-date: true
+```
+- **Typ:** `bool`
+- **Domyślnie:** `false`
+- **Pokazuje:** Szary znacznik "Joined [date]"
+- **Kiedy:** Zawsze (jeśli API zwraca `created`)
+- **Znaczenie:** Data kiedy urządzenie zostało dodane do sieci Tailscale
+- **Format:** "Joined Jan 2006" (np. "Joined May 2025")
+
+---
+
+## 📋 Przykładowe konfiguracje
+
+### Minimalna (tylko lista urządzeń)
+```yaml
+- type: tailscale
+  token: twoj_token
+```
+**Wyświetli:** Tylko podstawowe informacje o urządzeniach bez znaczników.
+
+### Kompaktowa (z online indicator)
+```yaml
+- type: tailscale
+  token: twoj_token
+  show-online-indicator: true
+```
+**Wyświetli:** Podstawowe info + zielony/czerwony punkt przy każdym urządzeniu.
+
+### Podstawowe znaczniki
+```yaml
+- type: tailscale
+  token: twoj_token
+  show-expiry-disabled: true
+  show-disconnected: true
+```
+**Wyświetli:** Info o wygasaniu kluczy i statusie połączenia.
+
+### Pełna widoczność (wszystko włączone)
+```yaml
+- type: tailscale
+  title: Tailscale Network
+  title-url: https://login.tailscale.com/admin/machines
+  token: twoj_token
+  cache: 5m
+  collapse-after: 6
+  show-online-indicator: true
+  show-expiry-disabled: true
+  show-disconnected: true
+  show-blocks-incoming: true
+  show-joined-date: true
+```
+**Wyświetli:** Wszystkie dostępne informacje i znaczniki.
+
+### Monitoring produkcyjny
+```yaml
+- type: tailscale
+  title: Production Devices
+  token: twoj_token
+  cache: 2m                    # Częstsze odświeżanie
+  collapse-after: 10           # Więcej urządzeń przed zwinięciem
+  show-online-indicator: true  # Ważny status online
+  show-disconnected: true      # Alerty o disconnects
+```
+**Cel:** Szybkie wykrywanie problemów z połączeniem.
+
+### Audyt bezpieczeństwa
+```yaml
+- type: tailscale
+  title: Security Audit
+  token: twoj_token
+  show-expiry-disabled: true   # Które klucze nigdy nie wygasają
+  show-blocks-incoming: true   # Które mają shields-up
+  show-joined-date: true       # Kiedy dodano urządzenia
+```
+**Cel:** Przegląd ustawień bezpieczeństwa.
+
+---
 
 ## Wizualne elementy
 
 Widget zachowuje całą kolorystykę z wersji custom-api:
-- **Kolor podstawowy** (`--color-primary`) - nazwa urządzenia i tło IP po hover
-- **Kolor pozytywny** (`--color-positive`) - wskaźnik online (jeśli włączony) i tło IP po skopiowaniu
+- **Kolor podstawowy** (`--color-primary`) - nazwa urządzenia, tło IP po hover
+- **Kolor pozytywny** (`--color-positive`) - wskaźnik online (jeśli włączony), tło IP po skopiowaniu
 - **Kolor negatywny** (`--color-negative`) - wskaźnik offline
-- **Kolor podstawowy** (`--color-primary`) - wskaźnik dostępnej aktualizacji
+
+### Kolory znaczników (badges) - dane dostępne z API:
+- **🔵 Expiry disabled** - Cyjanowy (#17a2b8) - Klucz nie wygasa
+- **� Disconnected** - Czerwony (#dc3545) - Nie połączony z kontrolą
+- **� Blocks Incoming** - Żółty (#ffc107) - Blokuje połączenia przychodzące
+- **⚫ Joined [data]** - Szary (#6c757d) - Data dołączenia do sieci
+
+> **⚠️ Ograniczenia API Tailscale:**  
+> Publiczne API Tailscale **NIE udostępnia** informacji o:
+> - Exit Node / Advertised Exit Node
+> - Subnets / Advertised Routes
+> - SSH (enablesSSH)
+> - Tags
+> - Shared devices
+> 
+> Te informacje są widoczne tylko w panelu webowym Tailscale, ale nie są eksportowane przez API v2.
+
+### Znaczniki (Badges) - dostępne dane
+Pod każdym urządzeniem mogą pojawić się znaczniki oparte na rzeczywistych danych z API:
+
+1. **🔵 Expiry disabled** - Klucz autoryzacyjny urządzenia nie wygasa automatycznie  
+   *(Wszystkie Twoje urządzenia mają tę flagę włączoną)*
+
+2. **🔴 Disconnected** - Urządzenie nie jest aktualnie połączone z panelem kontrolnym Tailscale  
+   *(Występuje gdy `connectedToControl: false`)*
+
+3. **🟡 Blocks Incoming** - Urządzenie blokuje przychodzące połączenia  
+   *(Ustawienie bezpieczeństwa w konfiguracji urządzenia)*
+
+4. **⚫ Joined [data]** - Data dołączenia urządzenia do sieci Tailscale  
+   *(Wyświetla czytelny format daty utworzenia urządzenia)*
 
 ### Kopiowanie adresu IP
 Po najechaniu na wiersz urządzenia:
@@ -87,26 +311,55 @@ Po najechaniu na wiersz urządzenia:
 4. Po skopiowaniu tło zmienia się na zielone i pojawia się ✓ na 2 sekundy
 5. Działa w każdej przeglądarce dzięki mechanizmowi fallback
 
-## Przykładowe zastosowania
+---
 
-### Podstawowy monitoring:
-```yaml
-- type: tailscale
-  token: ${TAILSCALE_TOKEN}
-```
+## ⚠️ Ograniczenia API Tailscale
 
-### Monitoring ze wskaźnikami online:
-```yaml
-- type: tailscale
-  token: ${TAILSCALE_TOKEN}
-  show-online-indicator: true
-  collapse-after: 10
-```
+Publiczne API Tailscale **NIE udostępnia** informacji o:
+- Exit Node / Advertised Exit Node
+- Subnets / Advertised Routes
+- SSH (enablesSSH)
+- Tags
+- Shared devices
 
-### Monitoring z niestandardowym cache:
-```yaml
-- type: tailscale
-  token: ${TAILSCALE_TOKEN}
-  cache: 5m
-  title: Moja Sieć Tailscale
-```
+Te informacje są widoczne tylko w panelu webowym Tailscale, ale nie są eksportowane przez API v2.
+
+### ✅ Dostępne z API:
+- Lista urządzeń
+- Adresy IP
+- Status połączenia (`connectedToControl`)
+- Expiry status (`keyExpiryDisabled`)
+- Blokada połączeń (`blocksIncomingConnections`)
+- Data utworzenia (`created`)
+- Ostatnia aktywność (`lastSeen`)
+- Dostępne aktualizacje (`updateAvailable`)
+
+---
+
+## 🔧 Rozwiązywanie problemów
+
+### Nie widać żadnych urządzeń
+1. Sprawdź czy token ma uprawnienia: **Devices: Read only**
+2. Sprawdź logi w terminalu: `./glance --config config/glance.yml`
+3. Przetestuj token ręcznie:
+   ```bash
+   curl -H "Authorization: Bearer YOUR_TOKEN" \
+     https://api.tailscale.com/api/v2/tailnet/-/devices
+   ```
+
+### Znaczniki się nie pokazują
+1. Upewnij się że włączyłeś odpowiednie opcje `show-*: true`
+2. Sprawdź czy dane urządzenia faktycznie mają te właściwości (np. `keyExpiryDisabled: true`)
+3. Sprawdź cache - może trzeba poczekać na odświeżenie
+
+### Token się przedawnia
+Token API Tailscale **nigdy nie wygasa** (w przeciwieństwie do device keys).
+Jeśli przestaje działać:
+1. Sprawdź czy token został usunięty z panelu Tailscale
+2. Wygeneruj nowy token i zaktualizuj config
+
+### Widget jest wolny
+1. Zwiększ `cache:` do np. `30m` lub `1h`
+2. Zmniejsz częstotliwość odświeżania całej strony Glance
+
+---
