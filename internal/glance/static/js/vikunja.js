@@ -35,6 +35,15 @@ function initVikunjaWidget(widget) {
                     return response.json();
                 })
                 .then(data => {
+                    // Play completion sound
+                    const completionSound = document.getElementById('vikunja-completion-sound');
+                    if (completionSound) {
+                        completionSound.currentTime = 0;
+                        completionSound.play().catch(err => {
+                            console.log('Could not play completion sound:', err);
+                        });
+                    }
+                    
                     // Remove the row with animation
                     row.style.transition = 'opacity 0.3s ease';
                     row.style.opacity = '0';
