@@ -806,11 +806,20 @@ func (a *application) handleVikunjaCreateTask(w http.ResponseWriter, r *http.Req
 	task, err := vikunjaWidget.createTask(request.Title, request.DueDate, request.LabelIDs)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte(fmt.Sprintf("Failed to create task: %v", err)))
+		return
+	}
+
+	if task == nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Task was created but response was empty"))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(task)
+	if err := json.NewEncoder(w).Encode(task); err != nil {
+		// Log encoding error but response is already sent
+		fmt.Printf("Error encoding task response: %v\n", err)
+	}
 }

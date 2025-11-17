@@ -379,6 +379,8 @@ func (widget *vikunjaWidget) fetchAllLabels() ([]vikunjaAPILabel, error) {
 }
 
 func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs []int) (*vikunjaAPITask, error) {
+	// Use the same endpoint format as the Vikunja web UI
+	// Create task in the default project (project ID 1)
 	url := widget.URL + "/api/v1/projects/1/tasks"
 
 	payload := map[string]interface{}{
@@ -407,9 +409,22 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 		return nil, err
 	}
 
-	// Add labels to the task if any - errors are logged but don't fail task creation
+	// Add labels to the task after creation
+	// Labels must be added separately via the labels endpoint
+	var labelErrors []error
 	for _, labelID := range labelIDs {
-		_ = widget.addLabelToTask(task.ID, labelID)
+		if err := widget.addLabelToTask(task.ID, labelID); err != nil {
+			labelErrors = append(labelErrors, fmt.Errorf("label %d: %w", labelID, err))
+		}
+	}
+
+	// If all labels failed to add, we still return the task but note the error
+	// The task was created successfully, just without labels
+	if len(labelErrors) > 0 && len(labelErrors) == len(labelIDs) {
+		// All labels failed - this might indicate a problem but task is still created
+		for _, lerr := range labelErrors {
+			fmt.Printf("Warning: %v\n", lerr)
+		}
 	}
 
 	return &task, nil
