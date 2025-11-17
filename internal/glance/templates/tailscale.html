@@ -1,0 +1,144 @@
+{{ template "widget-base.html" . }}
+
+{{ define "widget-content" }}
+<style>
+  .tailscale-device-info-container {
+    position: relative;
+    overflow: hidden;
+    height: 1.5em;
+  }
+
+  .tailscale-device-info {
+    display: flex;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  .tailscale-device-ip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translateY(-100%);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  .tailscale-device-info-container:hover .tailscale-device-info {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  .tailscale-device-info-container:hover .tailscale-device-ip {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .tailscale-update-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-primary);
+    display: inline-block;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  .tailscale-offline-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-negative);
+    display: inline-block;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  .tailscale-online-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-positive);
+    display: inline-block;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  .tailscale-device-name-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tailscale-indicators-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .tailscale-ip-clickable {
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    user-select: none;
+  }
+
+  .tailscale-ip-clickable:hover {
+    background-color: var(--color-primary);
+    color: var(--color-background);
+  }
+
+  .tailscale-ip-clickable.copied {
+    background-color: var(--color-positive);
+    color: var(--color-background);
+  }
+
+  .tailscale-ip-clickable.copied::after {
+    content: ' ✓';
+    margin-left: 4px;
+  }
+</style>
+
+{{ if .Devices }}
+<ul class="list list-gap-10 collapsible-container" data-collapse-after="{{ .CollapseAfter }}">
+  {{ range .Devices }}
+  <li>
+    <div class="flex items-center gap-10">
+      <div class="tailscale-device-name-container grow">
+        <span class="size-h4 block text-truncate color-primary">
+          {{ .ShortName }}
+        </span>
+        <div class="tailscale-indicators-container">
+          {{ if .UpdateAvailable }}
+          <span class="tailscale-update-indicator" data-popover-type="text" data-popover-text="Aktualizacja dostępna"></span>
+          {{ end }}
+
+          {{ if not .IsOnline }}
+          <span class="tailscale-offline-indicator" data-popover-type="text"
+            data-popover-text="Offline - Ostatnio aktywny {{ .LastSeenStr }}"></span>
+          {{ else if $.ShowOnlineIndicator }}
+          <span class="tailscale-online-indicator" data-popover-type="text" data-popover-text="Online"></span>
+          {{ end }}
+        </div>
+      </div>
+    </div>
+    <div class="tailscale-device-info-container">
+      <ul class="list-horizontal-text tailscale-device-info">
+        <li>{{ .OS }}</li>
+        <li>{{ .User }}</li>
+      </ul>
+      <div class="tailscale-device-ip">
+        <span class="tailscale-ip-clickable" 
+              data-ip="{{ .PrimaryAddress }}" 
+              title="Kliknij aby skopiować IP"
+              onclick="event.stopPropagation(); event.preventDefault(); var ip = this.getAttribute('data-ip'); var self = this; var textarea = document.createElement('textarea'); textarea.value = ip; textarea.style.position = 'fixed'; textarea.style.left = '-9999px'; document.body.appendChild(textarea); textarea.select(); try { document.execCommand('copy'); self.classList.add('copied'); setTimeout(function() { self.classList.remove('copied'); }, 2000); } catch(err) { console.error('Kopiowanie nie powiodło się:', err); } document.body.removeChild(textarea);">
+          {{ .PrimaryAddress }}
+        </span>
+      </div>
+    </div>
+  </li>
+  {{ end }}
+</ul>
+{{ else }}
+<p class="text-center color-paragraph">Brak urządzeń</p>
+{{ end }}
+{{ end }}
