@@ -10,6 +10,7 @@ Aby skonfigurować widget Vikunja, dodaj następującą konfigurację do swojego
 - type: vikunja
   url: https://twoja-instancja-vikunja.pl  # URL do Twojej instancji Vikunja
   token: twoj-token-api                     # Token API z Vikunja
+  project-id: 1                             # ID projektu do tworzenia nowych zadań (opcjonalnie, domyślnie 1)
   limit: 10                                  # Maksymalna liczba wyświetlanych zadań (opcjonalnie)
 ```
 
@@ -20,6 +21,15 @@ Aby skonfigurować widget Vikunja, dodaj następującą konfigurację do swojego
 3. Znajdź sekcję "API Tokens" lub "Tokeny API"
 4. Wygeneruj nowy token z odpowiednimi uprawnieniami
 5. Skopiuj token do konfiguracji widgetu
+
+### Znajdowanie ID projektu
+
+Aby znaleźć ID projektu w Vikunja:
+1. Otwórz projekt w przeglądarce
+2. Sprawdź URL - ID projektu znajduje się w adresie (np. `/projects/5` oznacza ID projektu = 5)
+3. Użyj tego ID w konfiguracji `project-id`
+
+**Uwaga**: Parametr `project-id` określa, w którym projekcie będą tworzone nowe zadania. Jeśli masz wiele projektów, ustaw ID projektu, w którym chcesz tworzyć zadania. Domyślnie używany jest projekt o ID 1.
 
 ## Funkcje widgetu
 

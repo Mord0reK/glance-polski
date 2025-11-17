@@ -20,6 +20,7 @@ type vikunjaWidget struct {
 	URL        string `yaml:"url"`
 	Token      string `yaml:"token"`
 	Limit      int    `yaml:"limit"`
+	ProjectID  int    `yaml:"project-id"` // Project ID for creating new tasks
 	Tasks      []vikunjaTask
 }
 
@@ -68,6 +69,10 @@ func (widget *vikunjaWidget) initialize() error {
 
 	if widget.Limit <= 0 {
 		widget.Limit = 10
+	}
+
+	if widget.ProjectID <= 0 {
+		widget.ProjectID = 1 // Default to project 1 if not specified
 	}
 
 	return nil
@@ -199,6 +204,13 @@ func formatTimeLeft(now, dueDate time.Time) string {
 
 func (widget *vikunjaWidget) Render() template.HTML {
 	return widget.renderTemplate(widget, vikunjaWidgetTemplate)
+}
+
+func (widget *vikunjaWidget) GetSoundPath() string {
+	if widget.Providers != nil && widget.Providers.assetResolver != nil {
+		return widget.Providers.assetResolver("sound/pop.mp3")
+	}
+	return "/static/sound/pop.mp3"
 }
 
 func (widget *vikunjaWidget) completeTask(taskID int) error {
@@ -379,9 +391,8 @@ func (widget *vikunjaWidget) fetchAllLabels() ([]vikunjaAPILabel, error) {
 }
 
 func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs []int) (*vikunjaAPITask, error) {
-	// Use the same endpoint format as the Vikunja web UI
-	// Create task in the default project (project ID 1)
-	url := widget.URL + "/api/v1/projects/1/tasks"
+	// Use the configured project ID for creating tasks
+	url := fmt.Sprintf("%s/api/v1/projects/%d/tasks", widget.URL, widget.ProjectID)
 
 	payload := map[string]interface{}{
 		"title": title,
