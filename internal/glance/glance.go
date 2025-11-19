@@ -456,6 +456,7 @@ func (a *application) server() (func() error, func() error) {
 	mux.HandleFunc("POST /api/vikunja/{widgetID}/add-label", a.handleVikunjaAddLabel)
 	mux.HandleFunc("POST /api/vikunja/{widgetID}/remove-label", a.handleVikunjaRemoveLabel)
 	mux.HandleFunc("GET /api/vikunja/{widgetID}/labels", a.handleVikunjaGetLabels)
+	mux.HandleFunc("GET /api/vikunja/{widgetID}/projects", a.handleVikunjaGetProjects)
 	mux.HandleFunc("GET /api/vikunja/{widgetID}/refresh", a.handleVikunjaRefresh)
 	mux.HandleFunc("POST /api/vikunja/{widgetID}/create-task", a.handleVikunjaCreateTask)
 
@@ -734,6 +735,40 @@ func (a *application) handleVikunjaGetLabels(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(labels)
 }
 
+func (a *application) handleVikunjaGetProjects(w http.ResponseWriter, r *http.Request) {
+	widgetIDStr := r.PathValue("widgetID")
+	widgetID, err := strconv.ParseUint(widgetIDStr, 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid widget ID"))
+		return
+	}
+
+	widget, exists := a.widgetByID[widgetID]
+	if !exists {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Widget not found"))
+		return
+	}
+
+	vikunjaWidget, ok := widget.(*vikunjaWidget)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Widget is not a Vikunja widget"))
+		return
+	}
+
+	projects, err := vikunjaWidget.fetchProjects()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(projects)
+}
+
 func (a *application) handleVikunjaRefresh(w http.ResponseWriter, r *http.Request) {
 	widgetIDStr := r.PathValue("widgetID")
 	widgetID, err := strconv.ParseUint(widgetIDStr, 10, 64)
@@ -792,9 +827,10 @@ func (a *application) handleVikunjaCreateTask(w http.ResponseWriter, r *http.Req
 	}
 
 	var request struct {
-		Title    string `json:"title"`
-		DueDate  string `json:"due_date"`
-		LabelIDs []int  `json:"label_ids"`
+		Title     string `json:"title"`
+		DueDate   string `json:"due_date"`
+		LabelIDs  []int  `json:"label_ids"`
+		ProjectID int    `json:"project_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -803,7 +839,7 @@ func (a *application) handleVikunjaCreateTask(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	task, err := vikunjaWidget.createTask(request.Title, request.DueDate, request.LabelIDs)
+	task, err := vikunjaWidget.createTask(request.Title, request.DueDate, request.LabelIDs, request.ProjectID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("Failed to create task: %v", err)))

@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -56,6 +57,11 @@ type vikunjaAPILabel struct {
 	HexColor string `json:"hex_color"`
 }
 
+type vikunjaProject struct {
+	ID    int    `json:"id"`
+	Title string `json:"title"`
+}
+
 func (widget *vikunjaWidget) initialize() error {
 	widget.withTitle("Vikunja").withCacheDuration(5 * time.Minute)
 
@@ -89,9 +95,20 @@ func (widget *vikunjaWidget) update(ctx context.Context) {
 }
 
 func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
-	url := widget.URL + "/api/v1/tasks/all"
+	fullURL := widget.URL + "/api/v1/tasks/all"
 
-	request, err := http.NewRequest("GET", url, nil)
+	u, err := url.Parse(fullURL)
+	if err != nil {
+		return nil, err
+	}
+
+	q := u.Query()
+	q.Set("sort_by", "due_date")
+	q.Set("order_by", "asc")
+	q.Set("limit", "250")
+	u.RawQuery = q.Encode()
+
+	request, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -331,14 +348,14 @@ func (widget *vikunjaWidget) addLabelToTask(taskID int, labelID int) error {
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		body, _ := io.ReadAll(response.Body)
 		bodyStr := string(body)
-		
+
 		// Vikunja returns error code 8001 when label already exists
 		// This is not an error for us - we want the label on the task
 		if response.StatusCode == 400 && (strings.Contains(bodyStr, "8001") || strings.Contains(bodyStr, "already exists")) {
 			// Label already exists, which is fine - we wanted it there anyway
 			return nil
 		}
-		
+
 		return fmt.Errorf("unexpected status code %d: %s", response.StatusCode, bodyStr)
 	}
 
@@ -390,9 +407,32 @@ func (widget *vikunjaWidget) fetchAllLabels() ([]vikunjaAPILabel, error) {
 	return labels, nil
 }
 
-func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs []int) (*vikunjaAPITask, error) {
-	// Use the configured project ID for creating tasks
-	url := fmt.Sprintf("%s/api/v1/projects/%d/tasks", widget.URL, widget.ProjectID)
+func (widget *vikunjaWidget) fetchProjects() ([]vikunjaProject, error) {
+	url := widget.URL + "/api/v1/projects"
+
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+widget.Token)
+
+	projects, err := decodeJsonFromRequest[[]vikunjaProject](defaultHTTPClient, request)
+	if err != nil {
+		return nil, err
+	}
+
+	return projects, nil
+}
+
+func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs []int, projectID int) (*vikunjaAPITask, error) {
+	// Use the configured project ID for creating tasks unless a specific project ID is provided
+	targetProjectID := widget.ProjectID
+	if projectID > 0 {
+		targetProjectID = projectID
+	}
+
+	url := fmt.Sprintf("%s/api/v1/projects/%d/tasks", widget.URL, targetProjectID)
 
 	// Build payload matching Vikunja API structure
 	// Based on Vikunja API documentation and user-provided payload structure
@@ -403,7 +443,7 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 		"done":        false,
 		"priority":    0,
 		"labels":      []interface{}{}, // Empty - labels added separately
-		"project_id":  widget.ProjectID,
+		"project_id":  targetProjectID,
 	}
 
 	// Add due_date if provided

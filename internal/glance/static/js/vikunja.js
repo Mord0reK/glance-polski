@@ -303,11 +303,34 @@ function openCreateModal(widgetID) {
     const modal = document.getElementById('vikunja-create-modal');
     const titleInput = document.getElementById('vikunja-create-title');
     const dueDateInput = document.getElementById('vikunja-create-due-date');
+    const projectSelect = document.getElementById('vikunja-create-project');
     const labelsContainer = document.getElementById('vikunja-create-labels-container');
 
     // Clear the form
     titleInput.value = '';
     dueDateInput.value = '';
+    
+    // Fetch and populate projects
+    projectSelect.innerHTML = '<option value="">Ładowanie...</option>';
+    
+    fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/projects`)
+        .then(response => response.json())
+        .then(projects => {
+            projectSelect.innerHTML = '<option value="">Domyślny projekt</option>';
+            
+            if (projects && projects.length > 0) {
+                projects.forEach(project => {
+                    const option = document.createElement('option');
+                    option.value = project.id;
+                    option.textContent = project.title;
+                    projectSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching projects:', error);
+            projectSelect.innerHTML = '<option value="">Błąd ładowania projektów</option>';
+        });
 
     // Fetch and display labels
     labelsContainer.innerHTML = '<p>Ładowanie etykiet...</p>';
@@ -360,6 +383,7 @@ function openCreateModal(widgetID) {
     async function createTask() {
         const title = titleInput.value.trim();
         const dueDate = dueDateInput.value;
+        const projectID = projectSelect.value ? parseInt(projectSelect.value) : 0;
         
         // Get selected label IDs
         const selectedLabels = Array.from(labelsContainer.querySelectorAll('input[type="checkbox"]:checked'))
@@ -387,7 +411,8 @@ function openCreateModal(widgetID) {
                 body: JSON.stringify({
                     title: title,
                     due_date: formattedDueDate,
-                    label_ids: selectedLabels
+                    label_ids: selectedLabels,
+                    project_id: projectID
                 })
             });
 
