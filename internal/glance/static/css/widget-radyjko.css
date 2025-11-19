@@ -7,7 +7,7 @@
 .radyjko-player {
     position: relative;
     height: 100%;
-    min-height: 380px;
+    min-height: 280px;
     max-height: 100%;
     display: flex;
     flex-direction: column;
@@ -50,13 +50,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 20px 16px;
+    padding: 16px 16px 8px;
     flex-shrink: 0;
 }
 
 .radyjko-album-art {
-    width: 140px;
-    height: 140px;
+    width: 100px;
+    height: 100px;
     border-radius: 12px;
     background: var(--color-widget-background-highlight);
     display: flex;
@@ -85,7 +85,7 @@
     position: relative;
     z-index: 2;
     text-align: center;
-    padding: 16px 16px 8px;
+    padding: 8px 16px 4px;
     width: 100%;
     min-width: 0;
 }
@@ -111,11 +111,11 @@
 .radyjko-controls {
     position: relative;
     z-index: 2;
-    padding: 16px 16px;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 20px;
+    gap: 16px;
     width: 100%;
     flex-shrink: 0;
 }
@@ -126,14 +126,14 @@
     color: var(--color-text-highlight);
     border: 1px solid var(--color-widget-content-border);
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     box-shadow: 0 2px 8px hsla(var(--bghs), var(--bgl), 0.1);
     font-weight: 500;
 }
@@ -154,17 +154,17 @@
 }
 
 .radyjko-btn.radyjko-btn-play-main {
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
     background: var(--color-primary);
     color: hsl(var(--bghs), var(--bgl));
     border-color: var(--color-primary);
-    font-size: 2rem;
+    font-size: 1.8rem;
 }
 
 .radyjko-btn.radyjko-btn-play-main svg {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
 }
 
 .radyjko-btn.radyjko-btn-prev,
@@ -172,8 +172,8 @@
     background: hsl(var(--bghs), calc(var(--scheme) (var(--scheme) var(--bgl) + 4%)));
     color: var(--color-text-highlight);
     border: 1px solid hsl(var(--bghs), calc(var(--scheme) (var(--scheme) var(--bgl) + 8%)));
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
 }
 
 .radyjko-btn.radyjko-btn-prev:hover,
