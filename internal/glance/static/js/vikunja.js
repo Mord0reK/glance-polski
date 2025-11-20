@@ -94,22 +94,24 @@ function initVikunjaWidget(widget) {
                 const taskID = parseInt(row.dataset.taskId);
                 const taskTitle = this.dataset.taskTitle;
                 const taskDueDate = this.dataset.taskDueDate;
+                const taskReminderDate = this.dataset.taskReminderDate;
                 
                 // Get current labels
                 const currentLabels = Array.from(row.querySelectorAll('.label')).map(label => 
                     parseInt(label.dataset.labelId)
                 );
 
-                openEditModal(widgetID, taskID, taskTitle, taskDueDate, currentLabels, row);
+                openEditModal(widgetID, taskID, taskTitle, taskDueDate, taskReminderDate, currentLabels, row);
             });
         });
     }
 }
 
-function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
+function openEditModal(widgetID, taskID, title, dueDate, reminderDate, currentLabelIDs, row) {
     const modal = document.getElementById('vikunja-edit-modal');
     const titleInput = document.getElementById('vikunja-edit-title');
     const dueDateInput = document.getElementById('vikunja-edit-due-date');
+    const reminderDateInput = document.getElementById('vikunja-edit-reminder-date');
     const labelsContainer = document.getElementById('vikunja-labels-container');
 
     // Set current values
@@ -120,6 +122,12 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
         dueDateInput.value = dueDate.replace(' ', 'T');
     } else {
         dueDateInput.value = '';
+    }
+
+    if (reminderDate) {
+        reminderDateInput.value = reminderDate.replace(' ', 'T');
+    } else {
+        reminderDateInput.value = '';
     }
 
     // Fetch and display labels
@@ -175,6 +183,7 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
     async function saveTask() {
         const newTitle = titleInput.value.trim();
         const newDueDate = dueDateInput.value;
+        const newReminderDate = reminderDateInput.value;
         
         // Get selected label IDs
         const selectedLabels = Array.from(labelsContainer.querySelectorAll('input[type="checkbox"]:checked'))
@@ -192,6 +201,12 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
             formattedDueDate = date.toISOString();
         }
 
+        let formattedReminderDate = '';
+        if (newReminderDate) {
+            const date = new Date(newReminderDate);
+            formattedReminderDate = date.toISOString();
+        }
+
         try {
             // Step 1: Update title and due date
             const updateResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/update-task`, {
@@ -202,7 +217,8 @@ function openEditModal(widgetID, taskID, title, dueDate, currentLabelIDs, row) {
                 body: JSON.stringify({
                     task_id: taskID,
                     title: newTitle,
-                    due_date: formattedDueDate
+                    due_date: formattedDueDate,
+                    reminder_date: formattedReminderDate
                 })
             });
 
@@ -303,12 +319,14 @@ function openCreateModal(widgetID) {
     const modal = document.getElementById('vikunja-create-modal');
     const titleInput = document.getElementById('vikunja-create-title');
     const dueDateInput = document.getElementById('vikunja-create-due-date');
+    const reminderDateInput = document.getElementById('vikunja-create-reminder-date');
     const projectSelect = document.getElementById('vikunja-create-project');
     const labelsContainer = document.getElementById('vikunja-create-labels-container');
 
     // Clear the form
     titleInput.value = '';
     dueDateInput.value = '';
+    reminderDateInput.value = '';
     
     // Fetch and populate projects
     projectSelect.innerHTML = '<option value="">Ładowanie...</option>';
@@ -383,6 +401,7 @@ function openCreateModal(widgetID) {
     async function createTask() {
         const title = titleInput.value.trim();
         const dueDate = dueDateInput.value;
+        const reminderDate = reminderDateInput.value;
         const projectID = projectSelect.value ? parseInt(projectSelect.value) : 0;
         
         // Get selected label IDs
@@ -401,6 +420,12 @@ function openCreateModal(widgetID) {
             formattedDueDate = date.toISOString();
         }
 
+        let formattedReminderDate = '';
+        if (reminderDate) {
+            const date = new Date(reminderDate);
+            formattedReminderDate = date.toISOString();
+        }
+
         try {
             // Create the task
             const createResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/create-task`, {
@@ -411,6 +436,7 @@ function openCreateModal(widgetID) {
                 body: JSON.stringify({
                     title: title,
                     due_date: formattedDueDate,
+                    reminder_date: formattedReminderDate,
                     label_ids: selectedLabels,
                     project_id: projectID
                 })
