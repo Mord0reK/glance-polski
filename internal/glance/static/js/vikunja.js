@@ -1,6 +1,51 @@
 // Vikunja widget interactivity
+let flatpickrLoadingPromise = null;
+
+function loadFlatpickr() {
+    if (window.flatpickr) return Promise.resolve();
+    if (flatpickrLoadingPromise) return flatpickrLoadingPromise;
+
+    flatpickrLoadingPromise = new Promise(async (resolve, reject) => {
+        try {
+            // Load CSS
+            const cssLink = document.createElement("link");
+            cssLink.rel = "stylesheet";
+            cssLink.href = "https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css";
+            document.head.appendChild(cssLink);
+
+            // Load JS
+            await new Promise((res, rej) => {
+                const script = document.createElement("script");
+                script.src = "https://cdn.jsdelivr.net/npm/flatpickr";
+                script.onload = res;
+                script.onerror = rej;
+                document.head.appendChild(script);
+            });
+
+            // Load Locale
+            await new Promise((res, rej) => {
+                const script = document.createElement("script");
+                script.src = "https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pl.js";
+                script.onload = res;
+                script.onerror = rej;
+                document.head.appendChild(script);
+            });
+
+            resolve();
+        } catch (e) {
+            console.error("Failed to load flatpickr", e);
+            reject(e);
+        }
+    });
+
+    return flatpickrLoadingPromise;
+}
+
 function initVikunjaWidget(widget) {
     if (!widget) return;
+    
+    // Start loading flatpickr immediately
+    loadFlatpickr();
     
     {
         const widgetID = widget.querySelector('.vikunja-table')?.dataset.widgetId || 
@@ -107,7 +152,43 @@ function initVikunjaWidget(widget) {
     }
 }
 
-function openEditModal(widgetID, taskID, title, dueDate, reminderDate, currentLabelIDs, row) {
+function initFlatpickr(element, defaultDate) {
+    if (element._flatpickr) {
+        element._flatpickr.destroy();
+    }
+    
+    if (!window.flatpickr) {
+        console.error("Flatpickr not loaded yet!");
+        return;
+    }
+    
+    // Find the wrapper element (parent of the input)
+    const wrapper = element.closest('.flatpickr-wrapper');
+    
+    const fp = flatpickr(wrapper || element, {
+        wrap: true, // Enable wrap mode to use external toggle
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        time_24hr: true,
+        locale: "pl",
+        defaultDate: defaultDate || null,
+        disableMobile: true,
+        allowInput: true, // Allow manual input
+        clickOpens: false // Only open on toggle button click
+    });
+
+    // Ensure the input element has reference to the flatpickr instance
+    // This is needed because we initialize on the wrapper but access it via the input in other functions
+    if (wrapper && element !== wrapper) {
+        element._flatpickr = fp;
+    }
+
+    return fp;
+}
+
+async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, currentLabelIDs, row) {
+    await loadFlatpickr();
+
     const modal = document.getElementById('vikunja-edit-modal');
     const titleInput = document.getElementById('vikunja-edit-title');
     const dueDateInput = document.getElementById('vikunja-edit-due-date');
@@ -117,18 +198,9 @@ function openEditModal(widgetID, taskID, title, dueDate, reminderDate, currentLa
     // Set current values
     titleInput.value = title || '';
     
-    // Convert date format from "2006-01-02 15:04" to datetime-local format "2006-01-02T15:04"
-    if (dueDate) {
-        dueDateInput.value = dueDate.replace(' ', 'T');
-    } else {
-        dueDateInput.value = '';
-    }
-
-    if (reminderDate) {
-        reminderDateInput.value = reminderDate.replace(' ', 'T');
-    } else {
-        reminderDateInput.value = '';
-    }
+    // Initialize flatpickr
+    initFlatpickr(dueDateInput, dueDate);
+    initFlatpickr(reminderDateInput, reminderDate);
 
     // Fetch and display labels
     labelsContainer.innerHTML = '<p>Ładowanie etykiet...</p>';
@@ -182,8 +254,8 @@ function openEditModal(widgetID, taskID, title, dueDate, reminderDate, currentLa
 
     async function saveTask() {
         const newTitle = titleInput.value.trim();
-        const newDueDate = dueDateInput.value;
-        const newReminderDate = reminderDateInput.value;
+        const dueDateFP = dueDateInput._flatpickr.selectedDates[0];
+        const reminderDateFP = reminderDateInput._flatpickr.selectedDates[0];
         
         // Get selected label IDs
         const selectedLabels = Array.from(labelsContainer.querySelectorAll('input[type="checkbox"]:checked'))
@@ -194,17 +266,15 @@ function openEditModal(widgetID, taskID, title, dueDate, reminderDate, currentLa
             return;
         }
 
-        // Convert datetime-local format to RFC3339
+        // Convert to RFC3339
         let formattedDueDate = '';
-        if (newDueDate) {
-            const date = new Date(newDueDate);
-            formattedDueDate = date.toISOString();
+        if (dueDateFP) {
+            formattedDueDate = dueDateFP.toISOString();
         }
 
         let formattedReminderDate = '';
-        if (newReminderDate) {
-            const date = new Date(newReminderDate);
-            formattedReminderDate = date.toISOString();
+        if (reminderDateFP) {
+            formattedReminderDate = reminderDateFP.toISOString();
         }
 
         try {
@@ -315,7 +385,9 @@ function openEditModal(widgetID, taskID, title, dueDate, reminderDate, currentLa
     });
 }
 
-function openCreateModal(widgetID) {
+async function openCreateModal(widgetID) {
+    await loadFlatpickr();
+
     const modal = document.getElementById('vikunja-create-modal');
     const titleInput = document.getElementById('vikunja-create-title');
     const dueDateInput = document.getElementById('vikunja-create-due-date');
@@ -325,8 +397,9 @@ function openCreateModal(widgetID) {
 
     // Clear the form
     titleInput.value = '';
-    dueDateInput.value = '';
-    reminderDateInput.value = '';
+    
+    initFlatpickr(dueDateInput);
+    initFlatpickr(reminderDateInput);
     
     // Fetch and populate projects
     projectSelect.innerHTML = '<option value="">Ładowanie...</option>';
@@ -400,8 +473,8 @@ function openCreateModal(widgetID) {
 
     async function createTask() {
         const title = titleInput.value.trim();
-        const dueDate = dueDateInput.value;
-        const reminderDate = reminderDateInput.value;
+        const dueDateFP = dueDateInput._flatpickr.selectedDates[0];
+        const reminderDateFP = reminderDateInput._flatpickr.selectedDates[0];
         const projectID = projectSelect.value ? parseInt(projectSelect.value) : 0;
         
         // Get selected label IDs
@@ -415,15 +488,13 @@ function openCreateModal(widgetID) {
 
         // Convert datetime-local format to RFC3339
         let formattedDueDate = '';
-        if (dueDate) {
-            const date = new Date(dueDate);
-            formattedDueDate = date.toISOString();
+        if (dueDateFP) {
+            formattedDueDate = dueDateFP.toISOString();
         }
 
         let formattedReminderDate = '';
-        if (reminderDate) {
-            const date = new Date(reminderDate);
-            formattedReminderDate = date.toISOString();
+        if (reminderDateFP) {
+            formattedReminderDate = reminderDateFP.toISOString();
         }
 
         try {
