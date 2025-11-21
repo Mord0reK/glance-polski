@@ -89,6 +89,8 @@ func newWidget(widgetType string) (widget, error) {
 		w = &tailscaleWidget{}
 	case "beszel":
 		w = &beszelWidget{}
+	case "cloudflare":
+		w = &cloudflareWidget{}
 	default:
 		return nil, fmt.Errorf("unknown widget type: %s", widgetType)
 	}

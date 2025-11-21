@@ -1,6 +1,7 @@
 package glance
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"math"
@@ -13,6 +14,13 @@ import (
 var intl = message.NewPrinter(language.English)
 
 var globalTemplateFunctions = template.FuncMap{
+	"json": func(v interface{}) (template.JS, error) {
+		a, err := json.Marshal(v)
+		if err != nil {
+			return "", err
+		}
+		return template.JS(a), nil
+	},
 	"formatApproxNumber": formatApproxNumber,
 	"formatNumber":       intl.Sprint,
 	"safeCSS": func(str string) template.CSS {
