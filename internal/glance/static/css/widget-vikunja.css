@@ -82,6 +82,10 @@
     white-space: nowrap;
 }
 
+.vikunja-time-left.overdue {
+    color: #ef4444;
+}
+
 .vikunja-title {
     color: var(--color-primary);
     font-weight: 400;

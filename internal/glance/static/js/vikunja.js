@@ -183,6 +183,32 @@ function initFlatpickr(element, defaultDate) {
         element._flatpickr = fp;
     }
 
+    // Auto-format input as YYYY-MM-DD HH:MM
+    element.addEventListener('input', function(e) {
+        // Don't format if deleting content to allow easier editing
+        if (e.inputType && e.inputType.startsWith('delete')) {
+            return;
+        }
+
+        let v = this.value.replace(/\D/g, '');
+        if (v.length > 12) v = v.slice(0, 12);
+        
+        let formatted = '';
+        if (v.length > 0) formatted += v.slice(0, 4);
+        if (v.length >= 4) formatted += '-';
+        if (v.length > 4) formatted += v.slice(4, 6);
+        if (v.length >= 6) formatted += '-';
+        if (v.length > 6) formatted += v.slice(6, 8);
+        if (v.length >= 8) formatted += ' ';
+        if (v.length > 8) formatted += v.slice(8, 10);
+        if (v.length >= 10) formatted += ':';
+        if (v.length > 10) formatted += v.slice(10, 12);
+        
+        if (this.value !== formatted) {
+            this.value = formatted;
+        }
+    });
+
     return fp;
 }
 
@@ -192,7 +218,6 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
     const modal = document.getElementById('vikunja-edit-modal');
     const titleInput = document.getElementById('vikunja-edit-title');
     const dueDateInput = document.getElementById('vikunja-edit-due-date');
-    const reminderDateInput = document.getElementById('vikunja-edit-reminder-date');
     const labelsContainer = document.getElementById('vikunja-labels-container');
 
     // Set current values
@@ -200,7 +225,6 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
     
     // Initialize flatpickr
     initFlatpickr(dueDateInput, dueDate);
-    initFlatpickr(reminderDateInput, reminderDate);
 
     // Fetch and display labels
     labelsContainer.innerHTML = '<p>Ładowanie etykiet...</p>';
@@ -255,7 +279,6 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
     async function saveTask() {
         const newTitle = titleInput.value.trim();
         const dueDateFP = dueDateInput._flatpickr.selectedDates[0];
-        const reminderDateFP = reminderDateInput._flatpickr.selectedDates[0];
         
         // Get selected label IDs
         const selectedLabels = Array.from(labelsContainer.querySelectorAll('input[type="checkbox"]:checked'))
@@ -272,11 +295,6 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
             formattedDueDate = dueDateFP.toISOString();
         }
 
-        let formattedReminderDate = '';
-        if (reminderDateFP) {
-            formattedReminderDate = reminderDateFP.toISOString();
-        }
-
         try {
             // Step 1: Update title and due date
             const updateResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/update-task`, {
@@ -287,8 +305,7 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
                 body: JSON.stringify({
                     task_id: taskID,
                     title: newTitle,
-                    due_date: formattedDueDate,
-                    reminder_date: formattedReminderDate
+                    due_date: formattedDueDate
                 })
             });
 
@@ -391,7 +408,6 @@ async function openCreateModal(widgetID) {
     const modal = document.getElementById('vikunja-create-modal');
     const titleInput = document.getElementById('vikunja-create-title');
     const dueDateInput = document.getElementById('vikunja-create-due-date');
-    const reminderDateInput = document.getElementById('vikunja-create-reminder-date');
     const projectSelect = document.getElementById('vikunja-create-project');
     const labelsContainer = document.getElementById('vikunja-create-labels-container');
 
@@ -399,7 +415,6 @@ async function openCreateModal(widgetID) {
     titleInput.value = '';
     
     initFlatpickr(dueDateInput);
-    initFlatpickr(reminderDateInput);
     
     // Fetch and populate projects
     projectSelect.innerHTML = '<option value="">Ładowanie...</option>';
@@ -474,7 +489,6 @@ async function openCreateModal(widgetID) {
     async function createTask() {
         const title = titleInput.value.trim();
         const dueDateFP = dueDateInput._flatpickr.selectedDates[0];
-        const reminderDateFP = reminderDateInput._flatpickr.selectedDates[0];
         const projectID = projectSelect.value ? parseInt(projectSelect.value) : 0;
         
         // Get selected label IDs
@@ -492,11 +506,6 @@ async function openCreateModal(widgetID) {
             formattedDueDate = dueDateFP.toISOString();
         }
 
-        let formattedReminderDate = '';
-        if (reminderDateFP) {
-            formattedReminderDate = reminderDateFP.toISOString();
-        }
-
         try {
             // Create the task
             const createResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/create-task`, {
@@ -507,7 +516,6 @@ async function openCreateModal(widgetID) {
                 body: JSON.stringify({
                     title: title,
                     due_date: formattedDueDate,
-                    reminder_date: formattedReminderDate,
                     label_ids: selectedLabels,
                     project_id: projectID
                 })
