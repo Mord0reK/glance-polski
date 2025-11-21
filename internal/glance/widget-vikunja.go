@@ -36,6 +36,7 @@ type vikunjaTask struct {
 	DueDateStr  string
 	Reminder    time.Time
 	ReminderStr string
+	IsOverdue   bool
 }
 
 type vikunjaLabel struct {
@@ -76,6 +77,7 @@ func (widget *vikunjaWidget) initialize() error {
 	if widget.URL == "" {
 		return fmt.Errorf("URL is required")
 	}
+	widget.URL = strings.TrimSuffix(widget.URL, "/")
 
 	if widget.Token == "" {
 		return fmt.Errorf("token is required")
@@ -149,6 +151,9 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 				task.DueDate = dueDate
 				task.DueDateStr = dueDate.Format("2006-01-02 15:04")
 				task.TimeLeft = formatTimeLeft(now, dueDate)
+				if dueDate.Before(now) {
+					task.IsOverdue = true
+				}
 			}
 		}
 
@@ -272,7 +277,7 @@ func (widget *vikunjaWidget) completeTask(taskID int) error {
 	return err
 }
 
-func (widget *vikunjaWidget) updateTaskBasic(taskID int, title string, dueDate string, reminderDate string) error {
+func (widget *vikunjaWidget) updateTaskBasic(taskID int, title string, dueDate string) error {
 	url := fmt.Sprintf("%s/api/v1/tasks/%d", widget.URL, taskID)
 
 	payload := map[string]interface{}{
@@ -281,25 +286,7 @@ func (widget *vikunjaWidget) updateTaskBasic(taskID int, title string, dueDate s
 
 	if dueDate != "" {
 		payload["due_date"] = dueDate
-	} else {
-		// If dueDate is empty string but we want to clear it, we might need to send null
-		// But here we assume empty string means "no change" or "clear"?
-		// The UI sends empty string if cleared.
-		// Let's assume we want to clear it if it's empty?
-		// Actually, the UI sends the current value if not changed.
-		// If the user clears it, it sends empty string.
-		// So we should probably send null if empty.
-		// But let's stick to previous logic: if dueDate != "" send it.
-		// Wait, if I want to remove due date?
-		// The previous code was:
-		// if dueDate != "" { payload["due_date"] = dueDate }
-		// This implies we can't remove due date.
-		// I'll leave it as is for now to avoid regression, but maybe I should check if "null" works.
-		// For now, let's just add reminder logic.
 	}
-    
-    // If we want to support clearing due date, we should handle it.
-    // But let's focus on reminders first.
 
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
@@ -317,11 +304,10 @@ func (widget *vikunjaWidget) updateTaskBasic(taskID int, title string, dueDate s
 
 	_, err = decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
 	if err != nil {
-        return err
-    }
+		return err
+	}
 
-    // Update reminder
-    return widget.setTaskReminder(taskID, reminderDate)
+	return nil
 }
 
 func (widget *vikunjaWidget) updateTaskLabels(taskID int, currentLabels []vikunjaAPILabel, desiredLabelIDs []int) error {
@@ -465,7 +451,7 @@ func (widget *vikunjaWidget) fetchProjects() ([]vikunjaProject, error) {
 	return projects, nil
 }
 
-func (widget *vikunjaWidget) createTask(title string, dueDate string, reminderDate string, labelIDs []int, projectID int) (*vikunjaAPITask, error) {
+func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs []int, projectID int) (*vikunjaAPITask, error) {
 	// Use the configured project ID for creating tasks unless a specific project ID is provided
 	targetProjectID := widget.ProjectID
 	if projectID > 0 {
@@ -511,20 +497,16 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, reminderDa
 		return nil, err
 	}
 
+	if task.ID == 0 {
+		return nil, fmt.Errorf("created task has invalid ID (0)")
+	}
+
 	// Add labels to the task separately
 	// This must be done after task creation via a separate API call
 	for _, labelID := range labelIDs {
 		if err := widget.addLabelToTask(task.ID, labelID); err != nil {
 			// Silently continue if label addition fails - task is already created
 			continue
-		}
-	}
-
-	// Add reminder if provided
-	if reminderDate != "" {
-		if err := widget.setTaskReminder(task.ID, reminderDate); err != nil {
-			// Silently continue if reminder addition fails
-			fmt.Printf("Failed to add reminder: %v\n", err)
 		}
 	}
 
@@ -539,7 +521,7 @@ func (widget *vikunjaWidget) setTaskReminder(taskID int, reminderDate string) er
 		return err
 	}
 	request.Header.Set("Authorization", "Bearer "+widget.Token)
-	
+
 	task, err := decodeJsonFromRequest[vikunjaAPITask](defaultHTTPClient, request)
 	if err != nil {
 		return err
@@ -561,7 +543,7 @@ func (widget *vikunjaWidget) setTaskReminder(taskID int, reminderDate string) er
 			defer resp.Body.Close()
 			if resp.StatusCode >= 300 {
 				body, _ := io.ReadAll(resp.Body)
-				return fmt.Errorf("failed to delete reminder: %s", string(body))
+				return fmt.Errorf("failed to delete reminder (status %d): %s", resp.StatusCode, string(body))
 			}
 		}
 		return nil
@@ -594,7 +576,7 @@ func (widget *vikunjaWidget) setTaskReminder(taskID int, reminderDate string) er
 		defer resp.Body.Close()
 		if resp.StatusCode >= 300 {
 			body, _ := io.ReadAll(resp.Body)
-			return fmt.Errorf("failed to update reminder: %s", string(body))
+			return fmt.Errorf("failed to update reminder (status %d): %s", resp.StatusCode, string(body))
 		}
 
 		// Delete others if any
@@ -630,7 +612,7 @@ func (widget *vikunjaWidget) setTaskReminder(taskID int, reminderDate string) er
 		defer resp.Body.Close()
 		if resp.StatusCode >= 300 {
 			body, _ := io.ReadAll(resp.Body)
-			return fmt.Errorf("failed to create reminder: %s", string(body))
+			return fmt.Errorf("failed to create reminder (status %d): %s", resp.StatusCode, string(body))
 		}
 	}
 
