@@ -144,7 +144,7 @@
 
 .vikunja-table .label {
     display: inline-block;
-    padding: 0.25rem 0.6rem;
+    padding: 0.2rem 0.350rem;
     border-radius: 1rem;
     font-size: 1.3rem;
     font-weight: 500;
@@ -283,6 +283,7 @@
 .vikunja-label-option {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.8rem;
     cursor: pointer;
     padding: 0.5rem;
