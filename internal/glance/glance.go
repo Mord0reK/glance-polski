@@ -459,6 +459,7 @@ func (a *application) server() (func() error, func() error) {
 	mux.HandleFunc("GET /api/vikunja/{widgetID}/projects", a.handleVikunjaGetProjects)
 	mux.HandleFunc("GET /api/vikunja/{widgetID}/refresh", a.handleVikunjaRefresh)
 	mux.HandleFunc("POST /api/vikunja/{widgetID}/create-task", a.handleVikunjaCreateTask)
+	mux.HandleFunc("POST /api/cloudflare/{widgetID}/update", a.handleCloudflareUpdate)
 
 	if a.RequiresAuth {
 		mux.HandleFunc("GET /login", a.handleLoginPageRequest)
@@ -860,4 +861,53 @@ func (a *application) handleVikunjaCreateTask(w http.ResponseWriter, r *http.Req
 		// Log encoding error but response is already sent
 		fmt.Printf("Error encoding task response: %v\n", err)
 	}
+}
+
+func (a *application) handleCloudflareUpdate(w http.ResponseWriter, r *http.Request) {
+	widgetIDStr := r.PathValue("widgetID")
+	widgetID, err := strconv.ParseUint(widgetIDStr, 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid widget ID"))
+		return
+	}
+
+	widget, exists := a.widgetByID[widgetID]
+	if !exists {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Widget not found"))
+		return
+	}
+
+	cfWidget, ok := widget.(*cloudflareWidget)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Widget is not a Cloudflare widget"))
+		return
+	}
+
+	var request struct {
+		TimeRange string `json:"time_range"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid request body"))
+		return
+	}
+
+	if request.TimeRange != "24h" && request.TimeRange != "7d" && request.TimeRange != "30d" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid time range"))
+		return
+	}
+
+	cfWidget.TimeRange = request.TimeRange
+	cfWidget.update(context.Background())
+
+	html := cfWidget.Render()
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(html))
 }
