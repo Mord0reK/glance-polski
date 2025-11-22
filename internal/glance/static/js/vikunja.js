@@ -1,9 +1,20 @@
 // Vikunja widget interactivity
 let flatpickrLoadingPromise = null;
 
+
+// Function to handle input color change based on content
+function handleInputColorChange(input) {
+    if (input.value.trim() !== '') {
+        input.classList.add('has-value');
+    } else {
+        input.classList.remove('has-value');
+    }
+}
+
 function loadFlatpickr() {
     if (window.flatpickr) return Promise.resolve();
     if (flatpickrLoadingPromise) return flatpickrLoadingPromise;
+
 
     flatpickrLoadingPromise = new Promise(async (resolve, reject) => {
         try {
@@ -12,6 +23,7 @@ function loadFlatpickr() {
             cssLink.rel = "stylesheet";
             cssLink.href = "https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css";
             document.head.appendChild(cssLink);
+
 
             // Load JS
             await new Promise((res, rej) => {
@@ -22,6 +34,7 @@ function loadFlatpickr() {
                 document.head.appendChild(script);
             });
 
+
             // Load Locale
             await new Promise((res, rej) => {
                 const script = document.createElement("script");
@@ -31,6 +44,7 @@ function loadFlatpickr() {
                 document.head.appendChild(script);
             });
 
+
             resolve();
         } catch (e) {
             console.error("Failed to load flatpickr", e);
@@ -38,8 +52,10 @@ function loadFlatpickr() {
         }
     });
 
+
     return flatpickrLoadingPromise;
 }
+
 
 function initVikunjaWidget(widget) {
     if (!widget) return;
@@ -52,6 +68,7 @@ function initVikunjaWidget(widget) {
                          widget.querySelector('.vikunja-add-btn')?.dataset.widgetId;
         if (!widgetID) return;
 
+
         // Handle add button (can be in table header or empty state)
         const addBtn = widget.querySelector('.vikunja-add-btn');
         if (addBtn) {
@@ -61,6 +78,7 @@ function initVikunjaWidget(widget) {
             });
         }
 
+
         // Handle task completion checkboxes
         widget.querySelectorAll('.vikunja-task-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', function(e) {
@@ -69,13 +87,16 @@ function initVikunjaWidget(widget) {
                     return;
                 }
 
+
                 const row = this.closest('tr');
                 const taskID = parseInt(row.dataset.taskId);
+
 
                 // if (!confirm('Czy na pewno chcesz oznaczyć to zadanie jako wykonane?')) {
                 //    this.checked = false;
                 //    return;
                 //}
+
 
                 // Play completion sound
                 const completionSound = document.getElementById('vikunja-completion-sound');
@@ -85,6 +106,7 @@ function initVikunjaWidget(widget) {
                         console.log('Could not play completion sound:', err);
                     });
                 }
+
 
                 // Call API to complete task
                 fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/complete-task`, {
@@ -132,6 +154,7 @@ function initVikunjaWidget(widget) {
             });
         });
 
+
         // Handle edit buttons
         widget.querySelectorAll('.vikunja-edit-btn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -146,11 +169,13 @@ function initVikunjaWidget(widget) {
                     parseInt(label.dataset.labelId)
                 );
 
+
                 openEditModal(widgetID, taskID, taskTitle, taskDueDate, taskReminderDate, currentLabels, row);
             });
         });
     }
 }
+
 
 function initFlatpickr(element, defaultDate) {
     if (element._flatpickr) {
@@ -177,11 +202,13 @@ function initFlatpickr(element, defaultDate) {
         clickOpens: false // Only open on toggle button click
     });
 
+
     // Ensure the input element has reference to the flatpickr instance
     // This is needed because we initialize on the wrapper but access it via the input in other functions
     if (wrapper && element !== wrapper) {
         element._flatpickr = fp;
     }
+
 
     // Auto-format input as YYYY-MM-DD HH:MM
     element.addEventListener('input', function(e) {
@@ -189,6 +216,7 @@ function initFlatpickr(element, defaultDate) {
         if (e.inputType && e.inputType.startsWith('delete')) {
             return;
         }
+
 
         let v = this.value.replace(/\D/g, '');
         if (v.length > 12) v = v.slice(0, 12);
@@ -209,22 +237,37 @@ function initFlatpickr(element, defaultDate) {
         }
     });
 
+
     return fp;
 }
 
+
 async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, currentLabelIDs, row) {
     await loadFlatpickr();
+
 
     const modal = document.getElementById('vikunja-edit-modal');
     const titleInput = document.getElementById('vikunja-edit-title');
     const dueDateInput = document.getElementById('vikunja-edit-due-date');
     const labelsContainer = document.getElementById('vikunja-labels-container');
 
+
     // Set current values
     titleInput.value = title || '';
     
+    // Set up input color change handlers
+    handleInputColorChange(titleInput);
+    titleInput.addEventListener('input', function() {
+        handleInputColorChange(this);
+    });
+    
     // Initialize flatpickr
     initFlatpickr(dueDateInput, dueDate);
+    handleInputColorChange(dueDateInput);
+    dueDateInput.addEventListener('input', function() {
+        handleInputColorChange(this);
+    });
+
 
     // Fetch and display labels
     labelsContainer.innerHTML = '<p>Ładowanie etykiet...</p>';
@@ -236,8 +279,8 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
             
             if (labels && labels.length > 0) {
                 labels.forEach(label => {
-                    const labelCheckbox = document.createElement('label');
-                    labelCheckbox.className = 'vikunja-label-option';
+                    const labelOption = document.createElement('div');
+                    labelOption.className = 'vikunja-label-option';
                     
                     const color = label.hex_color && label.hex_color[0] !== '#' 
                         ? '#' + label.hex_color 
@@ -245,12 +288,20 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
                     
                     const isChecked = currentLabelIDs.includes(label.id);
                     
-                    labelCheckbox.innerHTML = `
-                        <input type="checkbox" value="${label.id}" ${isChecked ? 'checked' : ''}>
-                        <span class="label" style="border-color: ${color}; color: ${color};">${label.title}</span>
-                    `;
-                    
-                    labelsContainer.appendChild(labelCheckbox);
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = label.id;
+                    if (isChecked) checkbox.checked = true;
+
+                    const labelText = document.createElement('span');
+                    labelText.className = 'label';
+                    labelText.style.borderColor = color;
+                    labelText.style.color = color;
+                    labelText.textContent = label.title;
+
+                    labelOption.appendChild(checkbox);
+                    labelOption.appendChild(labelText);
+                    labelsContainer.appendChild(labelOption);
                 });
             } else {
                 labelsContainer.innerHTML = '<p>Brak dostępnych etykiet</p>';
@@ -261,12 +312,15 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
             labelsContainer.innerHTML = '<p>Nie udało się załadować etykiet</p>';
         });
 
+
     modal.style.display = 'flex';
+
 
     // Handle close button
     const closeBtn = modal.querySelector('.vikunja-modal-close');
     const cancelBtn = modal.querySelector('.vikunja-btn-cancel');
     const saveBtn = modal.querySelector('.vikunja-btn-save');
+
 
     function closeModal() {
         modal.style.display = 'none';
@@ -276,6 +330,7 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
         saveBtn.removeEventListener('click', saveTask);
     }
 
+
     async function saveTask() {
         const newTitle = titleInput.value.trim();
         const dueDateFP = dueDateInput._flatpickr.selectedDates[0];
@@ -284,16 +339,19 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
         const selectedLabels = Array.from(labelsContainer.querySelectorAll('input[type="checkbox"]:checked'))
             .map(checkbox => parseInt(checkbox.value));
 
+
         if (!newTitle) {
             alert('Tytuł zadania nie może być pusty');
             return;
         }
+
 
         // Convert to RFC3339
         let formattedDueDate = '';
         if (dueDateFP) {
             formattedDueDate = dueDateFP.toISOString();
         }
+
 
         try {
             // Step 1: Update title and due date
@@ -309,9 +367,11 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
                 })
             });
 
+
             if (!updateResponse.ok) {
                 throw new Error('Failed to update task');
             }
+
 
             // Step 2: Update labels
             // Get current label IDs from the row
@@ -319,9 +379,11 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
                 parseInt(label.dataset.labelId)
             );
 
+
             // Determine which labels to add and remove
             const labelsToAdd = selectedLabels.filter(id => !currentLabels.includes(id));
             const labelsToRemove = currentLabels.filter(id => !selectedLabels.includes(id));
+
 
             // Add new labels
             for (const labelID of labelsToAdd) {
@@ -336,10 +398,12 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
                     })
                 });
 
+
                 if (!addResponse.ok) {
                     throw new Error(`Failed to add label ${labelID}`);
                 }
             }
+
 
             // Remove old labels
             for (const labelID of labelsToRemove) {
@@ -354,10 +418,12 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
                     })
                 });
 
+
                 if (!removeResponse.ok) {
                     throw new Error(`Failed to remove label ${labelID}`);
                 }
             }
+
 
             // Refresh the widget content
             const refreshResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/refresh`);
@@ -383,6 +449,7 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
                 initVikunjaWidget(newWidget);
             }
 
+
             closeModal();
         } catch (error) {
             console.error('Error updating task:', error);
@@ -390,9 +457,11 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
         }
     }
 
+
     closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
     saveBtn.addEventListener('click', saveTask);
+
 
     // Close modal when clicking outside
     modal.addEventListener('click', function(e) {
@@ -402,8 +471,10 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
     });
 }
 
+
 async function openCreateModal(widgetID) {
     await loadFlatpickr();
+
 
     const modal = document.getElementById('vikunja-create-modal');
     const titleInput = document.getElementById('vikunja-create-title');
@@ -411,10 +482,21 @@ async function openCreateModal(widgetID) {
     const projectSelect = document.getElementById('vikunja-create-project');
     const labelsContainer = document.getElementById('vikunja-create-labels-container');
 
+
     // Clear the form
     titleInput.value = '';
     
+    // Set up input color change handlers
+    handleInputColorChange(titleInput);
+    titleInput.addEventListener('input', function() {
+        handleInputColorChange(this);
+    });
+    
     initFlatpickr(dueDateInput);
+    handleInputColorChange(dueDateInput);
+    dueDateInput.addEventListener('input', function() {
+        handleInputColorChange(this);
+    });
     
     // Fetch and populate projects
     projectSelect.innerHTML = '<option value="">Ładowanie...</option>';
@@ -438,6 +520,7 @@ async function openCreateModal(widgetID) {
             projectSelect.innerHTML = '<option value="">Błąd ładowania projektów</option>';
         });
 
+
     // Fetch and display labels
     labelsContainer.innerHTML = '<p>Ładowanie etykiet...</p>';
     
@@ -448,19 +531,26 @@ async function openCreateModal(widgetID) {
             
             if (labels && labels.length > 0) {
                 labels.forEach(label => {
-                    const labelCheckbox = document.createElement('label');
-                    labelCheckbox.className = 'vikunja-label-option';
+                    const labelOption = document.createElement('div');
+                    labelOption.className = 'vikunja-label-option';
                     
                     const color = label.hex_color && label.hex_color[0] !== '#' 
                         ? '#' + label.hex_color 
                         : label.hex_color || '#666';
                     
-                    labelCheckbox.innerHTML = `
-                        <input type="checkbox" value="${label.id}">
-                        <span class="label" style="border-color: ${color}; color: ${color};">${label.title}</span>
-                    `;
-                    
-                    labelsContainer.appendChild(labelCheckbox);
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = label.id;
+
+                    const labelText = document.createElement('span');
+                    labelText.className = 'label';
+                    labelText.style.borderColor = color;
+                    labelText.style.color = color;
+                    labelText.textContent = label.title;
+
+                    labelOption.appendChild(checkbox);
+                    labelOption.appendChild(labelText);
+                    labelsContainer.appendChild(labelOption);
                 });
             } else {
                 labelsContainer.innerHTML = '<p>Brak dostępnych etykiet</p>';
@@ -471,12 +561,15 @@ async function openCreateModal(widgetID) {
             labelsContainer.innerHTML = '<p>Nie udało się załadować etykiet</p>';
         });
 
+
     modal.style.display = 'flex';
+
 
     // Handle close button
     const closeBtn = modal.querySelector('.vikunja-modal-close');
     const cancelBtn = modal.querySelector('.vikunja-btn-cancel');
     const createBtn = modal.querySelector('.vikunja-btn-create');
+
 
     function closeModal() {
         modal.style.display = 'none';
@@ -485,6 +578,7 @@ async function openCreateModal(widgetID) {
         cancelBtn.removeEventListener('click', closeModal);
         createBtn.removeEventListener('click', createTask);
     }
+
 
     async function createTask() {
         const title = titleInput.value.trim();
@@ -495,16 +589,19 @@ async function openCreateModal(widgetID) {
         const selectedLabels = Array.from(labelsContainer.querySelectorAll('input[type="checkbox"]:checked'))
             .map(checkbox => parseInt(checkbox.value));
 
+
         if (!title) {
             alert('Tytuł zadania nie może być pusty');
             return;
         }
+
 
         // Convert datetime-local format to RFC3339
         let formattedDueDate = '';
         if (dueDateFP) {
             formattedDueDate = dueDateFP.toISOString();
         }
+
 
         try {
             // Create the task
@@ -521,13 +618,16 @@ async function openCreateModal(widgetID) {
                 })
             });
 
+
             if (!createResponse.ok) {
                 const errorText = await createResponse.text();
                 console.error('Create task failed:', createResponse.status, errorText);
                 throw new Error(`Błąd ${createResponse.status}: ${errorText || createResponse.statusText}`);
             }
 
+
             const createdTask = await createResponse.json();
+
 
             // Refresh the widget content
             const refreshResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/refresh`);
@@ -553,6 +653,7 @@ async function openCreateModal(widgetID) {
                 initVikunjaWidget(newWidget);
             }
 
+
             closeModal();
         } catch (error) {
             console.error('Error creating task:', error);
@@ -560,9 +661,11 @@ async function openCreateModal(widgetID) {
         }
     }
 
+
     closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
     createBtn.addEventListener('click', createTask);
+
 
     // Close modal when clicking outside
     modal.addEventListener('click', function(e) {
@@ -571,5 +674,6 @@ async function openCreateModal(widgetID) {
         }
     });
 }
+
 
 export default initVikunjaWidget;
