@@ -502,3 +502,55 @@ span.flatpickr-weekday {
     background: transparent;
     color: var(--color-primary);
 }
+
+/* Affine Note Styles */
+.vikunja-title-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+}
+
+.task-title-link {
+    color: inherit;
+    text-decoration: none;
+    flex: 1;
+    min-width: 0;
+}
+
+.affine-note-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--color-text-base);
+    text-decoration: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.3rem;
+    transition: background-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+    font-size: 0.85em;
+}
+
+.affine-note-link:hover {
+    background-color: var(--color-widget-background-highlight);
+    color: var(--color-primary);
+}
+
+.affine-note-link svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+.affine-note-link .affine-note-title {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.affine-note-link:hover svg {
+    opacity: 1;
+}

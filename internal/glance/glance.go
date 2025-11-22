@@ -593,9 +593,10 @@ func (a *application) handleVikunjaUpdateTask(w http.ResponseWriter, r *http.Req
 	}
 
 	var request struct {
-		TaskID  int    `json:"task_id"`
-		Title   string `json:"title"`
-		DueDate string `json:"due_date"`
+		TaskID        int    `json:"task_id"`
+		Title         string `json:"title"`
+		DueDate       string `json:"due_date"`
+		AffineNoteURL string `json:"affine_note_url"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -604,7 +605,7 @@ func (a *application) handleVikunjaUpdateTask(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := vikunjaWidget.updateTaskBasic(request.TaskID, request.Title, request.DueDate); err != nil {
+	if err := vikunjaWidget.updateTaskBasic(request.TaskID, request.Title, request.DueDate, request.AffineNoteURL); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
@@ -828,10 +829,11 @@ func (a *application) handleVikunjaCreateTask(w http.ResponseWriter, r *http.Req
 	}
 
 	var request struct {
-		Title     string `json:"title"`
-		DueDate   string `json:"due_date"`
-		LabelIDs  []int  `json:"label_ids"`
-		ProjectID int    `json:"project_id"`
+		Title         string `json:"title"`
+		DueDate       string `json:"due_date"`
+		LabelIDs      []int  `json:"label_ids"`
+		ProjectID     int    `json:"project_id"`
+		AffineNoteURL string `json:"affine_note_url"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -840,7 +842,7 @@ func (a *application) handleVikunjaCreateTask(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	task, err := vikunjaWidget.createTask(request.Title, request.DueDate, request.LabelIDs, request.ProjectID)
+	task, err := vikunjaWidget.createTask(request.Title, request.DueDate, request.LabelIDs, request.ProjectID, request.AffineNoteURL)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("Failed to create task: %v", err)))

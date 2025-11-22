@@ -163,6 +163,7 @@ function initVikunjaWidget(widget) {
                 const taskTitle = this.dataset.taskTitle;
                 const taskDueDate = this.dataset.taskDueDate;
                 const taskReminderDate = this.dataset.taskReminderDate;
+                const affineNoteURL = this.dataset.affineNoteUrl || '';
                 
                 // Get current labels
                 const currentLabels = Array.from(row.querySelectorAll('.label')).map(label => 
@@ -170,7 +171,7 @@ function initVikunjaWidget(widget) {
                 );
 
 
-                openEditModal(widgetID, taskID, taskTitle, taskDueDate, taskReminderDate, currentLabels, row);
+                openEditModal(widgetID, taskID, taskTitle, taskDueDate, taskReminderDate, currentLabels, row, affineNoteURL);
             });
         });
     }
@@ -242,22 +243,29 @@ function initFlatpickr(element, defaultDate) {
 }
 
 
-async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, currentLabelIDs, row) {
+async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, currentLabelIDs, row, affineNoteURL) {
     await loadFlatpickr();
 
 
     const modal = document.getElementById('vikunja-edit-modal');
     const titleInput = document.getElementById('vikunja-edit-title');
     const dueDateInput = document.getElementById('vikunja-edit-due-date');
+    const affineURLInput = document.getElementById('vikunja-edit-affine-url');
     const labelsContainer = document.getElementById('vikunja-labels-container');
 
 
     // Set current values
     titleInput.value = title || '';
+    affineURLInput.value = affineNoteURL || '';
     
     // Set up input color change handlers
     handleInputColorChange(titleInput);
     titleInput.addEventListener('input', function() {
+        handleInputColorChange(this);
+    });
+    
+    handleInputColorChange(affineURLInput);
+    affineURLInput.addEventListener('input', function() {
         handleInputColorChange(this);
     });
     
@@ -334,6 +342,7 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
     async function saveTask() {
         const newTitle = titleInput.value.trim();
         const dueDateFP = dueDateInput._flatpickr.selectedDates[0];
+        const affineNoteURL = affineURLInput.value.trim();
         
         // Get selected label IDs
         const selectedLabels = Array.from(labelsContainer.querySelectorAll('input[type="checkbox"]:checked'))
@@ -354,7 +363,7 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
 
 
         try {
-            // Step 1: Update title and due date
+            // Step 1: Update title, due date and Affine note URL
             const updateResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/update-task`, {
                 method: 'POST',
                 headers: {
@@ -363,7 +372,8 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
                 body: JSON.stringify({
                     task_id: taskID,
                     title: newTitle,
-                    due_date: formattedDueDate
+                    due_date: formattedDueDate,
+                    affine_note_url: affineNoteURL
                 })
             });
 
@@ -479,16 +489,23 @@ async function openCreateModal(widgetID) {
     const modal = document.getElementById('vikunja-create-modal');
     const titleInput = document.getElementById('vikunja-create-title');
     const dueDateInput = document.getElementById('vikunja-create-due-date');
+    const affineURLInput = document.getElementById('vikunja-create-affine-url');
     const projectSelect = document.getElementById('vikunja-create-project');
     const labelsContainer = document.getElementById('vikunja-create-labels-container');
 
 
     // Clear the form
     titleInput.value = '';
+    affineURLInput.value = '';
     
     // Set up input color change handlers
     handleInputColorChange(titleInput);
     titleInput.addEventListener('input', function() {
+        handleInputColorChange(this);
+    });
+    
+    handleInputColorChange(affineURLInput);
+    affineURLInput.addEventListener('input', function() {
         handleInputColorChange(this);
     });
     
@@ -583,6 +600,7 @@ async function openCreateModal(widgetID) {
     async function createTask() {
         const title = titleInput.value.trim();
         const dueDateFP = dueDateInput._flatpickr.selectedDates[0];
+        const affineNoteURL = affineURLInput.value.trim();
         const projectID = projectSelect.value ? parseInt(projectSelect.value) : 0;
         
         // Get selected label IDs
@@ -614,7 +632,8 @@ async function openCreateModal(widgetID) {
                     title: title,
                     due_date: formattedDueDate,
                     label_ids: selectedLabels,
-                    project_id: projectID
+                    project_id: projectID,
+                    affine_note_url: affineNoteURL
                 })
             });
 

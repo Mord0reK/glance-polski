@@ -28,7 +28,17 @@
                 {{ if .TimeLeft }}{{ .TimeLeft }}{{ else }}-{{ end }}
             </td>
             <td class="vikunja-title">
-                <a href="{{ .TaskURL }}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">{{ .Title }}</a>
+                <div class="vikunja-title-container">
+                    <a href="{{ .TaskURL }}" target="_blank" rel="noopener noreferrer" class="task-title-link">{{ .Title }}</a>
+                    {{ if .AffineNoteURL }}
+                    <a href="{{ .AffineNoteURL }}" target="_blank" rel="noopener noreferrer" class="affine-note-link" title="{{ .AffineNoteTitle }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="affine-note-title">{{ if .AffineNoteTitle }}{{ .AffineNoteTitle }}{{ else }}Notatka{{ end }}</span>
+                    </a>
+                    {{ end }}
+                </div>
             </td>
             <td class="vikunja-labels">
                 {{ if .Labels }}
@@ -42,7 +52,7 @@
                 {{ end }}
             </td>
             <td>
-                <button class="vikunja-edit-btn" title="Edytuj zadanie" data-task-title="{{ .Title }}" data-task-due-date="{{ .DueDateStr }}" data-task-reminder-date="{{ .ReminderStr }}">
+                <button class="vikunja-edit-btn" title="Edytuj zadanie" data-task-title="{{ .Title }}" data-task-due-date="{{ .DueDateStr }}" data-task-reminder-date="{{ .ReminderStr }}" data-affine-note-url="{{ .AffineNoteURL }}">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 16px; height: 16px;">
                         <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
                         <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
@@ -100,6 +110,10 @@
                     <!-- Etykiety będą załadowane dynamicznie -->
                 </div>
             </div>
+            <div class="vikunja-form-group">
+                <label for="vikunja-create-affine-url">Link do notatki Affine (opcjonalnie):</label>
+                <input type="text" id="vikunja-create-affine-url" class="vikunja-input" placeholder="https://affine-url/workspace/...">
+            </div>
         </div>
         <div class="vikunja-modal-footer">
             <button class="vikunja-btn vikunja-btn-cancel">Anuluj</button>
@@ -136,6 +150,10 @@
                 <div id="vikunja-labels-container" class="vikunja-labels-selector">
                     <!-- Etykiety będą załadowane dynamicznie -->
                 </div>
+            </div>
+            <div class="vikunja-form-group">
+                <label for="vikunja-edit-affine-url">Link do notatki Affine (opcjonalnie):</label>
+                <input type="text" id="vikunja-edit-affine-url" class="vikunja-input" placeholder="https://affine-url/workspace/...">
             </div>
         </div>
         <div class="vikunja-modal-footer">
