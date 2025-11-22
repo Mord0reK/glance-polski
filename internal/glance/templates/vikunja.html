@@ -27,7 +27,9 @@
             <td class="vikunja-time-left {{ if .IsOverdue }}overdue{{ end }}">
                 {{ if .TimeLeft }}{{ .TimeLeft }}{{ else }}-{{ end }}
             </td>
-            <td class="vikunja-title">{{ .Title }}</td>
+            <td class="vikunja-title">
+                <a href="{{ .TaskURL }}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">{{ .Title }}</a>
+            </td>
             <td class="vikunja-labels">
                 {{ if .Labels }}
                 <div class="label-container">
@@ -67,7 +69,7 @@
 <div id="vikunja-create-modal" class="vikunja-modal" style="display: none;">
     <div class="vikunja-modal-content">
         <div class="vikunja-modal-header">
-            <h3>Dodaj nowe zadanie</h3>
+            <h3 class="color: var(--color-primary);">Dodaj nowe zadanie</h3>
             <button class="vikunja-modal-close">&times;</button>
         </div>
         <div class="vikunja-modal-body">
@@ -76,7 +78,7 @@
                 <input type="text" id="vikunja-create-title" class="vikunja-input" placeholder="Tytuł zadania">
             </div>
             <div class="vikunja-form-group">
-                <label for="vikunja-create-due-date">Termin:</label>
+                <label for="vikunja-create-due-date" style="color: var(--color-primary);">Termin:</label>
                 <div class="vikunja-input-group flatpickr-wrapper">
                     <input type="text" id="vikunja-create-due-date" class="vikunja-input" placeholder="RRRR-MM-DD GG:MM" data-input>
                     <button type="button" class="vikunja-input-icon" title="Wybierz datę" data-toggle>

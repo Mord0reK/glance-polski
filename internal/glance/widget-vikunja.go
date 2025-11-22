@@ -37,6 +37,7 @@ type vikunjaTask struct {
 	Reminder    time.Time
 	ReminderStr string
 	IsOverdue   bool
+	TaskURL     string
 }
 
 type vikunjaLabel struct {
@@ -143,6 +144,7 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 			Title:       apiTask.Title,
 			Done:        apiTask.Done,
 			PercentDone: int(apiTask.PercentDone),
+			TaskURL:     fmt.Sprintf("%s/tasks/%d", strings.TrimRight(widget.URL, "/"), apiTask.ID),
 		}
 
 		if apiTask.DueDate != "" {
