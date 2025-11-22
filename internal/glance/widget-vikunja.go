@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"sort"
@@ -169,6 +170,17 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 		return nil, err
 	}
 
+	// Authenticate with Affine once if configured, before processing tasks
+	var affineToken string
+	if widget.AffineURL != "" && widget.AffineEmail != "" && widget.AffinePassword != "" {
+		affineToken, err = widget.affineSignIn()
+		if err != nil {
+			// Log error but continue - we can still show tasks without Affine note titles
+			slog.Error("Failed to authenticate with Affine", "error", err)
+			affineToken = ""
+		}
+	}
+
 	tasks := make([]vikunjaTask, 0)
 	now := time.Now()
 
@@ -227,9 +239,9 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 				affineURL := strings.TrimPrefix(apiTask.Description, "AFFINE_NOTE:")
 				task.AffineNoteURL = affineURL
 
-				// Fetch note title if Affine is configured
-				if widget.AffineURL != "" && widget.AffineEmail != "" && widget.AffinePassword != "" {
-					noteTitle, err := widget.fetchAffineNoteTitle(affineURL)
+				// Fetch note title if Affine token is available
+				if affineToken != "" {
+					noteTitle, err := widget.fetchAffineNoteTitleWithToken(affineURL, affineToken)
 					if err == nil && noteTitle != "" {
 						task.AffineNoteTitle = noteTitle
 					}
@@ -773,21 +785,35 @@ func (widget *vikunjaWidget) affineSignIn() (string, error) {
 }
 
 // fetchAffineNoteTitle fetches the title of an Affine note
+// This method authenticates each time it's called
 func (widget *vikunjaWidget) fetchAffineNoteTitle(affineNoteURL string) (string, error) {
 	if affineNoteURL == "" {
 		return "", nil
-	}
-
-	// Parse the Affine URL to extract workspace and page IDs
-	workspaceID, pageID, err := widget.parseAffineURL(affineNoteURL)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse Affine URL: %w", err)
 	}
 
 	// Sign in to Affine
 	token, err := widget.affineSignIn()
 	if err != nil {
 		return "", fmt.Errorf("failed to sign in to Affine: %w", err)
+	}
+
+	return widget.fetchAffineNoteTitleWithToken(affineNoteURL, token)
+}
+
+// fetchAffineNoteTitleWithToken fetches the title of an Affine note using a provided token
+func (widget *vikunjaWidget) fetchAffineNoteTitleWithToken(affineNoteURL string, token string) (string, error) {
+	if affineNoteURL == "" {
+		return "", nil
+	}
+
+	if token == "" {
+		return "", fmt.Errorf("empty authentication token provided")
+	}
+
+	// Parse the Affine URL to extract workspace and page IDs
+	workspaceID, pageID, err := widget.parseAffineURL(affineNoteURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse Affine URL: %w", err)
 	}
 
 	// Prepare GraphQL request
