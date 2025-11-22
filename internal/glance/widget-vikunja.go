@@ -806,6 +806,10 @@ func (widget *vikunjaWidget) fetchAffineNoteTitleWithToken(affineNoteURL string,
 		return "", nil
 	}
 
+	if token == "" {
+		return "", fmt.Errorf("empty authentication token provided")
+	}
+
 	// Parse the Affine URL to extract workspace and page IDs
 	workspaceID, pageID, err := widget.parseAffineURL(affineNoteURL)
 	if err != nil {
