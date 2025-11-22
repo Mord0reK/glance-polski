@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"sort"
@@ -175,7 +176,7 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 		affineToken, err = widget.affineSignIn()
 		if err != nil {
 			// Log error but continue - we can still show tasks without Affine note titles
-			// The err is not returned here to avoid failing the entire widget
+			slog.Error("Failed to authenticate with Affine", "error", err)
 			affineToken = ""
 		}
 	}
