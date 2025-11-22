@@ -17,27 +17,32 @@ import (
 var vikunjaWidgetTemplate = mustParseTemplate("vikunja.html", "widget-base.html")
 
 type vikunjaWidget struct {
-	widgetBase `yaml:",inline"`
-	URL        string `yaml:"url"`
-	Token      string `yaml:"token"`
-	Limit      int    `yaml:"limit"`
-	ProjectID  int    `yaml:"project-id"` // Project ID for creating new tasks
-	Tasks      []vikunjaTask
+	widgetBase     `yaml:",inline"`
+	URL            string `yaml:"url"`
+	Token          string `yaml:"token"`
+	Limit          int    `yaml:"limit"`
+	ProjectID      int    `yaml:"project-id"` // Project ID for creating new tasks
+	AffineURL      string `yaml:"affine-url"`
+	AffineEmail    string `yaml:"affine-email"`
+	AffinePassword string `yaml:"affine-password"`
+	Tasks          []vikunjaTask
 }
 
 type vikunjaTask struct {
-	ID          int
-	Title       string
-	DueDate     time.Time
-	Done        bool
-	PercentDone int
-	Labels      []vikunjaLabel
-	TimeLeft    string
-	DueDateStr  string
-	Reminder    time.Time
-	ReminderStr string
-	IsOverdue   bool
-	TaskURL     string
+	ID              int
+	Title           string
+	DueDate         time.Time
+	Done            bool
+	PercentDone     int
+	Labels          []vikunjaLabel
+	TimeLeft        string
+	DueDateStr      string
+	Reminder        time.Time
+	ReminderStr     string
+	IsOverdue       bool
+	TaskURL         string
+	AffineNoteURL   string
+	AffineNoteTitle string
 }
 
 type vikunjaLabel struct {
@@ -47,13 +52,15 @@ type vikunjaLabel struct {
 }
 
 type vikunjaAPITask struct {
-	ID          int                  `json:"id"`
-	Title       string               `json:"title"`
-	Done        bool                 `json:"done"`
-	DueDate     string               `json:"due_date"`
-	PercentDone float64              `json:"percent_done"`
-	Labels      []vikunjaAPILabel    `json:"labels"`
-	Reminders   []vikunjaAPIReminder `json:"reminders"`
+	ID            int                  `json:"id"`
+	Title         string               `json:"title"`
+	Done          bool                 `json:"done"`
+	DueDate       string               `json:"due_date"`
+	PercentDone   float64              `json:"percent_done"`
+	Labels        []vikunjaAPILabel    `json:"labels"`
+	Reminders     []vikunjaAPIReminder `json:"reminders"`
+	Description   string               `json:"description"`
+	AffineNoteURL string               `json:"affine_note_url,omitempty"`
 }
 
 type vikunjaAPIReminder struct {
@@ -70,6 +77,37 @@ type vikunjaAPILabel struct {
 type vikunjaProject struct {
 	ID    int    `json:"id"`
 	Title string `json:"title"`
+}
+
+// Affine API structures
+type affineSignInRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type affineSignInResponse struct {
+	Token string `json:"token"`
+}
+
+type affineGraphQLRequest struct {
+	Query         string                 `json:"query"`
+	Variables     map[string]interface{} `json:"variables"`
+	OperationName string                 `json:"operationName"`
+}
+
+type affineGraphQLResponse struct {
+	Data struct {
+		Workspace struct {
+			Doc struct {
+				ID          string `json:"id"`
+				Mode        string `json:"mode"`
+				DefaultRole string `json:"defaultRole"`
+				Public      bool   `json:"public"`
+				Title       string `json:"title"`
+				Summary     string `json:"summary"`
+			} `json:"doc"`
+		} `json:"workspace"`
+	} `json:"data"`
 }
 
 func (widget *vikunjaWidget) initialize() error {
@@ -182,6 +220,23 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 			}
 		}
 
+		// Extract Affine note URL from description
+		// Format: AFFINE_NOTE:https://affine-url/workspace/...
+		if apiTask.Description != "" {
+			if strings.HasPrefix(apiTask.Description, "AFFINE_NOTE:") {
+				affineURL := strings.TrimPrefix(apiTask.Description, "AFFINE_NOTE:")
+				task.AffineNoteURL = affineURL
+
+				// Fetch note title if Affine is configured
+				if widget.AffineURL != "" && widget.AffineEmail != "" && widget.AffinePassword != "" {
+					noteTitle, err := widget.fetchAffineNoteTitle(affineURL)
+					if err == nil && noteTitle != "" {
+						task.AffineNoteTitle = noteTitle
+					}
+				}
+			}
+		}
+
 		tasks = append(tasks, task)
 	}
 
@@ -279,7 +334,7 @@ func (widget *vikunjaWidget) completeTask(taskID int) error {
 	return err
 }
 
-func (widget *vikunjaWidget) updateTaskBasic(taskID int, title string, dueDate string) error {
+func (widget *vikunjaWidget) updateTaskBasic(taskID int, title string, dueDate string, affineNoteURL string) error {
 	url := fmt.Sprintf("%s/api/v1/tasks/%d", widget.URL, taskID)
 
 	payload := map[string]interface{}{
@@ -288,6 +343,13 @@ func (widget *vikunjaWidget) updateTaskBasic(taskID int, title string, dueDate s
 
 	if dueDate != "" {
 		payload["due_date"] = dueDate
+	}
+
+	// Store Affine note URL in description with special prefix
+	if affineNoteURL != "" {
+		payload["description"] = "AFFINE_NOTE:" + affineNoteURL
+	} else {
+		payload["description"] = ""
 	}
 
 	jsonData, err := json.Marshal(payload)
@@ -453,7 +515,7 @@ func (widget *vikunjaWidget) fetchProjects() ([]vikunjaProject, error) {
 	return projects, nil
 }
 
-func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs []int, projectID int) (*vikunjaAPITask, error) {
+func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs []int, projectID int, affineNoteURL string) (*vikunjaAPITask, error) {
 	// Use the configured project ID for creating tasks unless a specific project ID is provided
 	targetProjectID := widget.ProjectID
 	if projectID > 0 {
@@ -465,9 +527,14 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 	// Build payload matching Vikunja API structure
 	// Based on Vikunja API documentation and user-provided payload structure
 	// Note: labels are added separately after task creation
+	description := ""
+	if affineNoteURL != "" {
+		description = "AFFINE_NOTE:" + affineNoteURL
+	}
+
 	payload := map[string]interface{}{
 		"title":       title,
-		"description": "",
+		"description": description,
 		"done":        false,
 		"priority":    0,
 		"labels":      []interface{}{}, // Empty - labels added separately
@@ -619,4 +686,165 @@ func (widget *vikunjaWidget) setTaskReminder(taskID int, reminderDate string) er
 	}
 
 	return nil
+}
+
+// parseAffineURL extracts workspaceID and pageID from Affine URL
+// Expected format: https://affine-url/workspace/WORKSPACE_ID/PAGE_ID
+func (widget *vikunjaWidget) parseAffineURL(affineURL string) (workspaceID, pageID string, err error) {
+	if affineURL == "" {
+		return "", "", fmt.Errorf("empty Affine URL")
+	}
+
+	u, err := url.Parse(affineURL)
+	if err != nil {
+		return "", "", fmt.Errorf("invalid URL: %w", err)
+	}
+
+	// Parse path segments
+	// Expected: /workspace/WORKSPACE_ID/PAGE_ID
+	parts := strings.Split(strings.Trim(u.Path, "/"), "/")
+
+	// Find workspace and page IDs
+	for i, part := range parts {
+		if part == "workspace" && i+2 < len(parts) {
+			workspaceID = parts[i+1]
+			pageID = parts[i+2]
+			return workspaceID, pageID, nil
+		}
+	}
+
+	return "", "", fmt.Errorf("could not extract workspace ID and page ID from URL")
+}
+
+// affineSignIn authenticates with Affine and returns a token
+func (widget *vikunjaWidget) affineSignIn() (string, error) {
+	if widget.AffineURL == "" || widget.AffineEmail == "" || widget.AffinePassword == "" {
+		return "", fmt.Errorf("Affine credentials not configured")
+	}
+
+	signInURL := strings.TrimSuffix(widget.AffineURL, "/") + "/api/auth/sign-in"
+
+	payload := affineSignInRequest{
+		Email:    widget.AffineEmail,
+		Password: widget.AffinePassword,
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal sign-in request: %w", err)
+	}
+
+	request, err := http.NewRequest("POST", signInURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", fmt.Errorf("failed to create sign-in request: %w", err)
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+
+	response, err := defaultHTTPClient.Do(request)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute sign-in request: %w", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(response.Body)
+		return "", fmt.Errorf("sign-in failed with status %d: %s", response.StatusCode, string(body))
+	}
+
+	// Try to extract token from cookies first (common pattern)
+	for _, cookie := range response.Cookies() {
+		if cookie.Name == "affine_session" || cookie.Name == "token" {
+			return cookie.Value, nil
+		}
+	}
+
+	// Try to parse JSON response
+	var signInResp affineSignInResponse
+	if err := json.NewDecoder(response.Body).Decode(&signInResp); err != nil {
+		return "", fmt.Errorf("failed to decode sign-in response: %w", err)
+	}
+
+	if signInResp.Token == "" {
+		return "", fmt.Errorf("no token in sign-in response")
+	}
+
+	return signInResp.Token, nil
+}
+
+// fetchAffineNoteTitle fetches the title of an Affine note
+func (widget *vikunjaWidget) fetchAffineNoteTitle(affineNoteURL string) (string, error) {
+	if affineNoteURL == "" {
+		return "", nil
+	}
+
+	// Parse the Affine URL to extract workspace and page IDs
+	workspaceID, pageID, err := widget.parseAffineURL(affineNoteURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse Affine URL: %w", err)
+	}
+
+	// Sign in to Affine
+	token, err := widget.affineSignIn()
+	if err != nil {
+		return "", fmt.Errorf("failed to sign in to Affine: %w", err)
+	}
+
+	// Prepare GraphQL request
+	graphQLURL := strings.TrimSuffix(widget.AffineURL, "/") + "/graphql"
+
+	query := `query getWorkspacePageById($workspaceId: String!, $pageId: String!) {
+  workspace(id: $workspaceId) {
+    doc(docId: $pageId) {
+      id
+      mode
+      defaultRole
+      public
+      title
+      summary
+    }
+  }
+}`
+
+	variables := map[string]interface{}{
+		"workspaceId": workspaceID,
+		"pageId":      pageID,
+	}
+
+	graphQLRequest := affineGraphQLRequest{
+		Query:         query,
+		Variables:     variables,
+		OperationName: "getWorkspacePageById",
+	}
+
+	jsonData, err := json.Marshal(graphQLRequest)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal GraphQL request: %w", err)
+	}
+
+	request, err := http.NewRequest("POST", graphQLURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", fmt.Errorf("failed to create GraphQL request: %w", err)
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+token)
+
+	response, err := defaultHTTPClient.Do(request)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute GraphQL request: %w", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(response.Body)
+		return "", fmt.Errorf("GraphQL request failed with status %d: %s", response.StatusCode, string(body))
+	}
+
+	var graphQLResp affineGraphQLResponse
+	if err := json.NewDecoder(response.Body).Decode(&graphQLResp); err != nil {
+		return "", fmt.Errorf("failed to decode GraphQL response: %w", err)
+	}
+
+	return graphQLResp.Data.Workspace.Doc.Title, nil
 }
