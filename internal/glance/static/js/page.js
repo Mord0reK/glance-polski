@@ -686,6 +686,17 @@ async function setupCloudflare() {
     }
 }
 
+async function setupBeszel() {
+    const elems = Array.from(document.getElementsByClassName("widget-type-beszel"));
+    if (elems.length == 0) return;
+
+    const beszel = await import ('./beszel.js');
+
+    for (let i = 0; i < elems.length; i++){
+        beszel.default(elems[i]);
+    }
+}
+
 function setupTruncatedElementTitles() {
     const elements = document.querySelectorAll(".text-truncate, .single-line-titles .title, .text-truncate-2-lines, .text-truncate-3-lines");
 
@@ -871,6 +882,7 @@ async function setupPage() {
         await setupRadyjko();
         await setupVikunja();
         await setupCloudflare();
+        await setupBeszel();
         setupCarousels();
         setupSearchBoxes();
         setupCollapsibleLists();

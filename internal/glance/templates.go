@@ -41,6 +41,12 @@ var globalTemplateFunctions = template.FuncMap{
 	"formatPriceWithPrecision": func(precision int, price float64) string {
 		return intl.Sprintf("%."+strconv.Itoa(precision)+"f", price)
 	},
+	"divideFloat": func(a, b float64) float64 {
+		if b == 0 {
+			return 0
+		}
+		return a / b
+	},
 	"dynamicRelativeTimeAttrs": dynamicRelativeTimeAttrs,
 	"formatServerMegabytes": func(mb uint64) template.HTML {
 		var value string

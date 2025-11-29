@@ -460,6 +460,7 @@ func (a *application) server() (func() error, func() error) {
 	mux.HandleFunc("GET /api/vikunja/{widgetID}/refresh", a.handleVikunjaRefresh)
 	mux.HandleFunc("POST /api/vikunja/{widgetID}/create-task", a.handleVikunjaCreateTask)
 	mux.HandleFunc("POST /api/cloudflare/{widgetID}/update", a.handleCloudflareUpdate)
+	mux.HandleFunc("POST /api/beszel/{widgetID}/chart", a.handleBeszelChartData)
 
 	if a.RequiresAuth {
 		mux.HandleFunc("GET /login", a.handleLoginPageRequest)
@@ -910,4 +911,66 @@ func (a *application) handleCloudflareUpdate(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
+}
+
+func (a *application) handleBeszelChartData(w http.ResponseWriter, r *http.Request) {
+	widgetIDStr := r.PathValue("widgetID")
+	widgetID, err := strconv.ParseUint(widgetIDStr, 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid widget ID"))
+		return
+	}
+
+	widget, exists := a.widgetByID[widgetID]
+	if !exists {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Widget not found"))
+		return
+	}
+
+	beszelW, ok := widget.(*beszelWidget)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Widget is not a Beszel widget"))
+		return
+	}
+
+	var request struct {
+		SystemID  string `json:"system_id"`
+		Metric    string `json:"metric"`
+		TimeRange string `json:"time_range"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid request body"))
+		return
+	}
+
+	// Walidacja parametrów
+	validMetrics := map[string]bool{"cpu": true, "ram": true, "disk": true, "network": true}
+	if !validMetrics[request.Metric] {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid metric type"))
+		return
+	}
+
+	validTimeRanges := map[string]bool{"1m": true, "1h": true, "12h": true, "24h": true, "7d": true, "30d": true}
+	if !validTimeRanges[request.TimeRange] {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid time range"))
+		return
+	}
+
+	chartData, err := beszelW.FetchChartData(request.SystemID, request.Metric, request.TimeRange)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("Failed to fetch chart data: %v", err)))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(chartData)
 }
