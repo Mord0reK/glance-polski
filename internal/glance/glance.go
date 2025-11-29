@@ -594,10 +594,12 @@ func (a *application) handleVikunjaUpdateTask(w http.ResponseWriter, r *http.Req
 	}
 
 	var request struct {
-		TaskID        int    `json:"task_id"`
-		Title         string `json:"title"`
-		DueDate       string `json:"due_date"`
-		AffineNoteURL string `json:"affine_note_url"`
+		TaskID          int    `json:"task_id"`
+		Title           string `json:"title"`
+		DueDate         string `json:"due_date"`
+		AffineNoteURL   string `json:"affine_note_url"`
+		CustomLinkURL   string `json:"custom_link_url"`
+		CustomLinkTitle string `json:"custom_link_title"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -606,7 +608,7 @@ func (a *application) handleVikunjaUpdateTask(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := vikunjaWidget.updateTaskBasic(request.TaskID, request.Title, request.DueDate, request.AffineNoteURL); err != nil {
+	if err := vikunjaWidget.updateTaskBasic(request.TaskID, request.Title, request.DueDate, request.AffineNoteURL, request.CustomLinkURL, request.CustomLinkTitle); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
@@ -830,11 +832,13 @@ func (a *application) handleVikunjaCreateTask(w http.ResponseWriter, r *http.Req
 	}
 
 	var request struct {
-		Title         string `json:"title"`
-		DueDate       string `json:"due_date"`
-		LabelIDs      []int  `json:"label_ids"`
-		ProjectID     int    `json:"project_id"`
-		AffineNoteURL string `json:"affine_note_url"`
+		Title           string `json:"title"`
+		DueDate         string `json:"due_date"`
+		LabelIDs        []int  `json:"label_ids"`
+		ProjectID       int    `json:"project_id"`
+		AffineNoteURL   string `json:"affine_note_url"`
+		CustomLinkURL   string `json:"custom_link_url"`
+		CustomLinkTitle string `json:"custom_link_title"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -843,7 +847,7 @@ func (a *application) handleVikunjaCreateTask(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	task, err := vikunjaWidget.createTask(request.Title, request.DueDate, request.LabelIDs, request.ProjectID, request.AffineNoteURL)
+	task, err := vikunjaWidget.createTask(request.Title, request.DueDate, request.LabelIDs, request.ProjectID, request.AffineNoteURL, request.CustomLinkURL, request.CustomLinkTitle)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("Failed to create task: %v", err)))

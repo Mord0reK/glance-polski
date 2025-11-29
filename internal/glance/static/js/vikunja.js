@@ -164,6 +164,8 @@ function initVikunjaWidget(widget) {
                 const taskDueDate = this.dataset.taskDueDate;
                 const taskReminderDate = this.dataset.taskReminderDate;
                 const affineNoteURL = this.dataset.affineNoteUrl || '';
+                const customLinkURL = this.dataset.customLinkUrl || '';
+                const customLinkTitle = this.dataset.customLinkTitle || '';
                 
                 // Get current labels
                 const currentLabels = Array.from(row.querySelectorAll('.label')).map(label => 
@@ -171,7 +173,7 @@ function initVikunjaWidget(widget) {
                 );
 
 
-                openEditModal(widgetID, taskID, taskTitle, taskDueDate, taskReminderDate, currentLabels, row, affineNoteURL);
+                openEditModal(widgetID, taskID, taskTitle, taskDueDate, taskReminderDate, currentLabels, row, affineNoteURL, customLinkURL, customLinkTitle);
             });
         });
     }
@@ -243,7 +245,7 @@ function initFlatpickr(element, defaultDate) {
 }
 
 
-async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, currentLabelIDs, row, affineNoteURL) {
+async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, currentLabelIDs, row, affineNoteURL, customLinkURL, customLinkTitle) {
     await loadFlatpickr();
 
 
@@ -251,12 +253,16 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
     const titleInput = document.getElementById('vikunja-edit-title');
     const dueDateInput = document.getElementById('vikunja-edit-due-date');
     const affineURLInput = document.getElementById('vikunja-edit-affine-url');
+    const customLinkURLInput = document.getElementById('vikunja-edit-custom-link-url');
+    const customLinkTitleInput = document.getElementById('vikunja-edit-custom-link-title');
     const labelsContainer = document.getElementById('vikunja-labels-container');
 
 
     // Set current values
     titleInput.value = title || '';
     affineURLInput.value = affineNoteURL || '';
+    customLinkURLInput.value = customLinkURL || '';
+    customLinkTitleInput.value = customLinkTitle || '';
     
     // Set up input color change handlers
     handleInputColorChange(titleInput);
@@ -266,6 +272,16 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
     
     handleInputColorChange(affineURLInput);
     affineURLInput.addEventListener('input', function() {
+        handleInputColorChange(this);
+    });
+    
+    handleInputColorChange(customLinkURLInput);
+    customLinkURLInput.addEventListener('input', function() {
+        handleInputColorChange(this);
+    });
+    
+    handleInputColorChange(customLinkTitleInput);
+    customLinkTitleInput.addEventListener('input', function() {
         handleInputColorChange(this);
     });
     
@@ -343,6 +359,8 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
         const newTitle = titleInput.value.trim();
         const dueDateFP = dueDateInput._flatpickr.selectedDates[0];
         const affineNoteURL = affineURLInput.value.trim();
+        const customLinkURL = customLinkURLInput.value.trim();
+        const customLinkTitle = customLinkTitleInput.value.trim();
         
         // Get selected label IDs
         const selectedLabels = Array.from(labelsContainer.querySelectorAll('input[type="checkbox"]:checked'))
@@ -363,7 +381,7 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
 
 
         try {
-            // Step 1: Update title, due date and Affine note URL
+            // Step 1: Update title, due date, Affine note URL, custom link URL and custom link title
             const updateResponse = await fetch(`${pageData.baseURL}/api/vikunja/${widgetID}/update-task`, {
                 method: 'POST',
                 headers: {
@@ -373,7 +391,9 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
                     task_id: taskID,
                     title: newTitle,
                     due_date: formattedDueDate,
-                    affine_note_url: affineNoteURL
+                    affine_note_url: affineNoteURL,
+                    custom_link_url: customLinkURL,
+                    custom_link_title: customLinkTitle
                 })
             });
 
@@ -490,6 +510,8 @@ async function openCreateModal(widgetID) {
     const titleInput = document.getElementById('vikunja-create-title');
     const dueDateInput = document.getElementById('vikunja-create-due-date');
     const affineURLInput = document.getElementById('vikunja-create-affine-url');
+    const customLinkURLInput = document.getElementById('vikunja-create-custom-link-url');
+    const customLinkTitleInput = document.getElementById('vikunja-create-custom-link-title');
     const projectSelect = document.getElementById('vikunja-create-project');
     const labelsContainer = document.getElementById('vikunja-create-labels-container');
 
@@ -497,6 +519,8 @@ async function openCreateModal(widgetID) {
     // Clear the form
     titleInput.value = '';
     affineURLInput.value = '';
+    customLinkURLInput.value = '';
+    customLinkTitleInput.value = '';
     
     // Set up input color change handlers
     handleInputColorChange(titleInput);
@@ -506,6 +530,16 @@ async function openCreateModal(widgetID) {
     
     handleInputColorChange(affineURLInput);
     affineURLInput.addEventListener('input', function() {
+        handleInputColorChange(this);
+    });
+    
+    handleInputColorChange(customLinkURLInput);
+    customLinkURLInput.addEventListener('input', function() {
+        handleInputColorChange(this);
+    });
+    
+    handleInputColorChange(customLinkTitleInput);
+    customLinkTitleInput.addEventListener('input', function() {
         handleInputColorChange(this);
     });
     
@@ -601,6 +635,8 @@ async function openCreateModal(widgetID) {
         const title = titleInput.value.trim();
         const dueDateFP = dueDateInput._flatpickr.selectedDates[0];
         const affineNoteURL = affineURLInput.value.trim();
+        const customLinkURL = customLinkURLInput.value.trim();
+        const customLinkTitle = customLinkTitleInput.value.trim();
         const projectID = projectSelect.value ? parseInt(projectSelect.value) : 0;
         
         // Get selected label IDs
@@ -633,7 +669,9 @@ async function openCreateModal(widgetID) {
                     due_date: formattedDueDate,
                     label_ids: selectedLabels,
                     project_id: projectID,
-                    affine_note_url: affineNoteURL
+                    affine_note_url: affineNoteURL,
+                    custom_link_url: customLinkURL,
+                    custom_link_title: customLinkTitle
                 })
             });
 

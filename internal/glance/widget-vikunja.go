@@ -44,6 +44,8 @@ type vikunjaTask struct {
 	TaskURL         string
 	AffineNoteURL   string
 	AffineNoteTitle string
+	CustomLinkURL   string
+	CustomLinkTitle string
 }
 
 type vikunjaLabel struct {
@@ -232,19 +234,30 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 			}
 		}
 
-		// Extract Affine note URL from description
+		// Extract Affine note URL, Custom link URL and Custom link title from description
 		// Format: AFFINE_NOTE:https://affine-url/workspace/...
+		//         CUSTOM_LINK:https://any-url/...
+		//         CUSTOM_LINK_TITLE:My Link Title
+		// Description can contain all, separated by newlines
 		if apiTask.Description != "" {
-			if strings.HasPrefix(apiTask.Description, "AFFINE_NOTE:") {
-				affineURL := strings.TrimPrefix(apiTask.Description, "AFFINE_NOTE:")
-				task.AffineNoteURL = affineURL
+			lines := strings.Split(apiTask.Description, "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if strings.HasPrefix(line, "AFFINE_NOTE:") {
+					affineURL := strings.TrimPrefix(line, "AFFINE_NOTE:")
+					task.AffineNoteURL = affineURL
 
-				// Fetch note title if Affine token is available
-				if affineToken != "" {
-					noteTitle, err := widget.fetchAffineNoteTitleWithToken(affineURL, affineToken)
-					if err == nil && noteTitle != "" {
-						task.AffineNoteTitle = noteTitle
+					// Fetch note title if Affine token is available
+					if affineToken != "" {
+						noteTitle, err := widget.fetchAffineNoteTitleWithToken(affineURL, affineToken)
+						if err == nil && noteTitle != "" {
+							task.AffineNoteTitle = noteTitle
+						}
 					}
+				} else if strings.HasPrefix(line, "CUSTOM_LINK:") {
+					task.CustomLinkURL = strings.TrimPrefix(line, "CUSTOM_LINK:")
+				} else if strings.HasPrefix(line, "CUSTOM_LINK_TITLE:") {
+					task.CustomLinkTitle = strings.TrimPrefix(line, "CUSTOM_LINK_TITLE:")
 				}
 			}
 		}
@@ -346,7 +359,7 @@ func (widget *vikunjaWidget) completeTask(taskID int) error {
 	return err
 }
 
-func (widget *vikunjaWidget) updateTaskBasic(taskID int, title string, dueDate string, affineNoteURL string) error {
+func (widget *vikunjaWidget) updateTaskBasic(taskID int, title string, dueDate string, affineNoteURL string, customLinkURL string, customLinkTitle string) error {
 	url := fmt.Sprintf("%s/api/v1/tasks/%d", widget.URL, taskID)
 
 	payload := map[string]interface{}{
@@ -357,12 +370,18 @@ func (widget *vikunjaWidget) updateTaskBasic(taskID int, title string, dueDate s
 		payload["due_date"] = dueDate
 	}
 
-	// Store Affine note URL in description with special prefix
+	// Store Affine note URL, Custom link URL and Custom link title in description with special prefixes
+	var descriptionParts []string
 	if affineNoteURL != "" {
-		payload["description"] = "AFFINE_NOTE:" + affineNoteURL
-	} else {
-		payload["description"] = ""
+		descriptionParts = append(descriptionParts, "AFFINE_NOTE:"+affineNoteURL)
 	}
+	if customLinkURL != "" {
+		descriptionParts = append(descriptionParts, "CUSTOM_LINK:"+customLinkURL)
+	}
+	if customLinkTitle != "" {
+		descriptionParts = append(descriptionParts, "CUSTOM_LINK_TITLE:"+customLinkTitle)
+	}
+	payload["description"] = strings.Join(descriptionParts, "\n")
 
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
@@ -527,7 +546,7 @@ func (widget *vikunjaWidget) fetchProjects() ([]vikunjaProject, error) {
 	return projects, nil
 }
 
-func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs []int, projectID int, affineNoteURL string) (*vikunjaAPITask, error) {
+func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs []int, projectID int, affineNoteURL string, customLinkURL string, customLinkTitle string) (*vikunjaAPITask, error) {
 	// Use the configured project ID for creating tasks unless a specific project ID is provided
 	targetProjectID := widget.ProjectID
 	if projectID > 0 {
@@ -539,10 +558,17 @@ func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs [
 	// Build payload matching Vikunja API structure
 	// Based on Vikunja API documentation and user-provided payload structure
 	// Note: labels are added separately after task creation
-	description := ""
+	var descriptionParts []string
 	if affineNoteURL != "" {
-		description = "AFFINE_NOTE:" + affineNoteURL
+		descriptionParts = append(descriptionParts, "AFFINE_NOTE:"+affineNoteURL)
 	}
+	if customLinkURL != "" {
+		descriptionParts = append(descriptionParts, "CUSTOM_LINK:"+customLinkURL)
+	}
+	if customLinkTitle != "" {
+		descriptionParts = append(descriptionParts, "CUSTOM_LINK_TITLE:"+customLinkTitle)
+	}
+	description := strings.Join(descriptionParts, "\n")
 
 	payload := map[string]interface{}{
 		"title":       title,
