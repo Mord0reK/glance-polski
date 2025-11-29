@@ -1193,6 +1193,7 @@ Example:
     - title: YouTube
       shortcut: "!yt"
       url: https://www.youtube.com/results?search_query={QUERY}
+      icon: https://youtube.com/favicon.ico
 ```
 
 Preview:
