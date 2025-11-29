@@ -112,6 +112,8 @@ function setupSearchBoxes() {
         const bangs = widget.querySelectorAll(".search-bangs > input");
         const bangsMap = {};
         const kbdElement = widget.getElementsByTagName("kbd")[0];
+        const searchIconDefault = widget.querySelector(".search-icon-default");
+        const searchIconBang = widget.querySelector(".search-icon-bang");
         let currentBang = null;
         let lastQuery = "";
 
@@ -163,8 +165,34 @@ function setupSearchBoxes() {
         };
 
         const changeCurrentBang = (bang) => {
+            if (currentBang === bang) {
+                return;
+            }
+            
             currentBang = bang;
             bangElement.textContent = bang != null ? bang.dataset.title : "";
+            
+            // Update search icon based on bang
+            if (bang != null && bang.dataset.icon) {
+                searchIconDefault.style.display = "none";
+                searchIconBang.src = bang.dataset.icon;
+                searchIconBang.classList.remove("visible");
+                // Handle auto-invert for SVG icons (like Simple Icons, MDI)
+                if (bang.dataset.iconInvert === "true") {
+                    searchIconBang.classList.add("auto-invert");
+                } else {
+                    searchIconBang.classList.remove("auto-invert");
+                }
+                // Force reflow to restart animation
+                void searchIconBang.offsetWidth;
+                searchIconBang.classList.add("visible");
+                searchIconBang.style.display = "";
+            } else {
+                searchIconDefault.style.display = "";
+                searchIconBang.style.display = "none";
+                searchIconBang.classList.remove("visible");
+                searchIconBang.classList.remove("auto-invert");
+            }
         }
 
         const handleInput = (event) => {

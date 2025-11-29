@@ -148,7 +148,8 @@ func newApplication(c *config) (*application, error) {
 	app.slugToPage[""] = &config.Pages[0]
 
 	providers := &widgetProviders{
-		assetResolver: app.StaticAssetPath,
+		assetResolver:     app.StaticAssetPath,
+		userAssetResolver: app.resolveUserDefinedAssetPath,
 	}
 
 	for p := range config.Pages {

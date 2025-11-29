@@ -177,7 +177,8 @@ type widgetBase struct {
 }
 
 type widgetProviders struct {
-	assetResolver func(string) string
+	assetResolver     func(string) string
+	userAssetResolver func(string) string
 }
 
 func (w *widgetBase) requiresUpdate(now *time.Time) bool {

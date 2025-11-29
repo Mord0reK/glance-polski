@@ -12,6 +12,7 @@ type SearchBang struct {
 	Title    string
 	Shortcut string
 	URL      string
+	Icon     customIconField `yaml:"icon"`
 }
 
 type searchWidget struct {
@@ -67,6 +68,11 @@ func (widget *searchWidget) initialize() error {
 		}
 
 		widget.Bangs[i].URL = convertSearchUrl(widget.Bangs[i].URL)
+
+		// Resolve icon path for user-defined assets (e.g. /assets/icons/...)
+		if widget.Bangs[i].Icon.URL != "" && widget.Providers != nil && widget.Providers.userAssetResolver != nil {
+			widget.Bangs[i].Icon.URL = template.URL(widget.Providers.userAssetResolver(string(widget.Bangs[i].Icon.URL)))
+		}
 	}
 
 	widget.cachedHTML = widget.renderTemplate(widget, searchWidgetTemplate)
