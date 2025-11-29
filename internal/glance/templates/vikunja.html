@@ -38,6 +38,15 @@
                         <span class="affine-note-title">{{ if .AffineNoteTitle }}{{ .AffineNoteTitle }}{{ else }}Notatka{{ end }}</span>
                     </a>
                     {{ end }}
+                    {{ if .CustomLinkURL }}
+                    <a href="{{ .CustomLinkURL }}" target="_blank" rel="noopener noreferrer" class="custom-link" title="{{ if .CustomLinkTitle }}{{ .CustomLinkTitle }}{{ else }}Link zewnętrzny{{ end }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M12.232 4.232a2.5 2.5 0 0 1 3.536 3.536l-1.225 1.224a.75.75 0 0 0 1.061 1.06l1.224-1.224a4 4 0 0 0-5.656-5.656l-3 3a4 4 0 0 0 .225 5.865.75.75 0 0 0 .977-1.138 2.5 2.5 0 0 1-.142-3.667l3-3Z" />
+                            <path d="M11.603 7.963a.75.75 0 0 0-.977 1.138 2.5 2.5 0 0 1 .142 3.667l-3 3a2.5 2.5 0 0 1-3.536-3.536l1.225-1.224a.75.75 0 0 0-1.061-1.06l-1.224 1.224a4 4 0 1 0 5.656 5.656l3-3a4 4 0 0 0-.225-5.865Z" />
+                        </svg>
+                        <span class="custom-link-title">{{ if .CustomLinkTitle }}{{ .CustomLinkTitle }}{{ else }}Link{{ end }}</span>
+                    </a>
+                    {{ end }}
                 </div>
             </td>
             <td class="vikunja-labels">
@@ -52,7 +61,7 @@
                 {{ end }}
             </td>
             <td>
-                <button class="vikunja-edit-btn" title="Edytuj zadanie" data-task-title="{{ .Title }}" data-task-due-date="{{ .DueDateStr }}" data-task-reminder-date="{{ .ReminderStr }}" data-affine-note-url="{{ .AffineNoteURL }}">
+                <button class="vikunja-edit-btn" title="Edytuj zadanie" data-task-title="{{ .Title }}" data-task-due-date="{{ .DueDateStr }}" data-task-reminder-date="{{ .ReminderStr }}" data-affine-note-url="{{ .AffineNoteURL }}" data-custom-link-url="{{ .CustomLinkURL }}" data-custom-link-title="{{ .CustomLinkTitle }}">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 16px; height: 16px;">
                         <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
                         <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
@@ -114,6 +123,14 @@
                 <label for="vikunja-create-affine-url">Link do notatki Affine (opcjonalnie):</label>
                 <input type="text" id="vikunja-create-affine-url" class="vikunja-input" placeholder="https://affine-url/workspace/...">
             </div>
+            <div class="vikunja-form-group">
+                <label for="vikunja-create-custom-link-url">Link zewnętrzny (opcjonalnie):</label>
+                <input type="text" id="vikunja-create-custom-link-url" class="vikunja-input" placeholder="https://dowolny-link/...">
+            </div>
+            <div class="vikunja-form-group">
+                <label for="vikunja-create-custom-link-title">Tytuł linku zewnętrznego (opcjonalnie):</label>
+                <input type="text" id="vikunja-create-custom-link-title" class="vikunja-input" placeholder="Nazwa linku">
+            </div>
         </div>
         <div class="vikunja-modal-footer">
             <button class="vikunja-btn vikunja-btn-cancel">Anuluj</button>
@@ -154,6 +171,14 @@
             <div class="vikunja-form-group">
                 <label for="vikunja-edit-affine-url">Link do notatki Affine (opcjonalnie):</label>
                 <input type="text" id="vikunja-edit-affine-url" class="vikunja-input" placeholder="https://affine-url/workspace/...">
+            </div>
+            <div class="vikunja-form-group">
+                <label for="vikunja-edit-custom-link-url">Link zewnętrzny (opcjonalnie):</label>
+                <input type="text" id="vikunja-edit-custom-link-url" class="vikunja-input" placeholder="https://dowolny-link/...">
+            </div>
+            <div class="vikunja-form-group">
+                <label for="vikunja-edit-custom-link-title">Tytuł linku zewnętrznego (opcjonalnie):</label>
+                <input type="text" id="vikunja-edit-custom-link-title" class="vikunja-input" placeholder="Nazwa linku">
             </div>
         </div>
         <div class="vikunja-modal-footer">
