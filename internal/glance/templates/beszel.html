@@ -2,87 +2,146 @@
 
 {{- define "widget-content" }}
 {{- $redirect := .RedirectURL }}
-{{- range .Systems }}
-<div class="server">
-    <div class="server-info">
-        <div class="server-details">
-            <div class="server-name size-h3">
+{{- $showCharts := .ShowCharts }}
+{{- $widgetID := .GetID }}
+{{- $beszelURL := .URL }}
+
+{{/* Systemy Online */}}
+{{- range .OnlineSystems }}
+<div class="beszel-system" data-system-id="{{ .ID }}" data-system-name="{{ .Name }}">
+    <div class="beszel-header">
+        <div class="beszel-header-left">
+            <div class="beszel-title">
                 {{ if ne $redirect "" }}
-                <a class="color-highlight" href="{{ $redirect }}/system/{{ .Name }}" target="_blank" rel="noopener">{{ .Name }}</a>
+                <a class="color-highlight size-h3" href="{{ $redirect }}/system/{{ .Name }}" target="_blank" rel="noopener">{{ .Name }}</a>
                 {{ else }}
-                <span class="color-highlight">{{ .Name }}</span>
+                <span class="color-highlight size-h3">{{ .Name }}</span>
                 {{ end }}
-            </div>
-            <div>
-                {{ if eq .Status "up" }}
-                    <span {{ dynamicRelativeTimeAttrs .BootTime }}></span> uptime
-                {{ else }}
-                    <span class="color-negative">down</span>
-                {{ end }}
+                <span class="beszel-status beszel-status-up">online</span>
             </div>
         </div>
-        <div class="shrink-0" data-popover-type="html" data-popover-margin="0.2rem" data-popover-max-width="400px">
-            <div data-popover-html>
-                <div class="size-h5 text-compact">HOST</div>
-                <div class="color-highlight">{{ .Host }}</div>
-                
-                <div class="size-h5 text-compact margin-top-3">KERNEL</div>
-                <div class="color-highlight">{{ .Info.Kernel }}</div>
-
-                <div class="size-h5 text-compact margin-top-3">CPU MODEL</div>
-                <div class="color-highlight">{{ .Info.CPUModel }}</div>
-            </div>
-            <svg class="server-icon" stroke="var(--color-{{ if eq .Status "up" }}positive{{ else }}negative{{ end }})" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 0 0-.12-1.03l-2.268-9.64a3.375 3.375 0 0 0-3.285-2.602H7.923a3.375 3.375 0 0 0-3.285 2.602l-2.268 9.64a4.5 4.5 0 0 0-.12 1.03v.228m19.5 0a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3m19.5 0a3 3 0 0 0-3-3H5.25a3 3 0 0 0-3 3m16.5 0h.008v.008h-.008v-.008Zm-3 0h.008v.008h-.008v-.008Z" />
-            </svg>
+        <div class="beszel-header-right">
+            <span class="beszel-badge beszel-badge-uptime" title="Uptime">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="beszel-badge-icon">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd" />
+                </svg>
+                <span {{ dynamicRelativeTimeAttrs .BootTime }}></span>
+            </span>
+            <span class="beszel-badge" title="CPU: {{ .Info.Cores }} rdzeni / {{ .Info.Threads }} wątków">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="beszel-badge-icon">
+                    <path d="M14 6H6v8h8V6z" />
+                    <path fill-rule="evenodd" d="M9.25 3V1.75a.75.75 0 011.5 0V3h1.5V1.75a.75.75 0 011.5 0V3h.5A2.75 2.75 0 0117 5.75v.5h1.25a.75.75 0 010 1.5H17v1.5h1.25a.75.75 0 010 1.5H17v1.5h1.25a.75.75 0 010 1.5H17v.5A2.75 2.75 0 0114.25 17h-.5v1.25a.75.75 0 01-1.5 0V17h-1.5v1.25a.75.75 0 01-1.5 0V17h-1.5v1.25a.75.75 0 01-1.5 0V17h-.5A2.75 2.75 0 013 14.25v-.5H1.75a.75.75 0 010-1.5H3v-1.5H1.75a.75.75 0 010-1.5H3v-1.5H1.75a.75.75 0 010-1.5H3v-.5A2.75 2.75 0 015.75 3h.5V1.75a.75.75 0 011.5 0V3h1.5zM4.5 5.75c0-.69.56-1.25 1.25-1.25h8.5c.69 0 1.25.56 1.25 1.25v8.5c0 .69-.56 1.25-1.25 1.25h-8.5c-.69 0-1.25-.56-1.25-1.25v-8.5z" clip-rule="evenodd" />
+                </svg>
+                {{ .Info.Cores }}C/{{ .Info.Threads }}T
+            </span>
+            <span class="beszel-badge{{ if ge .Info.CPU 85.0 }} beszel-badge-warning{{ end }}" title="Użycie CPU: {{ printf "%.1f" .Info.CPU }}%&#10;Model: {{ .Info.CPUModel }}&#10;Load: {{ .Info.Load1 }} / {{ .Info.Load5 }} / {{ .Info.Load15 }}">
+                CPU {{ printf "%.0f" .Info.CPU }}%
+            </span>
+            <span class="beszel-badge{{ if ge .Info.Memory 85.0 }} beszel-badge-warning{{ end }}" title="Użycie RAM: {{ printf "%.1f" .Info.Memory }}%">
+                RAM {{ printf "%.0f" .Info.Memory }}%
+            </span>
+            <span class="beszel-badge{{ if ge .Info.Disk 85.0 }} beszel-badge-warning{{ end }}" title="Użycie dysku: {{ printf "%.1f" .Info.Disk }}%">
+                DISK {{ printf "%.0f" .Info.Disk }}%
+            </span>
+            {{ if .Info.AgentVersion }}
+            <span class="beszel-badge beszel-badge-version" title="Agent Beszel v{{ .Info.AgentVersion }}">
+                v{{ .Info.AgentVersion }}
+            </span>
+            {{ end }}
         </div>
     </div>
-    <div class="server-stats">
-        <div class="flex-1">
-            <div class="flex items-end size-h5">
-                <div>CPU</div>
-                <div class="color-highlight margin-left-auto text-very-compact">{{ printf "%.1f" .Info.CPU }} <span class="color-base">%</span></div>
+    
+    {{- if $showCharts }}
+    <div class="beszel-chart-container" data-widget-id="{{ $widgetID }}" data-system-id="{{ .ID }}">
+        <div class="beszel-chart-controls">
+            <div class="beszel-control-group">
+                <span class="beszel-control-label">Metryka</span>
+                <select class="beszel-select beszel-metric-select">
+                    <option value="cpu" selected>CPU</option>
+                    <option value="ram">RAM</option>
+                    <option value="disk">Dysk</option>
+                    <option value="network">Sieć</option>
+                </select>
             </div>
-            <div class="progress-bar" data-popover-type="html">
-                <div data-popover-html>
-                    <div class="flex">
-                        <div class="size-h5">1M AVG</div>
-                        <div class="value-separator"></div>
-                        <div class="color-highlight text-very-compact">{{ .Info.Load1 }}</div>
-                    </div>
-                    <div class="flex margin-top-3">
-                        <div class="size-h5">5M AVG</div>
-                        <div class="value-separator"></div>
-                        <div class="color-highlight text-very-compact">{{ .Info.Load5 }}</div>
-                    </div>
-                    <div class="flex margin-top-3">
-                        <div class="size-h5">15M AVG</div>
-                        <div class="value-separator"></div>
-                        <div class="color-highlight text-very-compact">{{ .Info.Load15 }}</div>
-                    </div>
+            <div class="beszel-control-group">
+                <span class="beszel-control-label">Okres</span>
+                <select class="beszel-select beszel-time-select">
+                    <option value="1h" selected>1 godz</option>
+                    <option value="12h">12 godz</option>
+                    <option value="24h">24 godz</option>
+                    <option value="7d">7 dni</option>
+                    <option value="30d">30 dni</option>
+                </select>
+            </div>
+        </div>
+        <div class="beszel-chart-wrapper">
+            <div class="beszel-chart-y-axis">
+                <span class="beszel-y-label beszel-y-max">100%</span>
+                <span class="beszel-y-label beszel-y-mid">50%</span>
+                <span class="beszel-y-label beszel-y-min">0%</span>
+            </div>
+            <div class="beszel-chart">
+                <div class="beszel-chart-cursor"></div>
+                <div class="beszel-chart-tooltip"></div>
+                <svg class="beszel-chart-svg" viewBox="0 0 100 50" preserveAspectRatio="none">
+                    <polyline
+                        fill="none"
+                        stroke="var(--color-primary)"
+                        stroke-width="1.5"
+                        points=""
+                        vector-effect="non-scaling-stroke"
+                    />
+                </svg>
+                <div class="beszel-chart-loading">
+                    <span class="beszel-spinner"></span>
                 </div>
-                <div class="progress-value{{ if ge .Info.CPU 85.0 }} progress-value-notice{{ end }}" style="--percent: {{ .Info.CPU }}"></div>
             </div>
         </div>
-        <div class="flex-1">
-            <div class="flex items-end size-h5">
-                <div>RAM</div>
-                <div class="color-highlight margin-left-auto text-very-compact">{{ printf "%.1f" .Info.Memory }} <span class="color-base">%</span></div>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-value{{ if ge .Info.Memory 85.0 }} progress-value-notice{{ end }}" style="--percent: {{ .Info.Memory }}"></div>
+        <div class="beszel-chart-axis"></div>
+        <script type="application/json" class="beszel-chart-data">[]</script>
+    </div>
+    {{- end }}
+</div>
+{{- end }}
+
+{{/* Systemy Offline - z separatorem */}}
+{{- if .OfflineSystems }}
+<div class="beszel-offline-separator">
+    <span class="beszel-offline-label">Offline</span>
+</div>
+{{- range .OfflineSystems }}
+<div class="beszel-system beszel-system-offline" data-system-id="{{ .ID }}" data-system-name="{{ .Name }}">
+    <div class="beszel-header">
+        <div class="beszel-header-left">
+            <div class="beszel-title">
+                {{ if ne $redirect "" }}
+                <a class="color-highlight size-h3" href="{{ $redirect }}/system/{{ .Name }}" target="_blank" rel="noopener">{{ .Name }}</a>
+                {{ else }}
+                <span class="color-highlight size-h3">{{ .Name }}</span>
+                {{ end }}
+                <span class="beszel-status beszel-status-down">offline</span>
             </div>
         </div>
-        <div class="flex-1">
-            <div class="flex items-end size-h5">
-                <div>DISK</div>
-                <div class="color-highlight margin-left-auto text-very-compact">{{ printf "%.1f" .Info.Disk }} <span class="color-base">%</span></div>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-value{{ if ge .Info.Disk 85.0 }} progress-value-notice{{ end }}" style="--percent: {{ .Info.Disk }}"></div>
-            </div>
+        <div class="beszel-header-right">
+            <span class="beszel-badge" title="Host: {{ .Host }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="beszel-badge-icon">
+                    <path d="M4.632 3.533A2 2 0 016.577 2h6.846a2 2 0 011.945 1.533l1.976 8.234A3.489 3.489 0 0016 11.5H4c-.476 0-.93.095-1.344.267l1.976-8.234z" />
+                    <path fill-rule="evenodd" d="M4 13a2 2 0 100 4h12a2 2 0 100-4H4zm11.24 2a.75.75 0 01.75-.75H16a.75.75 0 01.75.75v.01a.75.75 0 01-.75.75h-.01a.75.75 0 01-.75-.75V15zm-2.25-.75a.75.75 0 00-.75.75v.01c0 .414.336.75.75.75H13a.75.75 0 00.75-.75V15a.75.75 0 00-.75-.75h-.01z" clip-rule="evenodd" />
+                </svg>
+                {{ .Host }}
+            </span>
+            {{ if .Info.Cores }}
+            <span class="beszel-badge" title="CPU: {{ .Info.Cores }} rdzeni / {{ .Info.Threads }} wątków">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="beszel-badge-icon">
+                    <path d="M14 6H6v8h8V6z" />
+                    <path fill-rule="evenodd" d="M9.25 3V1.75a.75.75 0 011.5 0V3h1.5V1.75a.75.75 0 011.5 0V3h.5A2.75 2.75 0 0117 5.75v.5h1.25a.75.75 0 010 1.5H17v1.5h1.25a.75.75 0 010 1.5H17v1.5h1.25a.75.75 0 010 1.5H17v.5A2.75 2.75 0 0114.25 17h-.5v1.25a.75.75 0 01-1.5 0V17h-1.5v1.25a.75.75 0 01-1.5 0V17h-1.5v1.25a.75.75 0 01-1.5 0V17h-.5A2.75 2.75 0 013 14.25v-.5H1.75a.75.75 0 010-1.5H3v-1.5H1.75a.75.75 0 010-1.5H3v-1.5H1.75a.75.75 0 010-1.5H3v-.5A2.75 2.75 0 015.75 3h.5V1.75a.75.75 0 011.5 0V3h1.5zM4.5 5.75c0-.69.56-1.25 1.25-1.25h8.5c.69 0 1.25.56 1.25 1.25v8.5c0 .69-.56 1.25-1.25 1.25h-8.5c-.69 0-1.25-.56-1.25-1.25v-8.5z" clip-rule="evenodd" />
+                </svg>
+                {{ .Info.Cores }}C/{{ .Info.Threads }}T
+            </span>
+            {{ end }}
         </div>
     </div>
 </div>
+{{- end }}
 {{- end }}
 {{- end }}

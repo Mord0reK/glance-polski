@@ -10,7 +10,8 @@ Aby skonfigurować widget Beszel, dodaj następującą konfigurację do swojego 
 - type: beszel
   url: https://twoja-instancja-beszel.pl    # URL do Twojej instancji Beszel (API)
   redirect-url: https://twoja-instancja-beszel.pl # URL do interfejsu webowego Beszel 
-  token: twoj-token-jwt                     # Token JWT (
+  token: twoj-token-jwt                     # Token JWT
+  show-charts: true                         # Włączenie wykresów (domyślnie true)
   cache: 10s                                # Częstotliwość odświeżania (domyślnie 10s)
 ```
 
@@ -47,6 +48,35 @@ Po najechaniu kursorem na ikonę serwera lub paski postępu, wyświetlane są do
 
 Jeśli skonfigurowano parametr `redirect-url`, kliknięcie w nazwę serwera otworzy nową kartę z szczegółowymi statystykami tego konkretnego systemu w panelu Beszel.
 
+### 5. Wykresy historyczne (NOWOŚĆ)
+
+Dla każdego serwera dostępny jest interaktywny wykres pokazujący dane historyczne. Wykresy można dostosować poprzez:
+
+#### Typy metryk:
+- **CPU** - użycie procesora w procentach
+- **RAM** - użycie pamięci w procentach
+- **Dysk** - zajętość dysku w procentach
+- **Sieć** - przesłane + odebrane dane w MB
+
+#### Zakresy czasowe:
+- **1h** - ostatnia godzina (dane co 1 minutę)
+- **12h** - ostatnie 12 godzin (dane co 10 minut)
+- **24h** - ostatnie 24 godziny (dane co 20 minut)
+- **7d** - ostatnie 7 dni (dane co 2 godziny)
+- **30d** - ostatnie 30 dni (dane co 8 godzin)
+
+#### Interakcja z wykresem:
+- Najedź kursorem na wykres, aby zobaczyć dokładne wartości w tooltipie
+- Wartości są wyświetlane z etykietą czasową
+
+#### Wyłączanie wykresów:
+Jeśli nie chcesz wyświetlać wykresów, możesz je wyłączyć:
+```yaml
+- type: beszel
+  url: https://beszel.example.com
+  show-charts: false
+```
+
 ## Przykładowa konfiguracja
 
 ```yaml
@@ -59,7 +89,8 @@ pages:
             title: Serwery
             url: https://beszel.example.com
             redirect-url: https://beszel.example.com
-            token: TWóJ_TOKEN
+            token: TWÓJ_TOKEN
+            show-charts: true
             cache: 5s
 ```
 
@@ -74,3 +105,14 @@ pages:
 ### Brakujące metryki
 
 Niektóre metryki (np. Load Average) mogą nie być dostępne w zależności od wersji agenta Beszel zainstalowanego na monitorowanym serwerze.
+
+### Wykresy nie ładują się
+
+1. Sprawdź czy endpoint `/api/collections/system_stats/records` jest dostępny.
+2. Upewnij się, że Beszel zbiera dane statystyczne - wykresy wymagają danych historycznych.
+3. Sprawdź konsolę przeglądarki pod kątem błędów JavaScript.
+
+### Brak danych na wykresie
+
+1. Beszel może nie mieć wystarczającej ilości danych historycznych dla wybranego zakresu czasowego.
+2. Spróbuj wybrać krótszy zakres czasowy (np. 1h zamiast 30d).

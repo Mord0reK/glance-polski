@@ -1,0 +1,462 @@
+/* Beszel Widget CSS */
+
+/* System container */
+.beszel-system {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: hsla(var(--bghs), calc(var(--bgl) + 2%), 0.5);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-widget-content-border);
+}
+
+.beszel-system:last-child {
+    margin-bottom: 0;
+}
+
+/* Header */
+.beszel-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.beszel-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.beszel-header-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.beszel-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.beszel-title a,
+.beszel-title span {
+    text-decoration: none;
+}
+
+.beszel-title a:hover {
+    text-decoration: underline;
+}
+
+/* Uptime / Host info */
+.beszel-uptime {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: var(--font-size-h6);
+    color: var(--color-text-subdue);
+}
+
+.beszel-icon-small {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+/* Status badge */
+.beszel-status {
+    font-size: var(--font-size-h6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+}
+
+.beszel-status-up {
+    background: hsla(var(--color-positive-hsl), 0.15);
+    color: var(--color-positive);
+}
+
+.beszel-status-down {
+    background: hsla(var(--color-negative-hsl), 0.15);
+    color: var(--color-negative);
+}
+
+/* Badges - statystyki po prawej */
+.beszel-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    font-size: var(--font-size-h6);
+    font-weight: 500;
+    background: hsla(var(--bghs), calc(var(--bgl) + 10%), 0.8);
+    border: 1px solid hsla(var(--bghs), calc(var(--bgl) + 20%), 0.5);
+    border-radius: 0.3rem;
+    color: var(--color-text-highlight);
+    white-space: nowrap;
+}
+
+.beszel-badge-icon {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.beszel-badge-version {
+    background: hsla(var(--color-primary-hsl), 0.15);
+    border-color: hsla(var(--color-primary-hsl), 0.3);
+    color: var(--color-primary);
+}
+
+.beszel-badge-uptime {
+    background: hsla(var(--color-positive-hsl), 0.1);
+    border-color: hsla(var(--color-positive-hsl), 0.25);
+    color: var(--color-positive);
+}
+
+.beszel-badge-warning {
+    background: hsla(var(--color-negative-hsl), 0.15);
+    border-color: hsla(var(--color-negative-hsl), 0.3);
+    color: var(--color-negative);
+}
+
+/* Meta info */
+.beszel-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    font-size: var(--font-size-h6);
+    color: var(--color-text-subdue);
+}
+
+.beszel-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.beszel-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+.beszel-version {
+    background: hsla(var(--bghs), calc(var(--bgl) + 8%), 0.5);
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.2rem;
+    font-size: 0.7rem;
+}
+
+/* Stats */
+.beszel-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.beszel-stat {
+    flex: 1;
+    min-width: 0;
+}
+
+.beszel-stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.3rem;
+}
+
+.beszel-stat-label {
+    font-size: var(--font-size-h6);
+    color: var(--color-text-subdue);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.beszel-stat-value {
+    font-size: var(--font-size-h5);
+    color: var(--color-text-highlight);
+    font-weight: 500;
+}
+
+/* Separator dla systemów offline */
+.beszel-offline-separator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0 1rem 0;
+    padding-top: 1rem;
+}
+
+.beszel-offline-separator::before,
+.beszel-offline-separator::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--color-negative), transparent);
+    opacity: 0.3;
+}
+
+.beszel-offline-label {
+    font-size: var(--font-size-h5);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-negative);
+    font-weight: 500;
+}
+
+/* Style dla systemów offline */
+.beszel-system-offline {
+    opacity: 0.6;
+    border-color: hsla(var(--color-negative-hsl), 0.3);
+}
+
+.beszel-system-offline .beszel-header {
+    margin-bottom: 0;
+}
+
+/* Kontener wykresu */
+.beszel-chart-container {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-widget-content-border);
+}
+
+/* Kontrolki - lepszy layout */
+.beszel-chart-controls {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+    align-items: center;
+}
+
+.beszel-control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.beszel-control-label {
+    font-size: var(--font-size-h6);
+    color: var(--color-text-subdue);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+/* Select - nowoczesny wygląd */
+.beszel-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: hsla(var(--bghs), calc(var(--bgl) + 8%), 0.6);
+    border: 1px solid hsla(var(--bghs), calc(var(--bgl) + 15%), 0.5);
+    border-radius: 0.35rem;
+    color: var(--color-text-highlight);
+    padding: 0.3rem 1.5rem 0.3rem 0.5rem;
+    font-size: var(--font-size-h6);
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.15s ease;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.4rem center;
+    background-size: 10px;
+    min-width: 70px;
+}
+
+.beszel-select:hover {
+    background-color: hsla(var(--bghs), calc(var(--bgl) + 12%), 0.8);
+    border-color: hsla(var(--bghs), calc(var(--bgl) + 20%), 0.7);
+}
+
+.beszel-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px hsla(var(--color-primary-hsl), 0.2);
+}
+
+.beszel-select option {
+    background-color: var(--color-widget-background);
+    color: var(--color-text-base);
+    padding: 0.5rem;
+}
+
+/* Wrapper wykresu z osią Y */
+.beszel-chart-wrapper {
+    display: flex;
+    gap: 0.4rem;
+}
+
+/* Oś Y */
+.beszel-chart-y-axis {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0.2rem 0;
+    min-width: 38px;
+}
+
+.beszel-y-label {
+    font-size: var(--font-size-h6);
+    color: var(--color-text-base);
+    line-height: 1;
+    font-weight: 500;
+}
+
+/* Wykres */
+.beszel-chart {
+    position: relative;
+    flex: 1;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        hsla(var(--bghs), calc(var(--bgl) + 3%), 0.3) 100%
+    );
+    border-radius: var(--border-radius);
+    padding: 0.2rem 0;
+    height: 90px;
+}
+
+.beszel-chart-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.beszel-chart-svg polyline {
+    filter: drop-shadow(0 1px 2px hsla(var(--bghs), var(--bgl), 0.3));
+}
+
+/* Cursor */
+.beszel-chart-cursor {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--color-primary);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 2;
+}
+
+/* Tooltip */
+.beszel-chart-tooltip {
+    position: absolute;
+    background: var(--color-popover-background);
+    border: 1px solid var(--color-popover-border);
+    border-radius: var(--border-radius);
+    padding: 0.3rem 0.5rem;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 10;
+    font-size: var(--font-size-h6);
+    box-shadow: 0 4px 12px -2px hsla(var(--bghs), var(--bgl), 0.4);
+    white-space: nowrap;
+}
+
+.beszel-chart-tooltip .tooltip-time {
+    color: var(--color-text-subdue);
+    font-size: var(--font-size-h6);
+}
+
+.beszel-chart-tooltip .tooltip-value {
+    color: var(--color-text-highlight);
+    font-weight: 500;
+}
+
+/* Loading */
+.beszel-chart-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: hsla(var(--bghs), var(--bgl), 0.8);
+    border-radius: var(--border-radius);
+    z-index: 5;
+}
+
+.beszel-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-widget-content-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: beszel-spin 0.6s linear infinite;
+}
+
+@keyframes beszel-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Oś czasu */
+.beszel-chart-axis {
+    position: relative;
+    height: 1rem;
+    margin-top: 0.15rem;
+    margin-left: 42px; /* Wyrównanie z wykresem (min-width osi Y + gap) */
+}
+
+.beszel-axis-label {
+    position: absolute;
+    font-size: var(--font-size-h6);
+    color: var(--color-text-subdue);
+    white-space: nowrap;
+    line-height: 1;
+}
+
+/* Responsywność */
+@container widget (max-width: 450px) {
+    .beszel-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .beszel-header-right {
+        width: 100%;
+        justify-content: flex-start;
+        margin-top: 0.25rem;
+    }
+}
+
+@container widget (max-width: 350px) {
+    .beszel-chart-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .beszel-control-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .beszel-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .beszel-meta {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+}
