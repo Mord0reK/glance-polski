@@ -8,3 +8,4 @@
 /glance
 /*.yml
 .env
+glance_binary
