@@ -326,8 +326,9 @@
         z-index: 10;
     }
 
-    .vikunja-add-btn-mobile:hover {
+    .vikunja-add-btn-mobile:active {
         background-color: var(--color-primary);
         opacity: 0.9;
+        transform: scale(0.95);
     }
 }
