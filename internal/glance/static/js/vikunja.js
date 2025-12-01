@@ -69,14 +69,13 @@ function initVikunjaWidget(widget) {
         if (!widgetID) return;
 
 
-        // Handle add button (can be in table header or empty state)
-        const addBtn = widget.querySelector('.vikunja-add-btn');
-        if (addBtn) {
+        // Handle add buttons (can be in table header, empty state, or mobile button)
+        widget.querySelectorAll('.vikunja-add-btn').forEach(addBtn => {
             addBtn.addEventListener('click', function() {
                 const btnWidgetID = this.dataset.widgetId || widgetID;
                 openCreateModal(btnWidgetID);
             });
-        }
+        });
 
 
         // Handle task completion checkboxes

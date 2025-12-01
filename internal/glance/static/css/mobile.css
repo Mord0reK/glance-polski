@@ -232,4 +232,102 @@
         line-clamp: 3;
         -webkit-line-clamp: 3;
     }
+
+    /* Vikunja widget mobile styles */
+    .vikunja-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .vikunja-table thead {
+        display: none;
+    }
+
+    .vikunja-table tbody {
+        display: block;
+    }
+
+    .vikunja-table tbody tr {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 0.8rem 0.5rem;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .vikunja-table td {
+        padding: 0.3rem 0.2rem;
+    }
+
+    /* Checkbox - first column */
+    .vikunja-table td:first-child {
+        order: 1;
+        flex: 0 0 auto;
+        padding: 0.2rem;
+    }
+
+    /* Time left column - show next to title */
+    .vikunja-table td:nth-child(2) {
+        order: 3;
+        flex: 0 0 auto;
+        font-size: 0.85em;
+    }
+
+    /* Title column - takes most space */
+    .vikunja-table td:nth-child(3) {
+        order: 2;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .vikunja-table td:nth-child(3) .vikunja-title-container {
+        flex-wrap: wrap;
+    }
+
+    .vikunja-table td:nth-child(3) .task-title-link {
+        width: 100%;
+        word-break: break-word;
+    }
+
+    /* Labels column - hide on mobile */
+    .vikunja-table td:nth-child(4) {
+        display: none;
+    }
+
+    /* Edit button column - always visible */
+    .vikunja-table td:nth-child(5) {
+        order: 4;
+        flex: 0 0 auto;
+    }
+
+    /* Ensure buttons are always visible and touchable */
+    .vikunja-add-btn,
+    .vikunja-edit-btn {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0.6rem;
+    }
+
+    /* Mobile add button - floating button that appears when header is hidden */
+    .vikunja-add-btn-mobile {
+        display: flex;
+        position: sticky;
+        bottom: 1rem;
+        right: 0;
+        margin-left: auto;
+        margin-top: 1rem;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: var(--color-primary);
+        color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        z-index: 10;
+    }
+
+    .vikunja-add-btn-mobile:hover {
+        background-color: var(--color-primary);
+        opacity: 0.9;
+    }
 }

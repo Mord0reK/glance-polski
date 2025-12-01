@@ -591,3 +591,8 @@ span.flatpickr-weekday {
 .custom-link:hover svg {
     opacity: 1;
 }
+
+/* Mobile add button - hidden by default on desktop */
+.vikunja-add-btn-mobile {
+    display: none;
+}
