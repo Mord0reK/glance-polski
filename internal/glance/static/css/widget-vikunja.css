@@ -99,6 +99,11 @@
     font-weight: 400;
 }
 
+/* Mobile meta - hidden by default on desktop */
+.vikunja-mobile-meta {
+    display: none;
+}
+
 .vikunja-progress {
     padding: 0.8rem 1rem;
 }

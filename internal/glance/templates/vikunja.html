@@ -47,6 +47,19 @@
                         <span class="custom-link-title">{{ if .CustomLinkTitle }}{{ .CustomLinkTitle }}{{ else }}Link{{ end }}</span>
                     </a>
                     {{ end }}
+                    <!-- Mobile-only: time left and labels displayed below title -->
+                    <div class="vikunja-mobile-meta">
+                        <span class="vikunja-mobile-time {{ if .IsOverdue }}overdue{{ end }}">
+                            {{ if .TimeLeft }}{{ .TimeLeft }}{{ end }}
+                        </span>
+                        {{ if .Labels }}
+                        <div class="vikunja-mobile-labels">
+                            {{ range .Labels }}
+                            <span class="label" style="border-color: {{ .Color }}; color: {{ .Color }};">{{ .Title }}</span>
+                            {{ end }}
+                        </div>
+                        {{ end }}
+                    </div>
                 </div>
             </td>
             <td class="vikunja-labels">
