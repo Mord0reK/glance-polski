@@ -60,7 +60,7 @@ func (widget *radyjkoWidget) Render() template.HTML {
 }
 
 func fetchRadioStations(ctx context.Context) (stationList, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://proxy.mordorek.dev/stations", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.radyjko.mordorek.dev/stations", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
