@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -23,6 +24,8 @@ type tailscaleWidget struct {
 	ShowBlocksIncoming  bool   `yaml:"show-blocks-incoming"`
 	ShowJoinedDate      bool   `yaml:"show-joined-date"`
 	Devices             []tailscaleDevice
+	OnlineDevices       []tailscaleDevice
+	OfflineDevices      []tailscaleDevice
 }
 
 type tailscaleDevice struct {
@@ -45,6 +48,11 @@ type tailscaleDevice struct {
 	Created                   time.Time
 	CreatedStr                string
 	ConnectedToControl        bool
+	// Feature flags
+	IsExitNode                bool
+	IsSubnetRouter            bool
+	TailscaleSSHEnabled       bool
+	AdvertisedRoutes          []string
 }
 
 type tailscaleAPIResponse struct {
@@ -66,6 +74,25 @@ type tailscaleAPIDevice struct {
 	BlocksIncomingConnections bool     `json:"blocksIncomingConnections"`
 	ConnectedToControl        bool     `json:"connectedToControl"`
 	ClientVersion             string   `json:"clientVersion"`
+	IsExitNode                bool     `json:"isExitNode"`
+	AdvertisedRoutes          []string `json:"advertisedRoutes"`
+	EnabledRoutes             []string `json:"enabledRoutes"`
+	TailscaleSSHEnabled       bool     `json:"tailscaleSSHEnabled"`
+}
+
+// Struktura odpowiedzi z /device/{id}/routes
+type tailscaleRoutesResponse struct {
+	AdvertisedRoutes []tailscaleRoute `json:"advertisedRoutes"`
+	EnabledRoutes    []tailscaleRoute `json:"enabledRoutes"`
+}
+
+type tailscaleRoute struct {
+	Route string `json:"route"`
+}
+
+// Struktura odpowiedzi z /device/{id}
+type tailscaleDeviceDetailsResponse struct {
+	TailscaleSSHEnabled bool `json:"tailscaleSSHEnabled"`
 }
 
 func (widget *tailscaleWidget) initialize() error {
@@ -102,6 +129,18 @@ func (widget *tailscaleWidget) update(ctx context.Context) {
 	}
 
 	widget.Devices = devices
+
+	// Grupowanie urządzeń na online i offline
+	widget.OnlineDevices = make([]tailscaleDevice, 0)
+	widget.OfflineDevices = make([]tailscaleDevice, 0)
+
+	for _, device := range devices {
+		if device.IsOnline {
+			widget.OnlineDevices = append(widget.OnlineDevices, device)
+		} else {
+			widget.OfflineDevices = append(widget.OfflineDevices, device)
+		}
+	}
 }
 
 func (widget *tailscaleWidget) fetchDevices() ([]tailscaleDevice, error) {
@@ -117,10 +156,11 @@ func (widget *tailscaleWidget) fetchDevices() ([]tailscaleDevice, error) {
 		return nil, err
 	}
 
-	devices := make([]tailscaleDevice, 0)
+	devices := make([]tailscaleDevice, len(apiResponse.Devices))
 	now := time.Now()
 
-	for _, apiDevice := range apiResponse.Devices {
+	// Najpierw tworzymy podstawowe dane urządzeń
+	for i, apiDevice := range apiResponse.Devices {
 		device := tailscaleDevice{
 			ID:                        apiDevice.ID,
 			Name:                      apiDevice.Name,
@@ -171,10 +211,55 @@ func (widget *tailscaleWidget) fetchDevices() ([]tailscaleDevice, error) {
 			}
 		}
 
-		devices = append(devices, device)
+		devices[i] = device
 	}
 
+	// Pobierz dodatkowe dane (routes i SSH) równolegle dla wszystkich urządzeń
+	var wg sync.WaitGroup
+	for i := range devices {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			widget.fetchDeviceDetails(&devices[idx])
+		}(i)
+	}
+	wg.Wait()
+
 	return devices, nil
+}
+
+// fetchDeviceDetails pobiera szczegóły urządzenia (routes i SSH)
+func (widget *tailscaleWidget) fetchDeviceDetails(device *tailscaleDevice) {
+	// Pobierz routes
+	routesURL := fmt.Sprintf("https://api.tailscale.com/api/v2/device/%s/routes", device.ID)
+	routesReq, err := http.NewRequest("GET", routesURL, nil)
+	if err == nil {
+		routesReq.Header.Set("Authorization", "Bearer "+widget.Token)
+		routesResp, err := decodeJsonFromRequest[tailscaleRoutesResponse](defaultHTTPClient, routesReq)
+		if err == nil {
+			// Sprawdź czy jest Exit Node (route 0.0.0.0/0 lub ::/0)
+			for _, route := range routesResp.EnabledRoutes {
+				if route.Route == "0.0.0.0/0" || route.Route == "::/0" {
+					device.IsExitNode = true
+				} else {
+					// Każdy inny route oznacza subnet router
+					device.IsSubnetRouter = true
+				}
+				device.AdvertisedRoutes = append(device.AdvertisedRoutes, route.Route)
+			}
+		}
+	}
+
+	// Pobierz szczegóły urządzenia (dla SSH)
+	detailsURL := fmt.Sprintf("https://api.tailscale.com/api/v2/device/%s", device.ID)
+	detailsReq, err := http.NewRequest("GET", detailsURL, nil)
+	if err == nil {
+		detailsReq.Header.Set("Authorization", "Bearer "+widget.Token)
+		detailsResp, err := decodeJsonFromRequest[tailscaleDeviceDetailsResponse](defaultHTTPClient, detailsReq)
+		if err == nil {
+			device.TailscaleSSHEnabled = detailsResp.TailscaleSSHEnabled
+		}
+	}
 }
 
 // extractShortName extracts the hostname before the first dot

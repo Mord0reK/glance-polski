@@ -32,34 +32,39 @@
     opacity: 1;
   }
 
-  .tailscale-update-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: var(--color-primary);
-    display: inline-block;
-    margin-left: 4px;
-    vertical-align: middle;
+  .tailscale-update-message {
+    font-size: 0.75em;
+    color: var(--color-primary);
+    padding: 2px 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .tailscale-update-message::before {
+    content: '⬆';
   }
 
   .tailscale-offline-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: var(--color-negative);
-    display: inline-block;
+    color: var(--color-negative);
+    font-weight: bold;
+    font-size: 1.1em;
     margin-left: 4px;
-    vertical-align: middle;
+  }
+
+  .tailscale-offline-indicator::before {
+    content: '✕';
   }
 
   .tailscale-online-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: var(--color-positive);
-    display: inline-block;
+    color: var(--color-positive);
+    font-weight: bold;
+    font-size: 1.1em;
     margin-left: 4px;
-    vertical-align: middle;
+  }
+
+  .tailscale-online-indicator::before {
+    content: '✓';
   }
 
   .tailscale-device-name-container {
@@ -119,64 +124,210 @@
     color: #ffffff;
   }
 
+  .tailscale-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .tailscale-section-header.online {
+    color: var(--color-positive);
+  }
+
+  .tailscale-section-header.offline {
+    color: var(--color-negative);
+  }
+
+  .tailscale-section-divider {
+    border: none;
+    border-top: 1px solid var(--color-separator);
+    margin: 12px 0;
+  }
+
+  .tailscale-section-count {
+    font-size: 0.8em;
+    opacity: 0.7;
+  }
+
+  .tailscale-device-details {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 0.8em;
+  }
+
+  .tailscale-device-ip-display {
+    color: var(--color-text-subdue);
+    font-family: monospace;
+    cursor: pointer;
+    padding: 1px 4px;
+    border-radius: 3px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .tailscale-device-ip-display:hover {
+    background-color: var(--color-primary);
+    color: var(--color-background);
+  }
+
+  .tailscale-device-ip-display.copied {
+    background-color: var(--color-positive);
+    color: var(--color-background);
+  }
+
+  .tailscale-feature-icons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .tailscale-feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65em;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .tailscale-feature-icon.exit-node {
+    background-color: #f59e0b;
+    color: #ffffff;
+  }
+
+  .tailscale-feature-icon.subnet-router {
+    background-color: #8b5cf6;
+    color: #ffffff;
+  }
+
+  .tailscale-feature-icon.ssh {
+    background-color: #10b981;
+    color: #ffffff;
+  }
+
+  .tailscale-user-email {
+    font-size: 0.75em;
+    color: var(--color-text-subdue);
+    opacity: 0.8;
+  }
+
 </style>
 
 {{ if .Devices }}
-<ul class="list list-gap-10 collapsible-container" data-collapse-after="{{ .CollapseAfter }}">
-  {{ range .Devices }}
-  <li>
-    <div class="flex items-center gap-10">
-      <div class="tailscale-device-name-container grow">
-        <span class="size-h4 block text-truncate color-primary">
-          {{ .ShortName }}
-        </span>
-        <div class="tailscale-indicators-container">
-          {{ if .UpdateAvailable }}
-          <span class="tailscale-update-indicator" data-popover-type="text" data-popover-text="Aktualizacja dostępna"></span>
-          {{ end }}
-
-          {{ if not .IsOnline }}
-          <span class="tailscale-offline-indicator" data-popover-type="text"
-            data-popover-text="Offline - Ostatnio aktywny {{ .LastSeenStr }}"></span>
-          {{ else if $.ShowOnlineIndicator }}
-          <span class="tailscale-online-indicator" data-popover-type="text" data-popover-text="Online"></span>
-          {{ end }}
+<div class="collapsible-container" data-collapse-after="{{ .CollapseAfter }}">
+  {{ if .OnlineDevices }}
+  <div class="tailscale-section-header online">
+    <span>Online</span>
+    <span class="tailscale-section-count">({{ len .OnlineDevices }})</span>
+  </div>
+  <ul class="list list-gap-10">
+    {{ range .OnlineDevices }}
+    <li>
+      <div class="flex items-center gap-10">
+        <div class="tailscale-device-name-container grow">
+          <span class="size-h4 block text-truncate color-primary">
+            {{ .ShortName }}
+          </span>
+          <div class="tailscale-indicators-container">
+            <span class="tailscale-online-indicator" data-popover-type="text" data-popover-text="Online"></span>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="tailscale-device-info-container">
-      <ul class="list-horizontal-text tailscale-device-info">
-        <li>{{ .OS }}</li>
-        <li>{{ .User }}</li>
-      </ul>
-      <div class="tailscale-device-ip">
-        <span class="tailscale-ip-clickable" 
+      <div class="tailscale-user-email">{{ .User }}</div>
+      {{ if .UpdateAvailable }}
+      <div class="tailscale-update-message">Aktualizacja dostępna</div>
+      {{ end }}
+      <div class="tailscale-device-details">
+        <span class="tailscale-device-ip-display" 
               data-ip="{{ .PrimaryAddress }}" 
               title="Kliknij aby skopiować IP"
-              onclick="event.stopPropagation(); event.preventDefault(); var ip = this.getAttribute('data-ip'); var self = this; var textarea = document.createElement('textarea'); textarea.value = ip; textarea.style.position = 'fixed'; textarea.style.left = '-9999px'; document.body.appendChild(textarea); textarea.select(); try { document.execCommand('copy'); self.classList.add('copied'); setTimeout(function() { self.classList.remove('copied'); }, 2000); } catch(err) { console.error('Kopiowanie nie powiodło się:', err); } document.body.removeChild(textarea);">
+              onclick="event.stopPropagation(); event.preventDefault(); var ip = this.getAttribute('data-ip'); var self = this; navigator.clipboard.writeText(ip).then(function() { self.classList.add('copied'); setTimeout(function() { self.classList.remove('copied'); }, 2000); }).catch(function(err) { console.error('Kopiowanie nie powiodło się:', err); });">
           {{ .PrimaryAddress }}
         </span>
+        <span style="opacity: 0.6;">{{ .OS }}</span>
       </div>
-    </div>
-    {{ if or (and $.ShowExpiryDisabled .KeyExpiryDisabled) (and $.ShowDisconnected (not .ConnectedToControl)) (and $.ShowBlocksIncoming .BlocksIncomingConnections) $.ShowJoinedDate }}
-    <div class="tailscale-badges">
-      {{ if and $.ShowExpiryDisabled .KeyExpiryDisabled }}
-      <span class="tailscale-badge expiry-disabled" title="Klucz nie wygasa automatycznie">Expiry disabled</span>
+      {{ if or .IsExitNode .IsSubnetRouter .TailscaleSSHEnabled }}
+      <div class="tailscale-feature-icons">
+        {{ if .IsExitNode }}
+        <span class="tailscale-feature-icon exit-node" data-popover-type="text" data-popover-text="Exit Node">Exit</span>
+        {{ end }}
+        {{ if .IsSubnetRouter }}
+        <span class="tailscale-feature-icon subnet-router" data-popover-type="text" data-popover-text="Subnet Router">Subnet</span>
+        {{ end }}
+        {{ if .TailscaleSSHEnabled }}
+        <span class="tailscale-feature-icon ssh" data-popover-type="text" data-popover-text="Tailscale SSH">SSH</span>
+        {{ end }}
+      </div>
       {{ end }}
-      {{ if and $.ShowDisconnected (not .ConnectedToControl) }}
-      <span class="tailscale-badge" style="background-color: #dc3545; color: #ffffff;" title="Urządzenie nie jest połączone z panelem kontrolnym">Disconnected</span>
-      {{ end }}
-      {{ if and $.ShowBlocksIncoming .BlocksIncomingConnections }}
-      <span class="tailscale-badge" style="background-color: #ffc107; color: #000000;" title="Blokuje przychodzące połączenia">Blocks Incoming</span>
-      {{ end }}
-      {{ if and $.ShowJoinedDate .CreatedStr }}
-      <span class="tailscale-badge" style="background-color: #6c757d; color: #ffffff;" title="Dodano do sieci: {{ .CreatedStr }}">Joined {{ .CreatedStr }}</span>
-      {{ end }}
-    </div>
+    </li>
     {{ end }}
-  </li>
+  </ul>
   {{ end }}
-</ul>
+
+  {{ if and .OnlineDevices .OfflineDevices }}
+  <hr class="tailscale-section-divider">
+  {{ end }}
+
+  {{ if .OfflineDevices }}
+  <div class="tailscale-section-header offline">
+    <span>Offline</span>
+    <span class="tailscale-section-count">({{ len .OfflineDevices }})</span>
+  </div>
+  <ul class="list list-gap-10">
+    {{ range .OfflineDevices }}
+    <li>
+      <div class="flex items-center gap-10">
+        <div class="tailscale-device-name-container grow">
+          <span class="size-h4 block text-truncate color-primary">
+            {{ .ShortName }}
+          </span>
+          <div class="tailscale-indicators-container">
+            <span class="tailscale-offline-indicator" data-popover-type="text"
+              data-popover-text="Offline - Ostatnio aktywny {{ .LastSeenStr }}"></span>
+          </div>
+        </div>
+      </div>
+      <div class="tailscale-user-email">{{ .User }}</div>
+      {{ if .UpdateAvailable }}
+      <div class="tailscale-update-message">Aktualizacja dostępna</div>
+      {{ end }}
+      <div class="tailscale-device-details">
+        <span class="tailscale-device-ip-display" 
+              data-ip="{{ .PrimaryAddress }}" 
+              title="Kliknij aby skopiować IP"
+              onclick="event.stopPropagation(); event.preventDefault(); var ip = this.getAttribute('data-ip'); var self = this; navigator.clipboard.writeText(ip).then(function() { self.classList.add('copied'); setTimeout(function() { self.classList.remove('copied'); }, 2000); }).catch(function(err) { console.error('Kopiowanie nie powiodło się:', err); });">
+          {{ .PrimaryAddress }}
+        </span>
+        <span style="opacity: 0.6;">{{ .OS }}</span>
+      </div>
+      {{ if or .IsExitNode .IsSubnetRouter .TailscaleSSHEnabled }}
+      <div class="tailscale-feature-icons">
+        {{ if .IsExitNode }}
+        <span class="tailscale-feature-icon exit-node" data-popover-type="text" data-popover-text="Exit Node">Exit</span>
+        {{ end }}
+        {{ if .IsSubnetRouter }}
+        <span class="tailscale-feature-icon subnet-router" data-popover-type="text" data-popover-text="Subnet Router">Subnet</span>
+        {{ end }}
+        {{ if .TailscaleSSHEnabled }}
+        <span class="tailscale-feature-icon ssh" data-popover-type="text" data-popover-text="Tailscale SSH">SSH</span>
+        {{ end }}
+      </div>
+      {{ end }}
+    </li>
+    {{ end }}
+  </ul>
+  {{ end }}
+</div>
 {{ else }}
 <p class="text-center color-paragraph">Brak urządzeń</p>
 {{ end }}
