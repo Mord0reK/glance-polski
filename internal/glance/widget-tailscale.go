@@ -13,19 +13,20 @@ import (
 var tailscaleWidgetTemplate = mustParseTemplate("tailscale.html", "widget-base.html")
 
 type tailscaleWidget struct {
-	widgetBase          `yaml:",inline"`
-	URL                 string `yaml:"url"`
-	Token               string `yaml:"token"`
-	Tailnet             string `yaml:"tailnet"`
-	CollapseAfter       int    `yaml:"collapse-after"`
-	ShowOnlineIndicator bool   `yaml:"show-online-indicator"`
-	ShowExpiryDisabled  bool   `yaml:"show-expiry-disabled"`
-	ShowDisconnected    bool   `yaml:"show-disconnected"`
-	ShowBlocksIncoming  bool   `yaml:"show-blocks-incoming"`
-	ShowJoinedDate      bool   `yaml:"show-joined-date"`
-	Devices             []tailscaleDevice
-	OnlineDevices       []tailscaleDevice
-	OfflineDevices      []tailscaleDevice
+	widgetBase           `yaml:",inline"`
+	URL                  string `yaml:"url"`
+	Token                string `yaml:"token"`
+	Tailnet              string `yaml:"tailnet"`
+	CollapseAfter        int    `yaml:"collapse-after"`
+	OfflineCollapseAfter int    `yaml:"-"`
+	ShowOnlineIndicator  bool   `yaml:"show-online-indicator"`
+	ShowExpiryDisabled   bool   `yaml:"show-expiry-disabled"`
+	HideOffline          bool   `yaml:"hide-offline"`
+	ShowBlocksIncoming   bool   `yaml:"show-blocks-incoming"`
+	ShowJoinedDate       bool   `yaml:"show-joined-date"`
+	Devices              []tailscaleDevice
+	OnlineDevices        []tailscaleDevice
+	OfflineDevices       []tailscaleDevice
 }
 
 type tailscaleDevice struct {
@@ -49,10 +50,10 @@ type tailscaleDevice struct {
 	CreatedStr                string
 	ConnectedToControl        bool
 	// Feature flags
-	IsExitNode                bool
-	IsSubnetRouter            bool
-	TailscaleSSHEnabled       bool
-	AdvertisedRoutes          []string
+	IsExitNode          bool
+	IsSubnetRouter      bool
+	TailscaleSSHEnabled bool
+	AdvertisedRoutes    []string
 }
 
 type tailscaleAPIResponse struct {
@@ -98,6 +99,10 @@ type tailscaleDeviceDetailsResponse struct {
 func (widget *tailscaleWidget) initialize() error {
 	widget.withTitle("Tailscale").withCacheDuration(10 * time.Minute)
 
+	if widget.CollapseAfter == 0 || widget.CollapseAfter < -1 {
+		widget.CollapseAfter = 5
+	}
+
 	if widget.Token == "" {
 		return fmt.Errorf("token is required")
 	}
@@ -108,10 +113,6 @@ func (widget *tailscaleWidget) initialize() error {
 
 	if widget.URL == "" {
 		widget.URL = fmt.Sprintf("https://api.tailscale.com/api/v2/tailnet/%s/devices", widget.Tailnet)
-	}
-
-	if widget.CollapseAfter <= 0 {
-		widget.CollapseAfter = 4
 	}
 
 	// Default badge visibility - all enabled by default
@@ -137,9 +138,20 @@ func (widget *tailscaleWidget) update(ctx context.Context) {
 	for _, device := range devices {
 		if device.IsOnline {
 			widget.OnlineDevices = append(widget.OnlineDevices, device)
-		} else {
+		} else if !widget.HideOffline {
 			widget.OfflineDevices = append(widget.OfflineDevices, device)
 		}
+	}
+
+	if widget.CollapseAfter > -1 {
+		onlineCount := len(widget.OnlineDevices)
+		remaining := widget.CollapseAfter - onlineCount
+		if remaining < 0 {
+			remaining = 0
+		}
+		widget.OfflineCollapseAfter = remaining
+	} else {
+		widget.OfflineCollapseAfter = -1
 	}
 }
 

@@ -224,13 +224,13 @@
 </style>
 
 {{ if .Devices }}
-<div class="collapsible-container" data-collapse-after="{{ .CollapseAfter }}">
+<div>
   {{ if .OnlineDevices }}
   <div class="tailscale-section-header online">
     <span>Online</span>
     <span class="tailscale-section-count">({{ len .OnlineDevices }})</span>
   </div>
-  <ul class="list list-gap-10">
+  <ul class="list list-gap-10 collapsible-container" data-collapse-after="{{ .CollapseAfter }}">
     {{ range .OnlineDevices }}
     <li>
       <div class="flex items-center gap-10">
@@ -283,7 +283,7 @@
     <span>Offline</span>
     <span class="tailscale-section-count">({{ len .OfflineDevices }})</span>
   </div>
-  <ul class="list list-gap-10">
+  <ul class="list list-gap-10 collapsible-container" data-collapse-after="{{ .OfflineCollapseAfter }}">
     {{ range .OfflineDevices }}
     <li>
       <div class="flex items-center gap-10">
