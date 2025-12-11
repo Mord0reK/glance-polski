@@ -1,0 +1,227 @@
+.navidrome-widget-container {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.navidrome-player {
+    position: relative;
+    height: 100%;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-widget-background);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 16px;
+}
+
+.navidrome-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(20px);
+    opacity: 0.2;
+    z-index: 0;
+    transition: background-image 0.5s ease;
+}
+
+.navidrome-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent 0%, hsla(var(--bghs), var(--bgl), 0.8) 100%);
+    z-index: 1;
+}
+
+.navidrome-album-section {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.navidrome-album-art {
+    width: 120px;
+    height: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px hsla(var(--bghs), var(--bgl), 0.15);
+    background: var(--color-widget-background-highlight);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-widget-content-border);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.navidrome-album-art:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px hsla(var(--bghs), var(--bgl), 0.25);
+}
+
+.navidrome-album-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.navidrome-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15%;
+    box-sizing: border-box;
+}
+
+.navidrome-info {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.navidrome-song-title {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: var(--color-text-base);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.navidrome-artist-name {
+    font-size: 0.9em;
+    color: var(--color-text-subdue);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.navidrome-playlist-selector {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.navidrome-select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    background: var(--color-widget-background-highlight);
+    border: 1px solid var(--color-widget-content-border);
+    color: var(--color-text-base);
+    font-size: 0.9em;
+}
+
+.navidrome-select option {
+    background: var(--color-widget-background);
+    color: var(--color-text-base);
+}
+
+.navidrome-controls {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.navidrome-footer-controls {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 0 16px;
+}
+
+.navidrome-volume-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 200px;
+    color: var(--color-text-subdue);
+}
+
+.navidrome-volume-slider {
+    flex-grow: 1;
+    height: 4px;
+    -webkit-appearance: none;
+    background: var(--color-widget-background-highlight);
+    border-radius: 2px;
+    outline: none;
+}
+
+.navidrome-volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-text-base);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.navidrome-volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: var(--color-text-highlight);
+}
+
+.navidrome-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-base);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.navidrome-btn:hover {
+    background: var(--color-widget-background-highlight);
+    color: var(--color-text-highlight);
+    transform: scale(1.1);
+}
+
+.navidrome-btn.active {
+    color: var(--color-primary);
+}
+
+.navidrome-btn-play {
+    background: var(--color-primary);
+    color: var(--color-widget-background);
+    width: 48px;
+    height: 48px;
+    box-shadow: 0 4px 12px hsla(var(--bghs), var(--bgl), 0.2);
+}
+
+.navidrome-btn-play:hover {
+    background: var(--color-text-highlight);
+    color: var(--color-widget-background);
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px hsla(var(--bghs), var(--bgl), 0.3);
+}

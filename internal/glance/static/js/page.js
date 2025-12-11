@@ -692,6 +692,17 @@ async function setupRadyjko() {
     }
 }
 
+async function setupNavidrome() {
+    const elems = Array.from(document.getElementsByClassName("widget-type-navidrome"));
+    if (elems.length == 0) return;
+
+    const navidrome = await import ('./navidrome.js');
+
+    for (let i = 0; i < elems.length; i++){
+        navidrome.default(elems[i]);
+    }
+}
+
 async function setupVikunja() {
     const elems = Array.from(document.getElementsByClassName("widget-type-vikunja"));
     if (elems.length == 0) return;
@@ -908,6 +919,7 @@ async function setupPage() {
         await setupCalendars();
         await setupTodos();
         await setupRadyjko();
+        await setupNavidrome();
         await setupVikunja();
         await setupCloudflare();
         await setupBeszel();

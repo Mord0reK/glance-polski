@@ -91,6 +91,8 @@ func newWidget(widgetType string) (widget, error) {
 		w = &beszelWidget{}
 	case "cloudflare":
 		w = &cloudflareWidget{}
+	case "navidrome":
+		w = &navidromeWidget{}
 	default:
 		return nil, fmt.Errorf("unknown widget type: %s", widgetType)
 	}

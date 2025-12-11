@@ -1,0 +1,73 @@
+{{ template "widget-base.html" . }}
+
+{{ define "widget-content-classes" }}widget-content-frameless navidrome-widget-container{{ end }}
+
+{{ define "widget-content" }}
+<div class="navidrome-player" data-url="{{ .URL }}" data-auth="{{ .AuthParams }}">
+    <!-- Background -->
+    <div class="navidrome-bg"></div>
+    <div class="navidrome-overlay"></div>
+    
+    <!-- Album Art -->
+    <div class="navidrome-album-section">
+        <div class="navidrome-album-art">
+            <img id="navidromeCover" src="" alt="Cover Art" style="display:none">
+            <div id="navidromeCoverPlaceholder" class="navidrome-cover-placeholder">
+                <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" id="Layer_1" x="0" y="0" version="1.1" viewBox="0 0 256 256"><style>.st1,.st2{fill:#fff;stroke:#000;stroke-width:9.9999;stroke-miterlimit:15.118}.st2{fill:none;stroke-linecap:round}</style><circle cx="128" cy="128" r="122.8" style="fill:#0084ff;stroke:#000;stroke-width:10.3641;stroke-miterlimit:15.118"/><circle cx="128" cy="128" r="43.7" class="st1"/><path d="M201.8 128c0 40.7-33 73.8-73.8 73.8M54.2 128c0-40.7 33-73.8 73.8-73.8" class="st2"/><path d="M224.9 128c0 1.2 0 2.5-.1 3.7m-2.2 17.6c-9.7 43.3-48.4 75.6-94.6 75.6M31.1 128c0-1.1 0-2.2.1-3.3m1.8-16c9-44.2 48.1-77.6 95-77.6" class="st2"/><circle cx="128" cy="128" r="9" class="st1"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info -->
+    <div class="navidrome-info">
+        <div class="navidrome-song-title" id="navidromeTitle">Wybierz playlistę</div>
+        <div class="navidrome-artist-name" id="navidromeArtist"></div>
+    </div>
+
+    <!-- Playlist Selector -->
+    <div class="navidrome-playlist-selector">
+        <select id="navidromePlaylistSelect" class="navidrome-select">
+            <option value="" disabled selected>Wybierz playlistę...</option>
+            {{ range .Playlists }}
+            <option value="{{ .ID }}">{{ .Name }}</option>
+            {{ end }}
+        </select>
+    </div>
+
+    <!-- Controls -->
+    <div class="navidrome-controls">
+        <button class="navidrome-btn" id="navidromeShuffleBtn" title="Losowo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+        </button>
+        
+        <button class="navidrome-btn" id="navidromePrevBtn" title="Poprzedni">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z"/></svg>
+        </button>
+
+        <button class="navidrome-btn navidrome-btn-play" id="navidromePlayPauseBtn" title="Odtwórz/Zatrzymaj">
+            <svg id="navidromePlayIcon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="navidromePauseIcon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+
+        <button class="navidrome-btn" id="navidromeNextBtn" title="Następny">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2V6zm-2 6l-8.5 6V6l8.5 6z"/></svg>
+        </button>
+
+        <button class="navidrome-btn" id="navidromeLoopBtn" title="Pętla">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+        </button>
+    </div>
+
+    <!-- Volume control -->
+    <div class="navidrome-footer-controls">
+        <div class="navidrome-volume-control">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+            </svg>
+            <input type="range" id="navidromeVolume" class="navidrome-volume-slider" min="0" max="100" value="100" title="Głośność">
+        </div>
+    </div>
+    
+    <audio id="navidromeAudio" crossorigin="anonymous"></audio>
+</div>
+{{ end }}
