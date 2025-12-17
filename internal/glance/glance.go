@@ -972,7 +972,7 @@ func (a *application) handleGoogleComputeAction(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	gceWidget.update(context.Background())
+	gceWidget.update(r.Context())
 	html := gceWidget.Render()
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

@@ -132,7 +132,7 @@ func (widget *googleComputeWidget) fetchInstances(ctx context.Context) ([]gceIns
 		return nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("listing instances: %w", err)
+		return nil, fmt.Errorf("listing instances during pagination: %w", err)
 	}
 
 	sort.Slice(instances, func(i, j int) bool {

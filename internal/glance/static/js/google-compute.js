@@ -43,6 +43,10 @@ export default function setupGoogleCompute(widgetElement) {
                     tempDiv.innerHTML = html;
                     const newWidget = tempDiv.firstElementChild;
 
+                    if (!newWidget) {
+                        throw new Error('No widget markup returned');
+                    }
+
                     widgetElement.replaceWith(newWidget);
                     setupGoogleCompute(newWidget);
                 } catch (err) {
