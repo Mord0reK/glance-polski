@@ -35,7 +35,9 @@ export default function setupGoogleCompute(widgetElement) {
                     });
 
                     if (!response.ok) {
-                        throw new Error('Request failed');
+                        const errorText = await response.text().catch(() => '');
+                        const message = errorText || response.statusText || 'Request failed';
+                        throw new Error(`Request failed (${response.status}): ${message}`);
                     }
 
                     const html = await response.text();

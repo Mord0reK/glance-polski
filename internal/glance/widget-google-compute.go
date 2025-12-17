@@ -110,10 +110,7 @@ func (widget *googleComputeWidget) fetchInstances(ctx context.Context) ([]gceIns
 
 	call := service.Instances.AggregatedList(widget.ProjectID).Context(ctx)
 
-	allowedZones := make(map[string]struct{})
-	for _, z := range widget.Zones {
-		allowedZones[strings.ToLower(z)] = struct{}{}
-	}
+	allowedZones := widget.allowedZones()
 
 	var instances []gceInstance
 	err = call.Pages(ctx, func(resp *compute.InstanceAggregatedList) error {
@@ -147,6 +144,7 @@ func mapGCEInstance(instance *compute.Instance, zone string) gceInstance {
 
 	var internalIP, externalIP string
 	for _, iface := range instance.NetworkInterfaces {
+		// Display only the first internal and external IP to keep the summary concise.
 		if internalIP == "" && iface.NetworkIP != "" {
 			internalIP = iface.NetworkIP
 		}
@@ -202,10 +200,7 @@ func (widget *googleComputeWidget) performInstanceAction(ctx context.Context, ac
 		return fmt.Errorf("instance name and zone are required")
 	}
 
-	allowedZones := make(map[string]struct{})
-	for _, z := range widget.Zones {
-		allowedZones[strings.ToLower(z)] = struct{}{}
-	}
+	allowedZones := widget.allowedZones()
 
 	if len(allowedZones) > 0 {
 		if _, ok := allowedZones[strings.ToLower(zone)]; !ok {
@@ -241,4 +236,13 @@ func (widget *googleComputeWidget) performInstanceAction(ctx context.Context, ac
 
 func (widget *googleComputeWidget) Render() template.HTML {
 	return widget.renderTemplate(widget, googleComputeWidgetTemplate)
+}
+
+func (widget *googleComputeWidget) allowedZones() map[string]struct{} {
+	allowed := make(map[string]struct{})
+	for _, z := range widget.Zones {
+		allowed[strings.ToLower(z)] = struct{}{}
+	}
+
+	return allowed
 }
