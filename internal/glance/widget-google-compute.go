@@ -41,6 +41,18 @@ type gceInstance struct {
 	CanReset    bool
 }
 
+const (
+	gceStatusRunning      = "RUNNING"
+	gceStatusTerminated   = "TERMINATED"
+	gceStatusStopped      = "STOPPED"
+	gceStatusSuspended    = "SUSPENDED"
+	gceStatusSuspending   = "SUSPENDING"
+	gceStatusStopping     = "STOPPING"
+	gceStatusProvisioning = "PROVISIONING"
+	gceStatusStaging      = "STAGING"
+	gceStatusStarting     = "STARTING"
+)
+
 func (widget *googleComputeWidget) initialize() error {
 	widget.withTitle("Google Compute Engine").withCacheDuration(1 * time.Minute)
 
@@ -79,8 +91,11 @@ func (widget *googleComputeWidget) parseServiceAccountKey() ([]byte, error) {
 		return nil, fmt.Errorf("service account file does not contain valid JSON")
 	}
 
-	if decoded, err := base64.StdEncoding.DecodeString(key); err == nil && json.Valid(decoded) {
-		return decoded, nil
+	if decoded, err := base64.StdEncoding.DecodeString(key); err == nil {
+		if json.Valid(decoded) {
+			return decoded, nil
+		}
+		return nil, fmt.Errorf("service-account-key base64 value is not valid JSON")
 	}
 
 	if json.Valid([]byte(key)) {
@@ -166,21 +181,21 @@ func mapGCEInstance(instance *compute.Instance, zone string) gceInstance {
 		MachineType: machineType,
 		InternalIP:  internalIP,
 		ExternalIP:  externalIP,
-		CanStart:    status == "TERMINATED" || status == "STOPPED" || status == "SUSPENDED",
-		CanStop:     status == "RUNNING",
-		CanReset:    status == "RUNNING",
+		CanStart:    status == gceStatusTerminated || status == gceStatusStopped || status == gceStatusSuspended,
+		CanStop:     status == gceStatusRunning,
+		CanReset:    status == gceStatusRunning,
 	}
 }
 
 func statusToClass(status string) string {
 	switch status {
-	case "RUNNING":
+	case gceStatusRunning:
 		return "running"
-	case "STOPPED", "TERMINATED":
+	case gceStatusStopped, gceStatusTerminated:
 		return "stopped"
-	case "PROVISIONING", "STAGING", "STARTING":
+	case gceStatusProvisioning, gceStatusStaging, gceStatusStarting:
 		return "starting"
-	case "SUSPENDING", "SUSPENDED", "STOPPING":
+	case gceStatusSuspending, gceStatusSuspended, gceStatusStopping:
 		return "stopping"
 	default:
 		return "unknown"

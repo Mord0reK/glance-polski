@@ -38,12 +38,14 @@
     border: 1px solid var(--color-widget-content-border);
     font-size: var(--font-size-h6);
     text-transform: capitalize;
+    --gce-status-running-border: hsla(43, 50%, 70%, 0.4);
+    --gce-status-running-bg: hsla(43, 50%, 70%, 0.06);
 }
 
 .gce-status-running {
     color: var(--color-positive);
-    border-color: hsla(43, 50%, 70%, 0.4);
-    background: hsla(43, 50%, 70%, 0.06);
+    border-color: var(--gce-status-running-border);
+    background: var(--gce-status-running-bg);
 }
 
 .gce-status-stopped {
