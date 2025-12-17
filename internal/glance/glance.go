@@ -1030,7 +1030,7 @@ func (a *application) handleBeszelChartData(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	chartData, err := beszelW.FetchChartData(request.SystemID, request.Metric, request.TimeRange)
+	chartData, err := beszelW.FetchChartData(r.Context(), request.SystemID, request.Metric, request.TimeRange)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("Failed to fetch chart data: %v", err)))

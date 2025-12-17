@@ -11,6 +11,10 @@ Aby skonfigurować widget Beszel, dodaj następującą konfigurację do swojego 
   url: https://twoja-instancja-beszel.pl    # URL do Twojej instancji Beszel (API)
   redirect-url: https://twoja-instancja-beszel.pl # URL do interfejsu webowego Beszel 
   token: twoj-token-jwt                     # Token JWT
+  # Alternatywnie zamiast statycznego tokenu możesz podać dane logowania.
+  # Widget pobierze token automatycznie i będzie go odświeżał co 3 dni.
+  identity: mail@gmail.com            # Login / email użytkownika Beszel
+  password: haslo_uzytkownika                # Hasło użytkownika Beszel
   show-charts: true                         # Włączenie wykresów (domyślnie true)
   cache: 10s                                # Częstotliwość odświeżania (domyślnie 10s)
 ```
@@ -19,6 +23,14 @@ Aby skonfigurować widget Beszel, dodaj następującą konfigurację do swojego 
 
 Jeśli Twoja instancja Beszel jest zabezpieczona i nie udostępnia danych publicznie, będziesz potrzebować tokenu.
 Obecnie widget obsługuje tokeny Bearer. Możesz uzyskać token logując się do Beszel i sprawdzając żądania sieciowe w przeglądarce lub generując go w panelu administracyjnym (jeśli dostępne).
+
+### Automatyczne odświeżanie tokenu (identity/password)
+
+Jeśli podasz w konfiguracji `identity` i `password`, widget będzie pobierał token z endpointu:
+
+`POST /api/collections/users/auth-with-password`
+
+i odświeżał go automatycznie co 3 dni. Token jest przechowywany w pamięci procesu (nie jest zapisywany do pliku) i w razie potrzeby zostanie ponownie pobrany.
 
 ## Funkcje widgetu
 

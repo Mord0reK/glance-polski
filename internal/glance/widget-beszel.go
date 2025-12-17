@@ -1,7 +1,9 @@
 package glance
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -9,6 +11,8 @@ import (
 	"net/url"
 	"slices"
 	"sort"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -18,12 +22,26 @@ type beszelWidget struct {
 	widgetBase      `yaml:",inline"`
 	URL             string         `yaml:"url"`
 	Token           string         `yaml:"token"`
+	Identity        string         `yaml:"identity"`
+	Password        string         `yaml:"password"`
 	RedirectURL     string         `yaml:"redirect-url"`
 	ShowChartsRaw   *bool          `yaml:"show-charts"`
 	ShowCharts      bool           `yaml:"-"`
 	Systems         []beszelSystem `yaml:"-"`
 	OnlineSystems   []beszelSystem `yaml:"-"`
 	OfflineSystems  []beszelSystem `yaml:"-"`
+
+	tokenMu        sync.Mutex `yaml:"-"`
+	tokenFetchedAt time.Time  `yaml:"-"`
+}
+
+type beszelAuthRequest struct {
+	Identity string `json:"identity"`
+	Password string `json:"password"`
+}
+
+type beszelAuthResponse struct {
+	Token string `json:"token"`
 }
 
 type beszelResponse struct {
@@ -102,6 +120,11 @@ func (w *beszelWidget) initialize() error {
 	if w.URL == "" {
 		return errors.New("beszel widget: url is required")
 	}
+	w.URL = strings.TrimSuffix(w.URL, "/")
+
+	if (w.Identity != "" && w.Password == "") || (w.Identity == "" && w.Password != "") {
+		return errors.New("beszel widget: both identity and password must be set")
+	}
 	// Domyślnie wykresy są włączone, chyba że użytkownik ustawił show-charts: false
 	if w.ShowChartsRaw == nil {
 		w.ShowCharts = true
@@ -111,7 +134,66 @@ func (w *beszelWidget) initialize() error {
 	return nil
 }
 
+const beszelTokenRefreshInterval = 72 * time.Hour
+
+func (w *beszelWidget) hasAuthConfig() bool {
+	return w.Identity != "" && w.Password != ""
+}
+
+func isUnauthorizedErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	// decodeJsonFromRequest formats 401 as: "unexpected status code 401 ..."
+	return strings.Contains(err.Error(), "status code 401")
+}
+
+func (w *beszelWidget) ensureToken(ctx context.Context, force bool) error {
+	if !w.hasAuthConfig() {
+		return nil
+	}
+
+	w.tokenMu.Lock()
+	defer w.tokenMu.Unlock()
+
+	now := time.Now()
+	if !force && w.Token != "" && !w.tokenFetchedAt.IsZero() && now.Sub(w.tokenFetchedAt) < beszelTokenRefreshInterval {
+		return nil
+	}
+
+	bodyBytes, err := json.Marshal(beszelAuthRequest{Identity: w.Identity, Password: w.Password})
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", w.URL+"/api/collections/users/auth-with-password", bytes.NewReader(bodyBytes))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := decodeJsonFromRequest[*beszelAuthResponse](defaultHTTPClient, req)
+	if err != nil {
+		return err
+	}
+	if resp == nil || resp.Token == "" {
+		return errors.New("beszel widget: auth response missing token")
+	}
+
+	w.Token = resp.Token
+	w.tokenFetchedAt = now
+	return nil
+}
+
 func (w *beszelWidget) update(ctx context.Context) {
+	if err := w.ensureToken(ctx, false); err != nil {
+		// Jeśli mamy już token (np. ręcznie ustawiony), spróbujmy i tak kontynuować.
+		if w.Token == "" {
+			w.withError(err)
+			return
+		}
+	}
+
 	req, err := http.NewRequestWithContext(ctx, "GET", w.URL+"/api/collections/systems/records", nil)
 	if err != nil {
 		w.withError(err)
@@ -123,6 +205,17 @@ func (w *beszelWidget) update(ctx context.Context) {
 	}
 
 	resp, err := decodeJsonFromRequest[*beszelResponse](defaultHTTPClient, req)
+	if err != nil && isUnauthorizedErr(err) && w.hasAuthConfig() {
+		if refreshErr := w.ensureToken(ctx, true); refreshErr == nil {
+			req2, reqErr := http.NewRequestWithContext(ctx, "GET", w.URL+"/api/collections/systems/records", nil)
+			if reqErr == nil {
+				if w.Token != "" {
+					req2.Header.Set("Authorization", "Bearer "+w.Token)
+				}
+				resp, err = decodeJsonFromRequest[*beszelResponse](defaultHTTPClient, req2)
+			}
+		}
+	}
 	if err != nil {
 		w.withError(err)
 		return
@@ -164,7 +257,13 @@ func (w *beszelWidget) Render() template.HTML {
 }
 
 // FetchChartData pobiera dane wykresu dla konkretnego systemu
-func (w *beszelWidget) FetchChartData(systemID string, metricType string, timeRange string) (*beszelChartData, error) {
+func (w *beszelWidget) FetchChartData(ctx context.Context, systemID string, metricType string, timeRange string) (*beszelChartData, error) {
+	if err := w.ensureToken(ctx, false); err != nil {
+		if w.Token == "" {
+			return nil, err
+		}
+	}
+
 	// Mapowanie timeRange na typ rekordu w Beszel
 	// Beszel przechowuje dane w typach: 1m, 10m, 20m, 120m, 480m
 	recordType := "1m"
@@ -205,7 +304,7 @@ func (w *beszelWidget) FetchChartData(systemID string, metricType string, timeRa
 	apiURL := fmt.Sprintf("%s/api/collections/system_stats/records?page=1&perPage=500&skipTotal=1&filter=%s&fields=created,stats&sort=created",
 		w.URL, url.QueryEscape(filter))
 
-	req, err := http.NewRequest("GET", apiURL, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -215,6 +314,17 @@ func (w *beszelWidget) FetchChartData(systemID string, metricType string, timeRa
 	}
 
 	resp, err := decodeJsonFromRequest[*beszelChartResponse](defaultHTTPClient, req)
+	if err != nil && isUnauthorizedErr(err) && w.hasAuthConfig() {
+		if refreshErr := w.ensureToken(ctx, true); refreshErr == nil {
+			req2, reqErr := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
+			if reqErr == nil {
+				if w.Token != "" {
+					req2.Header.Set("Authorization", "Bearer "+w.Token)
+				}
+				resp, err = decodeJsonFromRequest[*beszelChartResponse](defaultHTTPClient, req2)
+			}
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -247,6 +357,9 @@ func (w *beszelWidget) FetchChartData(systemID string, metricType string, timeRa
 		t, _ := time.Parse("2006-01-02 15:04:05.000Z", item.Created)
 		if t.IsZero() {
 			t, _ = time.Parse(time.RFC3339, item.Created)
+		}
+		if !t.IsZero() {
+			t = t.In(time.Local)
 		}
 
 		var label string
