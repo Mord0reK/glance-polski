@@ -1,0 +1,42 @@
+{{ template "widget-base.html" . }}
+
+{{- define "widget-content" }}
+<div class="gce-widget" data-widget-id="{{ .GetID }}">
+    {{- if .Instances }}
+    <ul class="list list-gap-15">
+        {{- range .Instances }}
+        <li class="gce-instance">
+            <div class="gce-instance-header">
+                <div class="gce-instance-name text-truncate">{{ .Name }}</div>
+                <span class="gce-status gce-status-{{ .StatusClass }}">{{ .Status }}</span>
+            </div>
+            <div class="gce-instance-meta">
+                <span>{{ .Zone }}</span>
+                {{- if .MachineType }}
+                <span>&bull; {{ .MachineType }}</span>
+                {{- end }}
+            </div>
+            {{- if or .InternalIP .ExternalIP }}
+            <div class="gce-instance-ips color-text-base">
+                {{- if .InternalIP }}
+                <span title="Internal IP">{{ .InternalIP }}</span>
+                {{- end }}
+                {{- if and .InternalIP .ExternalIP }}<span class="gce-ip-separator">&bull;</span>{{- end }}
+                {{- if .ExternalIP }}
+                <span title="External IP">{{ .ExternalIP }}</span>
+                {{- end }}
+            </div>
+            {{- end }}
+            <div class="gce-actions" data-instance="{{ .Name }}" data-zone="{{ .Zone }}">
+                <button type="button" class="gce-action-button" data-action="start" {{ if not .CanStart }}disabled{{ end }}>Start</button>
+                <button type="button" class="gce-action-button" data-action="restart" {{ if not .CanReset }}disabled{{ end }}>Restart</button>
+                <button type="button" class="gce-action-button gce-action-danger" data-action="stop" {{ if not .CanStop }}disabled{{ end }}>Stop</button>
+            </div>
+        </li>
+        {{- end }}
+    </ul>
+    {{- else }}
+    <div class="text-center color-paragraph">No instances to display.</div>
+    {{- end }}
+</div>
+{{- end }}

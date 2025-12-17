@@ -9,3 +9,4 @@
 /*.yml
 .env
 glance_binary
+/*.json

@@ -91,6 +91,8 @@ func newWidget(widgetType string) (widget, error) {
 		w = &beszelWidget{}
 	case "cloudflare":
 		w = &cloudflareWidget{}
+	case "google-compute":
+		w = &googleComputeWidget{}
 	case "navidrome":
 		w = &navidromeWidget{}
 	default:

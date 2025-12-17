@@ -31,6 +31,7 @@
   - [Monitor](#monitor)
   - [Releases](#releases)
   - [Docker Containers](#docker-containers)
+  - [Google Compute Engine](#google-compute-engine)
   - [DNS Stats](#dns-stats)
   - [Server Stats](#server-stats)
   - [Repository](#repository)
@@ -2305,6 +2306,27 @@ Whether to only show running containers. If set to `true` only containers that a
 | glance.id | The custom ID of the container. Used to group containers under a single parent. |
 | glance.parent | The ID of the parent container. Used to group containers under a single parent. |
 | glance.category | The category of the container. Used to filter containers by category. |
+
+### Google Compute Engine
+Displays Google Compute Engine instances for a project and lets you start, restart or stop them directly from Glance.
+
+```yaml
+- type: google-compute
+  project-id: my-project-id
+  service-account-key: ${GCP_SERVICE_ACCOUNT_JSON}
+  zones:
+    - europe-central2-a
+    - europe-central2-b
+```
+
+##### `project-id`
+Google Cloud project ID to read instances from.
+
+##### `service-account-key`
+Service account key with permissions to list instances and perform `start`, `stop` and `reset` operations. You can provide a file path, a base64 encoded JSON key, or the raw JSON value.
+
+##### `zones`
+Optional list of zones. When provided, the widget only shows and controls instances from these zones.
 
 ### DNS Stats
 Display statistics from a self-hosted ad-blocking DNS resolver such as AdGuard Home, Pi-hole, or Technitium.
