@@ -2308,7 +2308,7 @@ Whether to only show running containers. If set to `true` only containers that a
 | glance.category | The category of the container. Used to filter containers by category. |
 
 ### Google Compute Engine
-Wyświetla maszyny Google Compute Engine dla wskazanego projektu i pozwala uruchomić, zrestartować lub wyłączyć instancję bezpośrednio z Glance.
+Displays Google Compute Engine instances for a project and lets you start, restart or stop them directly from Glance.
 
 ```yaml
 - type: google-compute
@@ -2320,13 +2320,13 @@ Wyświetla maszyny Google Compute Engine dla wskazanego projektu i pozwala uruch
 ```
 
 ##### `project-id`
-Identyfikator projektu Google Cloud, z którego mają zostać pobrane maszyny wirtualne.
+Google Cloud project ID to read instances from.
 
 ##### `service-account-key`
-Klucz konta serwisowego z uprawnieniami do odczytu instancji oraz operacji `start`, `stop` i `reset`. Może być podany jako ścieżka do pliku, zakodowany base64 lub jako surowy JSON.
+Service account key with permissions to list instances and perform `start`, `stop` and `reset` operations. You can provide a file path, a base64 encoded JSON key, or the raw JSON value.
 
 ##### `zones`
-Opcjonalna lista stref. Jeśli podano, widget pokaże i będzie obsługiwał maszyny tylko z tych stref.
+Optional list of zones. When provided, the widget only shows and controls instances from these zones.
 
 ### DNS Stats
 Display statistics from a self-hosted ad-blocking DNS resolver such as AdGuard Home, Pi-hole, or Technitium.

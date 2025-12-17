@@ -46,7 +46,7 @@ export default function setupGoogleCompute(widgetElement) {
                     widgetElement.replaceWith(newWidget);
                     setupGoogleCompute(newWidget);
                 } catch (err) {
-                    console.error('Nie udało się wykonać akcji Compute Engine', err);
+                    console.error('Failed to perform Compute Engine action', err);
                     widgetElement.style.opacity = '1';
                     container.querySelectorAll('button').forEach((b) => (b.disabled = false));
                     button.textContent = previousText;

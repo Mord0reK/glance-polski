@@ -28,15 +28,15 @@
             </div>
             {{- end }}
             <div class="gce-actions" data-instance="{{ .Name }}" data-zone="{{ .Zone }}">
-                <button type="button" class="gce-action-button" data-action="start" {{ if not .CanStart }}disabled{{ end }}>Uruchom</button>
+                <button type="button" class="gce-action-button" data-action="start" {{ if not .CanStart }}disabled{{ end }}>Start</button>
                 <button type="button" class="gce-action-button" data-action="restart" {{ if not .CanReset }}disabled{{ end }}>Restart</button>
-                <button type="button" class="gce-action-button gce-action-danger" data-action="stop" {{ if not .CanStop }}disabled{{ end }}>Wyłącz</button>
+                <button type="button" class="gce-action-button gce-action-danger" data-action="stop" {{ if not .CanStop }}disabled{{ end }}>Stop</button>
             </div>
         </li>
         {{- end }}
     </ul>
     {{- else }}
-    <div class="text-center color-paragraph">Brak maszyn do wyświetlenia.</div>
+    <div class="text-center color-paragraph">No instances to display.</div>
     {{- end }}
 </div>
 {{- end }}
