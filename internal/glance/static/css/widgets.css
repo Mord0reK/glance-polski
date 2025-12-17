@@ -4,6 +4,7 @@
 @import "widget-clock.css";
 @import "widget-dns-stats.css";
 @import "widget-docker-containers.css";
+@import "widget-google-compute.css";
 @import "widget-group.css";
 @import "widget-markets.css";
 @import "widget-monitor.css";

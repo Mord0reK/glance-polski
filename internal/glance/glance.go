@@ -461,6 +461,7 @@ func (a *application) server() (func() error, func() error) {
 	mux.HandleFunc("GET /api/vikunja/{widgetID}/refresh", a.handleVikunjaRefresh)
 	mux.HandleFunc("POST /api/vikunja/{widgetID}/create-task", a.handleVikunjaCreateTask)
 	mux.HandleFunc("POST /api/cloudflare/{widgetID}/update", a.handleCloudflareUpdate)
+	mux.HandleFunc("POST /api/google-compute/{widgetID}/action", a.handleGoogleComputeAction)
 	mux.HandleFunc("POST /api/beszel/{widgetID}/chart", a.handleBeszelChartData)
 
 	if a.RequiresAuth {
@@ -912,6 +913,67 @@ func (a *application) handleCloudflareUpdate(w http.ResponseWriter, r *http.Requ
 	cfWidget.update(context.Background())
 
 	html := cfWidget.Render()
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(html))
+}
+
+func (a *application) handleGoogleComputeAction(w http.ResponseWriter, r *http.Request) {
+	widgetIDStr := r.PathValue("widgetID")
+	widgetID, err := strconv.ParseUint(widgetIDStr, 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid widget ID"))
+		return
+	}
+
+	widget, exists := a.widgetByID[widgetID]
+	if !exists {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Widget not found"))
+		return
+	}
+
+	gceWidget, ok := widget.(*googleComputeWidget)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Widget is not a Google Compute widget"))
+		return
+	}
+
+	var request struct {
+		Action   string `json:"action"`
+		Instance string `json:"instance"`
+		Zone     string `json:"zone"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid request body"))
+		return
+	}
+
+	if request.Action != "start" && request.Action != "stop" && request.Action != "restart" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid action"))
+		return
+	}
+
+	if request.Instance == "" || request.Zone == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Instance and zone are required"))
+		return
+	}
+
+	if err := gceWidget.performInstanceAction(r.Context(), request.Action, request.Zone, request.Instance); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("Failed to perform action: %v", err)))
+		return
+	}
+
+	gceWidget.update(context.Background())
+	html := gceWidget.Render()
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)

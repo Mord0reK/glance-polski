@@ -1,0 +1,96 @@
+.gce-instance {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--color-widget-content-border);
+}
+
+.gce-instance:last-child {
+    border-bottom: none;
+}
+
+.gce-instance-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.3rem;
+}
+
+.gce-instance-name {
+    font-weight: 600;
+    font-size: var(--font-size-h4);
+}
+
+.gce-instance-meta,
+.gce-instance-ips {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    color: var(--color-text-subdue);
+    font-size: var(--font-size-h6);
+}
+
+.gce-instance-ips {
+    margin-top: 0.2rem;
+}
+
+.gce-status {
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-widget-content-border);
+    font-size: var(--font-size-h6);
+    text-transform: capitalize;
+}
+
+.gce-status-running {
+    color: var(--color-positive);
+    border-color: hsla(43, 50%, 70%, 0.4);
+    background: hsla(43, 50%, 70%, 0.06);
+}
+
+.gce-status-stopped {
+    color: var(--color-text-subdue);
+    background: hsla(var(--bghs), 8%, 0.1);
+}
+
+.gce-status-starting,
+.gce-status-stopping {
+    color: var(--color-text-base);
+    background: hsla(var(--bghs), 10%, 0.12);
+}
+
+.gce-status-unknown {
+    color: var(--color-text-base);
+}
+
+.gce-actions {
+    margin-top: 0.8rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.gce-action-button {
+    padding: 0.55rem 0.9rem;
+    border-radius: 7px;
+    border: 1px solid var(--color-widget-content-border);
+    background: transparent;
+    color: var(--color-text-base);
+    cursor: pointer;
+    transition: border-color 0.1s ease, color 0.1s ease, background-color 0.1s ease;
+}
+
+.gce-action-button:hover:not(:disabled) {
+    border-color: var(--color-text-base);
+}
+
+.gce-action-danger {
+    color: var(--color-negative);
+}
+
+.gce-action-danger:hover:not(:disabled) {
+    border-color: var(--color-negative);
+}
+
+.gce-action-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

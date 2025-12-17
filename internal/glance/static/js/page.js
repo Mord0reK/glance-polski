@@ -725,6 +725,17 @@ async function setupCloudflare() {
     }
 }
 
+async function setupGoogleCompute() {
+    const elems = Array.from(document.getElementsByClassName("widget-type-google-compute"));
+    if (elems.length == 0) return;
+
+    const googleCompute = await import ('./google-compute.js');
+
+    for (let i = 0; i < elems.length; i++){
+        googleCompute.default(elems[i]);
+    }
+}
+
 async function setupBeszel() {
     const elems = Array.from(document.getElementsByClassName("widget-type-beszel"));
     if (elems.length == 0) return;
@@ -922,6 +933,7 @@ async function setupPage() {
         await setupNavidrome();
         await setupVikunja();
         await setupCloudflare();
+        await setupGoogleCompute();
         await setupBeszel();
         setupCarousels();
         setupSearchBoxes();
