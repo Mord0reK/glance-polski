@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -81,6 +82,10 @@ func (widget *googleComputeWidget) parseServiceAccountKey() ([]byte, error) {
 	}
 
 	if fileInfo, err := os.Stat(key); err == nil && !fileInfo.IsDir() {
+		if !filepath.IsAbs(key) {
+			return nil, fmt.Errorf("service-account-key path must be absolute")
+		}
+
 		data, readErr := os.ReadFile(key)
 		if readErr != nil {
 			return nil, fmt.Errorf("reading service account file: %w", readErr)
@@ -131,10 +136,8 @@ func (widget *googleComputeWidget) fetchInstances(ctx context.Context) ([]gceIns
 	err = call.Pages(ctx, func(resp *compute.InstanceAggregatedList) error {
 		for zoneKey, scopedList := range resp.Items {
 			zoneName := path.Base(zoneKey)
-			if len(allowedZones) > 0 {
-				if _, ok := allowedZones[strings.ToLower(zoneName)]; !ok {
-					continue
-				}
+			if !widget.isZoneAllowed(zoneName, allowedZones) {
+				continue
 			}
 
 			for _, instance := range scopedList.Instances {
@@ -217,10 +220,8 @@ func (widget *googleComputeWidget) performInstanceAction(ctx context.Context, ac
 
 	allowedZones := widget.allowedZones()
 
-	if len(allowedZones) > 0 {
-		if _, ok := allowedZones[strings.ToLower(zone)]; !ok {
-			return fmt.Errorf("zone %s is not allowed for this widget", zone)
-		}
+	if !widget.isZoneAllowed(zone, allowedZones) {
+		return fmt.Errorf("zone %s is not allowed for this widget", zone)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
@@ -260,4 +261,13 @@ func (widget *googleComputeWidget) allowedZones() map[string]struct{} {
 	}
 
 	return allowed
+}
+
+func (widget *googleComputeWidget) isZoneAllowed(zone string, allowedZones map[string]struct{}) bool {
+	if len(allowedZones) == 0 {
+		return true
+	}
+
+	_, ok := allowedZones[strings.ToLower(zone)]
+	return ok
 }
