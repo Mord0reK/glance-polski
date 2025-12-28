@@ -19,7 +19,7 @@ import (
 var dnsStatsWidgetTemplate = mustParseTemplate("dns-stats.html", "widget-base.html")
 
 const (
-	dnsStatsBars            = 8
+	dnsStatsBars            = 12
 	dnsStatsHoursSpan       = 24
 	dnsStatsHoursPerBar int = dnsStatsHoursSpan / dnsStatsBars
 )
@@ -27,9 +27,9 @@ const (
 type dnsStatsWidget struct {
 	widgetBase `yaml:",inline"`
 
-	TimeLabels      [8]string `yaml:"-"`
-	Stats           *dnsStats `yaml:"-"`
-	piholeSessionID string    `yaml:"-"`
+	TimeLabels      [12]string `yaml:"-"`
+	Stats           *dnsStats  `yaml:"-"`
+	piholeSessionID string     `yaml:"-"`
 
 	HourFormat     string `yaml:"hour-format"`
 	HideGraph      bool   `yaml:"hide-graph"`
@@ -49,12 +49,13 @@ const (
 	dnsServicePiholeV6   = "pihole-v6"
 )
 
-func makeDNSWidgetTimeLabels(format string) [8]string {
+func makeDNSWidgetTimeLabels(format string) [12]string {
 	now := time.Now()
 	var labels [dnsStatsBars]string
 
-	for h := dnsStatsHoursSpan; h > 0; h -= dnsStatsHoursPerBar {
-		labels[7-(h/3-1)] = strings.ToLower(now.Add(-time.Duration(h) * time.Hour).Format(format))
+	for i := 0; i < dnsStatsBars; i++ {
+		hoursAgo := (dnsStatsBars - 1 - i) * dnsStatsHoursPerBar
+		labels[i] = strings.ToLower(now.Add(-time.Duration(hoursAgo) * time.Hour).Format(format))
 	}
 
 	return labels
@@ -115,7 +116,7 @@ func (widget *dnsStatsWidget) update(ctx context.Context) {
 	}
 
 	if widget.HourFormat == "24h" {
-		widget.TimeLabels = makeDNSWidgetTimeLabels("15:00")
+		widget.TimeLabels = makeDNSWidgetTimeLabels("15")
 	} else {
 		widget.TimeLabels = makeDNSWidgetTimeLabels("3PM")
 	}
@@ -174,7 +175,7 @@ func fetchAdguardStats(instanceURL string, allowInsecure bool, username, passwor
 		return nil, err
 	}
 
-	var topBlockedDomainsCount = min(len(responseJson.TopBlockedDomains), 5)
+	var topBlockedDomainsCount = min(len(responseJson.TopBlockedDomains), 10)
 
 	stats := &dnsStats{
 		TotalQueries:      responseJson.TotalQueries,
