@@ -507,7 +507,7 @@ func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string
 	now := time.Now()
 	currentDate := now.Format("2006-01-02")
 	cacheKey := getCacheKey(lat, lon)
-	
+
 	// Fetch slightly more data to ensure we cover the full 24h of the current local day
 	date := now.Add(-24 * time.Hour).Format("2006-01-02")
 	lastDate := now.Add(24 * time.Hour).Format("2006-01-02")
@@ -532,9 +532,6 @@ func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string
 
 	// Get all cached records (which now includes the fresh data)
 	allRecords := globalBrightSkyCache.getRecords(cacheKey, currentDate)
-	if allRecords == nil {
-		allRecords = responseJson.Weather
-	}
 
 	// Filter and group records for the current local day (00:00 - 23:59)
 	localDayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
