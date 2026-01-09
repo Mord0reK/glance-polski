@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	_ "time/tzdata"
@@ -427,8 +428,86 @@ type brightSkyWeatherResponseJson struct {
 	} `json:"sources"`
 }
 
+// brightSkyCache stores weather records per location to preserve historical data
+type brightSkyCache struct {
+	mu      sync.RWMutex
+	records map[string][]brightSkyWeatherRecord // key: "lat,lon"
+	date    map[string]string                    // key: "lat,lon", value: date (YYYY-MM-DD)
+}
+
+var globalBrightSkyCache = &brightSkyCache{
+	records: make(map[string][]brightSkyWeatherRecord),
+	date:    make(map[string]string),
+}
+
+// getCacheKey generates a cache key from latitude and longitude
+func getCacheKey(lat, lon float64) string {
+	return fmt.Sprintf("%.4f,%.4f", lat, lon)
+}
+
+// addRecords adds new weather records to cache, merging with existing data for the same day
+func (c *brightSkyCache) addRecords(key string, records []brightSkyWeatherRecord, currentDate string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Check if it's a new day - if so, clear old data
+	if c.date[key] != currentDate {
+		c.records[key] = nil
+		c.date[key] = currentDate
+	}
+
+	// Merge new records with existing ones, avoiding duplicates
+	existing := c.records[key]
+	recordMap := make(map[time.Time]brightSkyWeatherRecord)
+
+	// Add existing records to map
+	for _, r := range existing {
+		recordMap[r.Timestamp] = r
+	}
+
+	// Add or update with new records
+	for _, r := range records {
+		recordMap[r.Timestamp] = r
+	}
+
+	// Convert back to slice and sort by timestamp
+	merged := make([]brightSkyWeatherRecord, 0, len(recordMap))
+	for _, r := range recordMap {
+		merged = append(merged, r)
+	}
+
+	// Sort by timestamp
+	slices.SortFunc(merged, func(a, b brightSkyWeatherRecord) int {
+		if a.Timestamp.Before(b.Timestamp) {
+			return -1
+		}
+		if a.Timestamp.After(b.Timestamp) {
+			return 1
+		}
+		return 0
+	})
+
+	c.records[key] = merged
+}
+
+// getRecords retrieves cached weather records for a location
+func (c *brightSkyCache) getRecords(key string, currentDate string) []brightSkyWeatherRecord {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	// Check if cache is for the current day
+	if c.date[key] != currentDate {
+		return nil
+	}
+
+	return c.records[key]
+}
+
 func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string, error) {
 	now := time.Now()
+	currentDate := now.Format("2006-01-02")
+	cacheKey := getCacheKey(lat, lon)
+	
 	// Fetch slightly more data to ensure we cover the full 24h of the current local day
 	date := now.Add(-24 * time.Hour).Format("2006-01-02")
 	lastDate := now.Add(24 * time.Hour).Format("2006-01-02")
@@ -446,6 +525,15 @@ func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string
 	stationName := ""
 	if len(responseJson.Sources) > 0 {
 		stationName = responseJson.Sources[0].StationName
+	}
+
+	// Add fresh records to cache
+	globalBrightSkyCache.addRecords(cacheKey, responseJson.Weather, currentDate)
+
+	// Get all cached records (which now includes the fresh data)
+	allRecords := globalBrightSkyCache.getRecords(cacheKey, currentDate)
+	if allRecords == nil {
+		allRecords = responseJson.Weather
 	}
 
 	// Filter and group records for the current local day (00:00 - 23:59)
@@ -471,7 +559,7 @@ func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string
 	var currentRecord brightSkyWeatherRecord
 	minDiff := math.MaxFloat64
 	currentFound := false
-	for _, r := range responseJson.Weather {
+	for _, r := range allRecords {
 		diff := math.Abs(now.Sub(r.Timestamp).Seconds())
 		if diff < minDiff {
 			minDiff = diff
@@ -497,7 +585,7 @@ func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string
 	precipitations := make([]int, 12)
 	precipCounts := make([]int, 12)
 
-	for _, r := range responseJson.Weather {
+	for _, r := range allRecords {
 		// Only use records from the current local day
 		if r.Timestamp.Before(localDayStart) || r.Timestamp.After(localDayEnd) {
 			continue
