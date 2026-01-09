@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	_ "time/tzdata"
@@ -427,8 +428,142 @@ type brightSkyWeatherResponseJson struct {
 	} `json:"sources"`
 }
 
+// brightSkyCache stores weather records per location to preserve historical data
+type brightSkyCache struct {
+	mu         sync.RWMutex
+	records    map[string][]brightSkyWeatherRecord // key: "lat,lon"
+	date       map[string]string                    // key: "lat,lon", value: date (YYYY-MM-DD)
+	lastAccess map[string]time.Time                 // key: "lat,lon", tracks last access time for cleanup
+}
+
+var globalBrightSkyCache = &brightSkyCache{
+	records:    make(map[string][]brightSkyWeatherRecord),
+	date:       make(map[string]string),
+	lastAccess: make(map[string]time.Time),
+}
+
+const maxCachedLocations = 100      // Maximum number of locations to cache
+const staleLocationThreshold = 7    // Days after which unused locations are removed
+
+// getCacheKey generates a cache key from latitude and longitude
+func getCacheKey(lat, lon float64) string {
+	return fmt.Sprintf("%.4f,%.4f", lat, lon)
+}
+
+// addRecords adds new weather records to cache, merging with existing data for the same day
+func (c *brightSkyCache) addRecords(key string, records []brightSkyWeatherRecord, currentDate string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Check if it's a new day - if so, clear old data
+	if c.date[key] != currentDate {
+		c.records[key] = nil
+		c.date[key] = currentDate
+	}
+
+	// Update last access time
+	c.lastAccess[key] = time.Now()
+
+	// Cleanup stale locations if cache is getting too large
+	if len(c.records) > maxCachedLocations {
+		c.cleanupStaleLocations()
+	}
+
+	// Merge new records with existing ones, avoiding duplicates
+	existing := c.records[key]
+	recordMap := make(map[time.Time]brightSkyWeatherRecord)
+
+	// Add existing records to map
+	for _, r := range existing {
+		recordMap[r.Timestamp] = r
+	}
+
+	// Add or update with new records
+	for _, r := range records {
+		recordMap[r.Timestamp] = r
+	}
+
+	// Convert back to slice and sort by timestamp
+	merged := make([]brightSkyWeatherRecord, 0, len(recordMap))
+	for _, r := range recordMap {
+		merged = append(merged, r)
+	}
+
+	// Sort by timestamp
+	slices.SortFunc(merged, func(a, b brightSkyWeatherRecord) int {
+		if a.Timestamp.Before(b.Timestamp) {
+			return -1
+		}
+		if a.Timestamp.After(b.Timestamp) {
+			return 1
+		}
+		return 0
+	})
+
+	c.records[key] = merged
+}
+
+// cleanupStaleLocations removes entries that haven't been accessed in a while
+// Must be called with mutex locked
+func (c *brightSkyCache) cleanupStaleLocations() {
+	threshold := time.Now().Add(-staleLocationThreshold * 24 * time.Hour)
+	for key, lastAccess := range c.lastAccess {
+		if lastAccess.Before(threshold) {
+			delete(c.records, key)
+			delete(c.date, key)
+			delete(c.lastAccess, key)
+		}
+	}
+}
+
+// getRecords retrieves cached weather records for a location
+func (c *brightSkyCache) getRecords(key string, currentDate string) []brightSkyWeatherRecord {
+	c.mu.RLock()
+	
+	// Check if cache is for the current day
+	if c.date[key] != currentDate {
+		c.mu.RUnlock()
+		return nil
+	}
+
+	records := c.records[key]
+	c.mu.RUnlock()
+
+	// Update last access time with write lock
+	c.mu.Lock()
+	c.lastAccess[key] = time.Now()
+	c.mu.Unlock()
+
+	return records
+}
+
 func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string, error) {
 	now := time.Now()
+	cacheKey := getCacheKey(lat, lon)
+
+	// Fetch sunrise/sunset and timezone from Open-Meteo first
+	omUrl := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&daily=sunrise,sunset&timeformat=unixtime&timezone=auto&forecast_days=1", lat, lon)
+	omRequest, _ := http.NewRequest("GET", omUrl, nil)
+	omResponse, omErr := decodeJsonFromRequest[openMeteoWeatherResponseJson](defaultHTTPClient, omRequest)
+	
+	// Determine timezone for the location
+	var locationTZ *time.Location
+	if omErr == nil && omResponse.Timezone != "" {
+		var tzErr error
+		locationTZ, tzErr = time.LoadLocation(omResponse.Timezone)
+		if tzErr != nil {
+			// Fallback to UTC if timezone lookup fails (e.g., invalid timezone string)
+			locationTZ = time.UTC
+		}
+	} else {
+		// Fallback to UTC if we couldn't get timezone from API
+		locationTZ = time.UTC
+	}
+
+	// Use location's timezone for cache date management
+	nowInLocationTZ := now.In(locationTZ)
+	currentDate := nowInLocationTZ.Format("2006-01-02")
+
 	// Fetch slightly more data to ensure we cover the full 24h of the current local day
 	date := now.Add(-24 * time.Hour).Format("2006-01-02")
 	lastDate := now.Add(24 * time.Hour).Format("2006-01-02")
@@ -448,16 +583,19 @@ func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string
 		stationName = responseJson.Sources[0].StationName
 	}
 
+	// Add fresh records to cache
+	globalBrightSkyCache.addRecords(cacheKey, responseJson.Weather, currentDate)
+
+	// Get all cached records (which now includes the fresh data)
+	allRecords := globalBrightSkyCache.getRecords(cacheKey, currentDate)
+
 	// Filter and group records for the current local day (00:00 - 23:59)
 	localDayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	localDayEnd := localDayStart.Add(24 * time.Hour)
 
-	// Fetch sunrise/sunset from Open-Meteo as Bright Sky doesn't provide them easily
+	// Calculate sunrise/sunset bars from already fetched Open-Meteo data
 	sunriseBar, sunsetBar := -1, -1
-	omUrl := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&daily=sunrise,sunset&timeformat=unixtime&timezone=auto&forecast_days=1", lat, lon)
-	omRequest, _ := http.NewRequest("GET", omUrl, nil)
-	omResponse, err := decodeJsonFromRequest[openMeteoWeatherResponseJson](defaultHTTPClient, omRequest)
-	if err == nil && len(omResponse.Daily.Sunrise) > 0 {
+	if omErr == nil && len(omResponse.Daily.Sunrise) > 0 {
 		// We use .Local() to ensure consistency with how bars are grouped (which also uses server local time)
 		sunriseBar = time.Unix(omResponse.Daily.Sunrise[0], 0).Local().Hour() / 2
 		sunsetBar = (time.Unix(omResponse.Daily.Sunset[0], 0).Local().Hour() - 1) / 2
@@ -471,7 +609,7 @@ func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string
 	var currentRecord brightSkyWeatherRecord
 	minDiff := math.MaxFloat64
 	currentFound := false
-	for _, r := range responseJson.Weather {
+	for _, r := range allRecords {
 		diff := math.Abs(now.Sub(r.Timestamp).Seconds())
 		if diff < minDiff {
 			minDiff = diff
@@ -497,7 +635,7 @@ func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string
 	precipitations := make([]int, 12)
 	precipCounts := make([]int, 12)
 
-	for _, r := range responseJson.Weather {
+	for _, r := range allRecords {
 		// Only use records from the current local day
 		if r.Timestamp.Before(localDayStart) || r.Timestamp.After(localDayEnd) {
 			continue
