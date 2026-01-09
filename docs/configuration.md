@@ -1840,9 +1840,27 @@ Each bar represents a 2 hour interval. The yellow background represents sunrise 
 | hour-format | string | no | 12h |
 | hide-location | boolean | no | false |
 | show-area-name | boolean | no | false |
+| use-brightsky | boolean | no | false | 
+| lat | string | no | |
+| lon | string | no | |
 
 ##### `location`
 The name of the city and country to fetch weather information for. Attempting to launch the applcation with an invalid location will result in an error. You can use the [gecoding API page](https://open-meteo.com/en/docs/geocoding-api) to search for your specific location. Glance will use the first result from the list if there are multiple.
+
+#### `use-brightsky`
+If set to true, you don't need the `location` property, but you must specify `lat` and `lon`.
+
+#### `lat`
+Your Latitude.
+```
+lat: 21.37
+```
+
+#### `lan`
+Your Longitude.
+```
+lon: 21.37
+```
 
 ##### `units`
 Whether to show the temperature in celsius or fahrenheit, possible values are `metric` or `imperial`.

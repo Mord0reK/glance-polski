@@ -2,9 +2,12 @@
 <p>Wersja ta posiada także następujące zmiany</p>
 <li> Widget Radyjko <br>
 <li> Widget Cloudflare <br>
+<li> Widget Navidrome <br>
 <li> Natywny widget Vikunja <br>
 <li> Natywny widget Beszel <br>
-<li> Integracja z Affine
+<li> Natywny widget Tailscale <br>
+<li> Integracja z Affine <br>
+<li> Poprawiony widget pogody <br>
 <li> Możliwość przesuwania między lewą częścią, środkową i prawą poprzez przesunięcie na urządzeniach mobilnych
 
 <h1>Poniżej znajduje się reszta oryginalnego pliku README.md z oficjalnego repozytorium glanceapp/glance</h1>
