@@ -137,3 +137,16 @@
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
+.weather-status-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.weather-status-icon {
+    height: 3.5em;
+    width: auto;
+    pointer-events: none;
+}
