@@ -518,18 +518,23 @@ func (c *brightSkyCache) cleanupStaleLocations() {
 
 // getRecords retrieves cached weather records for a location
 func (c *brightSkyCache) getRecords(key string, currentDate string) []brightSkyWeatherRecord {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
+	c.mu.RLock()
+	
 	// Check if cache is for the current day
 	if c.date[key] != currentDate {
+		c.mu.RUnlock()
 		return nil
 	}
 
-	// Update last access time
-	c.lastAccess[key] = time.Now()
+	records := c.records[key]
+	c.mu.RUnlock()
 
-	return c.records[key]
+	// Update last access time with write lock
+	c.mu.Lock()
+	c.lastAccess[key] = time.Now()
+	c.mu.Unlock()
+
+	return records
 }
 
 func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string, error) {
@@ -544,9 +549,10 @@ func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string
 	// Determine timezone for the location
 	var locationTZ *time.Location
 	if omErr == nil && omResponse.Timezone != "" {
-		locationTZ, _ = time.LoadLocation(omResponse.Timezone)
-		if locationTZ == nil {
-			// Fallback to UTC if timezone lookup fails
+		var tzErr error
+		locationTZ, tzErr = time.LoadLocation(omResponse.Timezone)
+		if tzErr != nil {
+			// Fallback to UTC if timezone lookup fails (e.g., invalid timezone string)
 			locationTZ = time.UTC
 		}
 	} else {
