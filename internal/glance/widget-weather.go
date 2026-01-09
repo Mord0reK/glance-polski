@@ -24,6 +24,9 @@ type weatherWidget struct {
 	HideLocation bool                        `yaml:"hide-location"`
 	HourFormat   string                      `yaml:"hour-format"`
 	Units        string                      `yaml:"units"`
+	UseBrightSky bool                        `yaml:"use-brightsky"`
+	Lat          float64                     `yaml:"lat"`
+	Lon          float64                     `yaml:"lon"`
 	Place        *openMeteoPlaceResponseJson `yaml:"-"`
 	Weather      *weather                    `yaml:"-"`
 	TimeLabels   [12]string                  `yaml:"-"`
@@ -35,7 +38,7 @@ var timeLabels24h = [12]string{"2:00", "4:00", "6:00", "8:00", "10:00", "12:00",
 func (widget *weatherWidget) initialize() error {
 	widget.withTitle("Weather").withCacheOnTheHour()
 
-	if widget.Location == "" {
+	if !widget.UseBrightSky && widget.Location == "" {
 		return fmt.Errorf("location is required")
 	}
 
@@ -57,6 +60,32 @@ func (widget *weatherWidget) initialize() error {
 }
 
 func (widget *weatherWidget) update(ctx context.Context) {
+	if widget.UseBrightSky {
+		weather, stationName, err := fetchWeatherFromBrightSky(widget.Lat, widget.Lon, widget.Units)
+		if !widget.canContinueUpdateAfterHandlingErr(err) {
+			return
+		}
+
+		if widget.Place == nil {
+			widget.Place = &openMeteoPlaceResponseJson{
+				Name:    widget.Location,
+				Country: fmt.Sprintf("%.2f, %.2f", widget.Lat, widget.Lon),
+			}
+		}
+
+		if stationName != "" && widget.Location == "" {
+			widget.Place.Name = strings.Title(strings.ToLower(stationName))
+			widget.Place.Country = ""
+		}
+
+		if widget.Place.Name == "" {
+			widget.Place.Name = "Bright Sky"
+		}
+
+		widget.Weather = weather
+		return
+	}
+
 	if widget.Place == nil {
 		place, err := fetchOpenMeteoPlaceFromName(widget.Location)
 		if err != nil {
@@ -113,6 +142,8 @@ type openMeteoPlaceResponseJson struct {
 }
 
 type openMeteoWeatherResponseJson struct {
+	Timezone string `json:"timezone"`
+
 	Daily struct {
 		Sunrise []int64 `json:"sunrise"`
 		Sunset  []int64 `json:"sunset"`
@@ -292,6 +323,215 @@ func fetchWeatherForOpenMeteoPlace(place *openMeteoPlaceResponseJson, units stri
 		SunsetColumn:        sunsetBar,
 		Columns:             bars,
 	}, nil
+}
+
+type brightSkyWeatherRecord struct {
+	Timestamp                time.Time `json:"timestamp"`
+	Temperature              float64   `json:"temperature"`
+	WindSpeed                float64   `json:"wind_speed"`
+	DewPoint                 float64   `json:"dew_point"`
+	Precipitation            float64   `json:"precipitation"`
+	Condition                string    `json:"condition"`
+	PrecipitationProbability *int      `json:"precipitation_probability"`
+}
+
+type brightSkyWeatherResponseJson struct {
+	Weather []brightSkyWeatherRecord `json:"weather"`
+	Sources []struct {
+		StationName string `json:"station_name"`
+	} `json:"sources"`
+}
+
+func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string, error) {
+	now := time.Now()
+	// Fetch slightly more data to ensure we cover the full 24h of the current local day
+	date := now.Add(-24 * time.Hour).Format("2006-01-02")
+	lastDate := now.Add(24 * time.Hour).Format("2006-01-02")
+	requestUrl := fmt.Sprintf("https://api.brightsky.dev/weather?lat=%f&lon=%f&date=%s&last_date=%s", lat, lon, date, lastDate)
+	request, _ := http.NewRequest("GET", requestUrl, nil)
+	responseJson, err := decodeJsonFromRequest[brightSkyWeatherResponseJson](defaultHTTPClient, request)
+	if err != nil {
+		return nil, "", fmt.Errorf("fetching Bright Sky data: %v", err)
+	}
+
+	if len(responseJson.Weather) == 0 {
+		return nil, "", fmt.Errorf("no weather data returned from Bright Sky")
+	}
+
+	stationName := ""
+	if len(responseJson.Sources) > 0 {
+		stationName = responseJson.Sources[0].StationName
+	}
+
+	// Filter and group records for the current local day (00:00 - 23:59)
+	localDayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	localDayEnd := localDayStart.Add(24 * time.Hour)
+
+	// Fetch sunrise/sunset from Open-Meteo as Bright Sky doesn't provide them easily
+	sunriseBar, sunsetBar := -1, -1
+	omUrl := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&daily=sunrise,sunset&timeformat=unixtime&timezone=auto&forecast_days=1", lat, lon)
+	omRequest, _ := http.NewRequest("GET", omUrl, nil)
+	omResponse, err := decodeJsonFromRequest[openMeteoWeatherResponseJson](defaultHTTPClient, omRequest)
+	if err == nil && len(omResponse.Daily.Sunrise) > 0 {
+		location, _ := time.LoadLocation(omResponse.Timezone)
+		if location == nil {
+			location = time.Local
+		}
+
+		sunriseBar = time.Unix(omResponse.Daily.Sunrise[0], 0).In(location).Hour() / 2
+		sunsetBar = (time.Unix(omResponse.Daily.Sunset[0], 0).In(location).Hour() - 1) / 2
+
+		if sunsetBar < 0 {
+			sunsetBar = 0
+		}
+	}
+
+	// Find record closest to now for current weather
+	var currentRecord brightSkyWeatherRecord
+	minDiff := math.MaxFloat64
+	currentFound := false
+	for _, r := range responseJson.Weather {
+		diff := math.Abs(now.Sub(r.Timestamp).Seconds())
+		if diff < minDiff {
+			minDiff = diff
+			currentRecord = r
+			currentFound = true
+		}
+	}
+
+	if !currentFound {
+		return nil, "", fmt.Errorf("could not find current weather record in Bright Sky response")
+	}
+
+	temp := currentRecord.Temperature
+	apparentTemp := CalculateApparentTemperature(currentRecord.Temperature, currentRecord.WindSpeed, currentRecord.DewPoint)
+	if units == "imperial" {
+		temp = temp*1.8 + 32
+		apparentTemp = apparentTemp*1.8 + 32
+	}
+
+	// Build columns
+	temperatures := make([]float64, 12)
+	counts := make([]int, 12)
+	precipitations := make([]int, 12)
+	precipCounts := make([]int, 12)
+
+	for _, r := range responseJson.Weather {
+		// Only use records from the current local day
+		if r.Timestamp.Before(localDayStart) || r.Timestamp.After(localDayEnd) {
+			continue
+		}
+
+		hour := r.Timestamp.Local().Hour()
+		col := hour / 2
+		if col >= 0 && col < 12 {
+			t := r.Temperature
+			if units == "imperial" {
+				t = t*1.8 + 32
+			}
+			temperatures[col] += t
+			counts[col]++
+
+			if r.PrecipitationProbability != nil {
+				precipitations[col] += *r.PrecipitationProbability
+				precipCounts[col]++
+			} else {
+				// Fallback to precipitation amount
+				if r.Precipitation > 0 {
+					precipitations[col] += 100
+				}
+				precipCounts[col]++
+			}
+		}
+	}
+
+	bars := make([]weatherColumn, 12)
+	finalTemps := make([]int, 12)
+	for i := 0; i < 12; i++ {
+		if counts[i] > 0 {
+			finalTemps[i] = int(math.Round(temperatures[i] / float64(counts[i])))
+		} else {
+			finalTemps[i] = int(math.Round(temp)) // Fallback
+		}
+
+		hasPrecip := false
+		if precipCounts[i] > 0 {
+			hasPrecip = (precipitations[i] / precipCounts[i]) > 75
+		}
+		bars[i].Temperature = finalTemps[i]
+		bars[i].HasPrecipitation = hasPrecip
+	}
+
+	minT := slices.Min(finalTemps)
+	maxT := slices.Max(finalTemps)
+	temperaturesRange := float64(maxT - minT)
+
+	for i := 0; i < 12; i++ {
+		if temperaturesRange > 0 {
+			bars[i].Scale = float64(bars[i].Temperature-minT) / temperaturesRange
+		} else {
+			bars[i].Scale = 1
+		}
+	}
+
+	return &weather{
+		Temperature:         int(math.Round(temp)),
+		ApparentTemperature: int(math.Round(apparentTemp)),
+		WeatherCode:         brightSkyConditionToWMO(currentRecord.Condition),
+		CurrentColumn:       now.Hour() / 2,
+		Columns:             bars,
+		SunriseColumn:       sunriseBar,
+		SunsetColumn:        sunsetBar,
+	}, stationName, nil
+}
+
+func brightSkyConditionToWMO(condition string) int {
+	switch condition {
+	case "dry", "clear-day", "clear-night":
+		return 0
+	case "partly-cloudy-day", "partly-cloudy-night":
+		return 2
+	case "cloudy":
+		return 3
+	case "fog":
+		return 45
+	case "rain":
+		return 61
+	case "sleet":
+		return 66
+	case "snow":
+		return 71
+	case "hail":
+		return 77
+	case "thunderstorm":
+		return 95
+	default:
+		return 0
+	}
+}
+
+func CalculateApparentTemperature(temp, windSpeed, dewPoint float64) float64 {
+	// 1. Calculate Relative Humidity (RH) using Magnus-Tetens formula
+	rh := 100 * math.Exp((17.625*dewPoint)/(243.04+dewPoint)) / math.Exp((17.625*temp)/(243.04+temp))
+
+	if temp <= 10 {
+		// 2. Wind Chill (standard Jagua/NWS, windSpeed in km/h)
+		if windSpeed < 4.8 {
+			return temp
+		}
+		v016 := math.Pow(windSpeed, 0.16)
+		return 13.12 + 0.6215*temp - 11.37*v016 + 0.3965*temp*v016
+	}
+
+	if temp >= 26.7 {
+		// 3. Heat Index (Rothfusz formula, requires Fahrenheit)
+		tf := temp*1.8 + 32
+		hi := -42.379 + 2.04901523*tf + 10.14333127*rh - 0.22475541*tf*rh - 0.00683783*tf*tf - 0.05481717*rh*rh + 0.00122874*tf*tf*rh + 0.00085282*tf*rh*rh - 0.00000199*tf*tf*rh*rh
+		return (hi - 32) / 1.8
+	}
+
+	// 4. For temperatures between 10°C and 26.7°C, return raw temperature
+	return temp
 }
 
 var weatherCodeTable = map[int]string{
