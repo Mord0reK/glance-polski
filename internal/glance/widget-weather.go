@@ -113,6 +113,7 @@ type weather struct {
 	Temperature         int
 	ApparentTemperature int
 	WeatherCode         int
+	CloudCover          int
 	CurrentColumn       int
 	SunriseColumn       int
 	SunsetColumn        int
@@ -125,6 +126,87 @@ func (w *weather) WeatherCodeAsString() string {
 	}
 
 	return ""
+}
+
+func (w *weather) WeatherIcon() string {
+	isDay := true
+	if w.SunriseColumn != -1 && w.SunsetColumn != -1 {
+		isDay = w.CurrentColumn >= w.SunriseColumn && w.CurrentColumn <= w.SunsetColumn
+	}
+
+	// Dynamic cloudiness check (threshold 80% for "full overcast")
+	isOvercast := w.CloudCover >= 80
+
+	switch w.WeatherCode {
+	case 0, 1: // Clear / Mainly clear
+		if isOvercast {
+			return "overcast.svg"
+		}
+		if isDay {
+			return "clear-day.svg"
+		}
+		return "clear-night.svg"
+	case 2: // Partly cloudy
+		if isOvercast {
+			return "overcast.svg"
+		}
+		if isDay {
+			return "partly-cloudy-day.svg"
+		}
+		return "partly-cloudy-night.svg"
+	case 3: // Overcast
+		return "overcast.svg"
+	case 45, 48: // Fog
+		if isOvercast {
+			return "fog.svg"
+		}
+		if isDay {
+			return "fog-day.svg"
+		}
+		return "fog-night.svg"
+	case 51, 53, 55: // Drizzle
+		if isOvercast {
+			return "drizzle.svg"
+		}
+		if isDay {
+			return "partly-cloudy-day-drizzle.svg"
+		}
+		return "partly-cloudy-night-drizzle.svg"
+	case 56, 57, 66, 67: // Freezing drizzle/rain (Sleet)
+		if isOvercast {
+			return "sleet.svg"
+		}
+		if isDay {
+			return "partly-cloudy-day-sleet.svg"
+		}
+		return "partly-cloudy-night-sleet.svg"
+	case 61, 63, 65, 80, 81, 82: // Rain
+		if isOvercast {
+			return "rain.svg"
+		}
+		if isDay {
+			return "partly-cloudy-day-rain.svg"
+		}
+		return "partly-cloudy-night-rain.svg"
+	case 71, 73, 75, 77, 85, 86: // Snow
+		if isOvercast {
+			return "snow.svg"
+		}
+		if isDay {
+			return "partly-cloudy-day-snow.svg"
+		}
+		return "partly-cloudy-night-snow.svg"
+	case 95, 96, 99: // Thunderstorm
+		if isOvercast {
+			return "thunderstorms-rain.svg"
+		}
+		if isDay {
+			return "thunderstorms-day.svg"
+		}
+		return "thunderstorms-night.svg"
+	default:
+		return "not-available.svg"
+	}
 }
 
 type openMeteoPlacesResponseJson struct {
@@ -158,6 +240,7 @@ type openMeteoWeatherResponseJson struct {
 		Temperature         float64 `json:"temperature_2m"`
 		ApparentTemperature float64 `json:"apparent_temperature"`
 		WeatherCode         int     `json:"weather_code"`
+		CloudCover          int     `json:"cloud_cover"`
 	} `json:"current"`
 }
 
@@ -256,7 +339,7 @@ func fetchWeatherForOpenMeteoPlace(place *openMeteoPlaceResponseJson, units stri
 	query.Add("timeformat", "unixtime")
 	query.Add("timezone", place.Timezone)
 	query.Add("forecast_days", "1")
-	query.Add("current", "temperature_2m,apparent_temperature,weather_code")
+	query.Add("current", "temperature_2m,apparent_temperature,weather_code,cloud_cover")
 	query.Add("hourly", "temperature_2m,precipitation_probability")
 	query.Add("daily", "sunrise,sunset")
 	query.Add("temperature_unit", temperatureUnit)
@@ -318,6 +401,7 @@ func fetchWeatherForOpenMeteoPlace(place *openMeteoPlaceResponseJson, units stri
 		Temperature:         int(responseJson.Current.Temperature),
 		ApparentTemperature: int(responseJson.Current.ApparentTemperature),
 		WeatherCode:         responseJson.Current.WeatherCode,
+		CloudCover:          responseJson.Current.CloudCover,
 		CurrentColumn:       currentBar,
 		SunriseColumn:       sunriseBar,
 		SunsetColumn:        sunsetBar,
@@ -330,6 +414,7 @@ type brightSkyWeatherRecord struct {
 	Temperature              float64   `json:"temperature"`
 	WindSpeed                float64   `json:"wind_speed"`
 	DewPoint                 float64   `json:"dew_point"`
+	CloudCover               int       `json:"cloud_cover"`
 	Precipitation            float64   `json:"precipitation"`
 	Condition                string    `json:"condition"`
 	PrecipitationProbability *int      `json:"precipitation_probability"`
@@ -373,13 +458,9 @@ func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string
 	omRequest, _ := http.NewRequest("GET", omUrl, nil)
 	omResponse, err := decodeJsonFromRequest[openMeteoWeatherResponseJson](defaultHTTPClient, omRequest)
 	if err == nil && len(omResponse.Daily.Sunrise) > 0 {
-		location, _ := time.LoadLocation(omResponse.Timezone)
-		if location == nil {
-			location = time.Local
-		}
-
-		sunriseBar = time.Unix(omResponse.Daily.Sunrise[0], 0).In(location).Hour() / 2
-		sunsetBar = (time.Unix(omResponse.Daily.Sunset[0], 0).In(location).Hour() - 1) / 2
+		// We use .Local() to ensure consistency with how bars are grouped (which also uses server local time)
+		sunriseBar = time.Unix(omResponse.Daily.Sunrise[0], 0).Local().Hour() / 2
+		sunsetBar = (time.Unix(omResponse.Daily.Sunset[0], 0).Local().Hour() - 1) / 2
 
 		if sunsetBar < 0 {
 			sunsetBar = 0
@@ -478,6 +559,7 @@ func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string
 		Temperature:         int(math.Round(temp)),
 		ApparentTemperature: int(math.Round(apparentTemp)),
 		WeatherCode:         brightSkyConditionToWMO(currentRecord.Condition),
+		CloudCover:          currentRecord.CloudCover,
 		CurrentColumn:       now.Hour() / 2,
 		Columns:             bars,
 		SunriseColumn:       sunriseBar,

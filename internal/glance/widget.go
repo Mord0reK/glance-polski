@@ -229,6 +229,10 @@ func (w *widgetBase) setProviders(providers *widgetProviders) {
 	w.Providers = providers
 }
 
+func (w *widgetBase) StaticAssetPath(path string) string {
+	return w.Providers.assetResolver(path)
+}
+
 func (w *widgetBase) renderTemplate(data any, t *template.Template) template.HTML {
 	w.templateBuffer.Reset()
 	err := t.Execute(&w.templateBuffer, data)
