@@ -78,8 +78,9 @@ type vikunjaAPILabel struct {
 }
 
 type vikunjaProject struct {
-	ID    int    `json:"id"`
-	Title string `json:"title"`
+	ID         int    `json:"id"`
+	Title      string `json:"title"`
+	IsArchived bool   `json:"is_archived"`
 }
 
 // Affine API structures
@@ -543,7 +544,15 @@ func (widget *vikunjaWidget) fetchProjects() ([]vikunjaProject, error) {
 		return nil, err
 	}
 
-	return projects, nil
+	// Filter archived projects
+	var activeProjects []vikunjaProject
+	for _, p := range projects {
+		if !p.IsArchived {
+			activeProjects = append(activeProjects, p)
+		}
+	}
+
+	return activeProjects, nil
 }
 
 func (widget *vikunjaWidget) createTask(title string, dueDate string, labelIDs []int, projectID int, affineNoteURL string, customLinkURL string, customLinkTitle string) (*vikunjaAPITask, error) {
