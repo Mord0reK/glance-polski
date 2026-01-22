@@ -1,58 +1,135 @@
 .widget-content-qbittorrent .qbittorrent-summary {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--color-separator);
-    flex-wrap: wrap;
 }
 
 .widget-content-qbittorrent .qbittorrent-stat {
     display: flex;
-    align-items: baseline;
-    gap: 0.3rem;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 33%;
 }
 
-.widget-content-qbittorrent .qbittorrent-icon {
-    width: 1.6rem;
-    height: 1.6rem;
-    display: block;
+.widget-content-qbittorrent .qbittorrent-stat:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 10%;
+    bottom: 10%;
+    width: 1px;
+    background: var(--color-separator);
+    opacity: 0.5;
+}
+
+.widget-content-qbittorrent .qbittorrent-stat-value {
+    font-size: var(--font-size-h2);
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.widget-content-qbittorrent .qbittorrent-stat-unit {
+    font-size: var(--font-size-h5);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+    color: var(--color-text-paragraph);
+}
+
+.widget-content-qbittorrent .qbittorrent-stat-label {
+    text-transform: uppercase;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    color: var(--color-text-subdue);
+}
+
+.widget-content-qbittorrent .qbittorrent-stat-label.active {
+    color: var(--color-primary);
+}
+
+.widget-content-qbittorrent .qbittorrent-details summary {
+    list-style: none;
+    user-select: none;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.widget-content-qbittorrent .qbittorrent-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.widget-content-qbittorrent .qbittorrent-arrow {
+    display: inline-block;
+    font-size: 0.8em;
+    transition: transform 0.2s;
+    margin-right: 0.5rem;
+}
+
+.widget-content-qbittorrent .qbittorrent-details[open] .qbittorrent-arrow {
+    transform: rotate(90deg);
+}
+
+.widget-content-qbittorrent .qbittorrent-state-char {
+    font-size: 1.4rem;
+    width: 2rem;
+    text-align: center;
+    font-family: monospace;
+    font-weight: bold;
 }
 
 .widget-content-qbittorrent .qbittorrent-progress-container {
-    height: 0.4rem;
+    position: relative;
+    height: 1.8rem;
     background: var(--color-widget-background-highlight);
-    border-radius: 0.2rem;
+    border-radius: 0.3rem;
     overflow: hidden;
+    margin-top: 0.4rem;
 }
 
 .widget-content-qbittorrent .qbittorrent-progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
-    border-radius: 0.2rem;
     transition: width 0.3s ease;
+    background: var(--color-text-subdue);
+    opacity: 0.15;
+}
+
+.widget-content-qbittorrent .qbittorrent-progress-bar[data-state="downloading"] {
     background: var(--color-primary);
+    opacity: 0.2;
 }
 
 .widget-content-qbittorrent .qbittorrent-progress-bar[data-state="seeding"] {
     background: var(--color-positive);
-}
-
-.widget-content-qbittorrent .qbittorrent-progress-bar[data-state="paused"] {
-    background: var(--color-text-subdue);
-}
-
-.widget-content-qbittorrent .qbittorrent-progress-bar[data-state="stalled"] {
-    background: var(--color-text-subdue);
+    opacity: 0.2;
 }
 
 .widget-content-qbittorrent .qbittorrent-progress-bar[data-state="error"] {
     background: var(--color-negative);
+    opacity: 0.2;
 }
 
-.widget-content-qbittorrent .qbittorrent-category {
-    background: var(--color-widget-background-highlight);
-    padding: 0.1rem 0.4rem;
-    border-radius: 0.3rem;
-    color: var(--color-text-highlight);
+.widget-content-qbittorrent .qbittorrent-progress-info {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    padding: 0 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--color-text-paragraph);
+    white-space: nowrap;
 }
 
 .widget-content-qbittorrent .qbittorrent-torrent {
-    padding: 0.5rem 0;
+    margin-bottom: 1.2rem;
+}
+
+.widget-content-qbittorrent .cursor-pointer {
+    cursor: pointer;
 }

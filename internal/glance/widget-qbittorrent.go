@@ -57,6 +57,7 @@ type qbittorrentTorrent struct {
 	StateIcon            string
 	StateText            string
 	SizeFormatted        string
+	DownloadedFormatted  string
 	SpeedFormatted       string
 	UploadSpeedFormatted string
 	ETAFormatted         string
@@ -249,6 +250,7 @@ func (widget *qbittorrentWidget) processTorrents(rawTorrents []map[string]interf
 		torrent.StateIcon = qbittorrentStateToIcon(torrent.State)
 		torrent.StateText = qbittorrentStateToText(torrent.State)
 		torrent.SizeFormatted = formatBytes(torrent.Size)
+		torrent.DownloadedFormatted = formatBytes(torrent.Downloaded)
 
 		// Only show download speed for downloading torrents
 		if torrent.DownloadSpeed > 0 && torrent.Progress < 1 {
@@ -301,13 +303,9 @@ func (widget *qbittorrentWidget) processTorrents(rawTorrents []map[string]interf
 		summary.Torrents = summary.Torrents[:widget.Limit]
 	}
 
-	// Format summary speeds
-	if summary.TotalDownloadSpeed > 0 {
-		summary.TotalDownloadSpeedFormatted = formatBytesPerSecond(summary.TotalDownloadSpeed)
-	}
-	if summary.TotalUploadSpeed > 0 {
-		summary.TotalUploadSpeedFormatted = formatBytesPerSecond(summary.TotalUploadSpeed)
-	}
+	// Format summary speeds (in MB/s as number only)
+	summary.TotalDownloadSpeedFormatted = fmt.Sprintf("%.2f", summary.TotalDownloadSpeed/(1024*1024))
+	summary.TotalUploadSpeedFormatted = fmt.Sprintf("%.2f", summary.TotalUploadSpeed/(1024*1024))
 
 	return summary
 }
