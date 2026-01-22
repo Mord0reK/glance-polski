@@ -1,0 +1,71 @@
+{{ template "widget-base.html" . }}
+
+{{- define "widget-content-classes" }}widget-content-qbittorrent{{ end }}
+
+{{- define "widget-content" }}
+<div class="qbittorrent-summary margin-bottom-15">
+    <div class="qbittorrent-stat">
+        <div class="qbittorrent-stat-value color-highlight">{{ .Summary.TotalDownloadSpeedFormatted }}{{- if not .Summary.TotalDownloadSpeedFormatted }}0.00{{- end }}</div>
+        <div class="qbittorrent-stat-unit">MB/s</div>
+        <div class="qbittorrent-stat-label{{ if .Summary.TotalDownloadSpeedFormatted }} active{{ end }}">DOWNLOAD</div>
+    </div>
+    <div class="qbittorrent-stat">
+        <div class="qbittorrent-stat-value color-highlight">{{ .Summary.SeedingCount }}</div>
+        <div class="qbittorrent-stat-label">SEEDING</div>
+    </div>
+    <div class="qbittorrent-stat">
+        <div class="qbittorrent-stat-value color-highlight">{{ .Summary.DownloadingCount }}</div>
+        <div class="qbittorrent-stat-label">LEECHING</div>
+    </div>
+</div>
+
+{{- if .Summary.Torrents }}
+<details class="qbittorrent-details" open>
+    <summary class="cursor-pointer">
+        <span class="qbittorrent-arrow">▶</span>
+        <span class="color-highlight">Torrents</span>
+    </summary>
+    <ul class="list margin-top-10">
+        {{- range .Summary.Torrents }}
+        <li class="qbittorrent-torrent">
+            <div class="flex items-center gap-10 margin-bottom-3">
+                {{ template "qb-state-icon" .StateIcon }}
+                <div class="min-width-0 grow">
+                    <div class="color-highlight text-truncate size-h4" title="{{ .Name }}">{{ .Name }}</div>
+                </div>
+            </div>
+            <div class="qbittorrent-progress-container">
+                <div class="qbittorrent-progress-bar" style="width: {{ .ProgressPercent }}%;" data-state="{{ .StateIcon }}"></div>
+                <div class="qbittorrent-progress-info">
+                    <span>{{ .DownloadedFormatted }} / {{ .SizeFormatted }}</span>
+                    <span>{{ if .ETAFormatted }}{{ .ETAFormatted }}{{ else }}∞{{ end }}</span>
+                </div>
+            </div>
+        </li>
+        {{- end }}
+    </ul>
+</details>
+{{- else }}
+<div class="text-center color-base margin-top-10">No active torrents</div>
+{{- end }}
+{{- end }}
+
+{{- define "qb-state-icon" }}
+{{- if eq . "downloading" }}
+<span class="qbittorrent-state-char color-primary">↓</span>
+{{- else if eq . "seeding" }}
+<span class="qbittorrent-state-char color-positive">↑</span>
+{{- else if eq . "paused" }}
+<span class="qbittorrent-state-char color-base">||</span>
+{{- else if eq . "stalled" }}
+<span class="qbittorrent-state-char color-base">?</span>
+{{- else if eq . "queued" }}
+<span class="qbittorrent-state-char color-base">◷</span>
+{{- else if eq . "checking" }}
+<span class="qbittorrent-state-char color-base">⟳</span>
+{{- else if eq . "error" }}
+<span class="qbittorrent-state-char color-negative">✕</span>
+{{- else }}
+<span class="qbittorrent-state-char color-base">?</span>
+{{- end }}
+{{- end }}

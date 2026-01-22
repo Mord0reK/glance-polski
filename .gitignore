@@ -10,3 +10,4 @@
 .env
 glance_binary
 /*.json
+/qbwrapper
