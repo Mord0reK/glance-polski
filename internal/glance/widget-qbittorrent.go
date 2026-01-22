@@ -83,6 +83,8 @@ func (widget *qbittorrentWidget) initialize() error {
 	}
 	widget.URL = strings.TrimSuffix(widget.URL, "/")
 
+	widget.withTitleURL(widget.URL)
+
 	if widget.Username == "" {
 		return fmt.Errorf("username is required")
 	}
