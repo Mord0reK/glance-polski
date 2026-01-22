@@ -1,0 +1,105 @@
+{{ template "widget-base.html" . }}
+
+{{- define "widget-content-classes" }}widget-content-qbittorrent{{ end }}
+
+{{- define "widget-content" }}
+<div class="qbittorrent-summary flex gap-15 margin-bottom-15">
+    <div class="qbittorrent-stat">
+        <span class="color-highlight size-h3">{{ .Summary.DownloadingCount }}</span>
+        <span class="size-h5 color-base">Downloading</span>
+    </div>
+    <div class="qbittorrent-stat">
+        <span class="color-highlight size-h3">{{ .Summary.SeedingCount }}</span>
+        <span class="size-h5 color-base">Seeding</span>
+    </div>
+    <div class="qbittorrent-stat">
+        <span class="color-highlight size-h3">{{ .Summary.PausedCount }}</span>
+        <span class="size-h5 color-base">Paused</span>
+    </div>
+    {{- if .Summary.TotalDownloadSpeedFormatted }}
+    <div class="qbittorrent-stat margin-left-auto">
+        <span class="color-primary size-h4">↓ {{ .Summary.TotalDownloadSpeedFormatted }}</span>
+    </div>
+    {{- end }}
+    {{- if .Summary.TotalUploadSpeedFormatted }}
+    <div class="qbittorrent-stat">
+        <span class="color-positive size-h4">↑ {{ .Summary.TotalUploadSpeedFormatted }}</span>
+    </div>
+    {{- end }}
+</div>
+
+<ul class="list list-gap-10 list-with-separator">
+    {{- range .Summary.Torrents }}
+    <li class="qbittorrent-torrent">
+        <div class="flex items-center gap-10 margin-bottom-5">
+            <div class="qbittorrent-state-icon shrink-0" data-state="{{ .StateIcon }}">
+                {{ template "qb-state-icon" .StateIcon }}
+            </div>
+            <div class="min-width-0 grow">
+                <div class="color-highlight text-truncate size-title-dynamic" title="{{ .Name }}">{{ .Name }}</div>
+            </div>
+            <div class="shrink-0 size-h5 color-base">{{ .SizeFormatted }}</div>
+        </div>
+
+        <div class="qbittorrent-progress-container margin-bottom-5">
+            <div class="qbittorrent-progress-bar" style="width: {{ .ProgressPercent }}%;" data-state="{{ .StateIcon }}"></div>
+        </div>
+
+        <div class="flex items-center gap-10 size-h5">
+            <span class="color-base">{{ .ProgressPercent }}%</span>
+            {{- if .Category }}
+            <span class="qbittorrent-category">{{ .Category }}</span>
+            {{- end }}
+            <span class="color-base">{{ .StateText }}</span>
+            {{- if .SpeedFormatted }}
+            <span class="color-primary margin-left-auto">↓ {{ .SpeedFormatted }}</span>
+            {{- end }}
+            {{- if .ETAFormatted }}
+            <span class="color-base">ETA: {{ .ETAFormatted }}</span>
+            {{- end }}
+            {{- if .UploadSpeedFormatted }}
+            <span class="color-positive{{ if not .SpeedFormatted }} margin-left-auto{{ end }}">↑ {{ .UploadSpeedFormatted }}</span>
+            {{- end }}
+        </div>
+    </li>
+    {{- else }}
+    <li class="text-center color-base">No torrents to display</li>
+    {{- end }}
+</ul>
+{{- end }}
+
+{{- define "qb-state-icon" }}
+{{- if eq . "downloading" }}
+<svg class="qbittorrent-icon" fill="var(--color-primary)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
+    <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm.75-11.25a.75.75 0 0 0-1.5 0v4.59L7.3 9.24a.75.75 0 0 0-1.1 1.02l3.25 3.5a.75.75 0 0 0 1.1 0l3.25-3.5a.75.75 0 1 0-1.1-1.02l-1.95 2.1V6.75z" clip-rule="evenodd" />
+</svg>
+{{- else if eq . "seeding" }}
+<svg class="qbittorrent-icon" fill="var(--color-positive)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
+    <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm.75-4.75a.75.75 0 0 1-1.5 0V8.66L7.3 10.76a.75.75 0 0 1-1.1-1.02l3.25-3.5a.75.75 0 0 1 1.1 0l3.25 3.5a.75.75 0 1 1-1.1 1.02l-1.95-2.1v4.59z" clip-rule="evenodd" />
+</svg>
+{{- else if eq . "paused" }}
+<svg class="qbittorrent-icon" fill="var(--color-text-base)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
+    <path fill-rule="evenodd" d="M2 10a8 8 0 1 1 16 0 8 8 0 0 1-16 0Zm5-2.25A.75.75 0 0 1 7.75 7h.5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1-.75-.75v-4.5Zm4 0a.75.75 0 0 1 .75-.75h.5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1-.75-.75v-4.5Z" clip-rule="evenodd" />
+</svg>
+{{- else if eq . "stalled" }}
+<svg class="qbittorrent-icon" fill="var(--color-text-subdue)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
+    <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+</svg>
+{{- else if eq . "queued" }}
+<svg class="qbittorrent-icon" fill="var(--color-text-subdue)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
+    <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" />
+</svg>
+{{- else if eq . "checking" }}
+<svg class="qbittorrent-icon" fill="var(--color-text-subdue)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
+    <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clip-rule="evenodd" />
+</svg>
+{{- else if eq . "error" }}
+<svg class="qbittorrent-icon" fill="var(--color-negative)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
+    <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+</svg>
+{{- else }}
+<svg class="qbittorrent-icon" fill="var(--color-text-base)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
+    <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.94a.75.75 0 1 1-1.061-1.061 3 3 0 1 1 2.871 5.026v.345a.75.75 0 0 1-1.5 0v-.5c0-.72.57-1.172 1.081-1.287A1.5 1.5 0 1 0 8.94 6.94ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+</svg>
+{{- end }}
+{{- end }}

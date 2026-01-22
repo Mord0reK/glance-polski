@@ -95,6 +95,8 @@ func newWidget(widgetType string) (widget, error) {
 		w = &googleComputeWidget{}
 	case "navidrome":
 		w = &navidromeWidget{}
+	case "qbittorrent":
+		w = &qbittorrentWidget{}
 	default:
 		return nil, fmt.Errorf("unknown widget type: %s", widgetType)
 	}
