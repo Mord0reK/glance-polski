@@ -6,6 +6,7 @@
 <li> Natywny widget Vikunja <br>
 <li> Natywny widget Beszel <br>
 <li> Natywny widget Tailscale <br>
+<li> Natywny widget qBittorrent <br>
 <li> Integracja z Affine <br>
 <li> Poprawiony widget pogody <br>
 <li> Możliwość przesuwania między lewą częścią, środkową i prawą poprzez przesunięcie na urządzeniach mobilnych
