@@ -148,7 +148,7 @@ func (widget *vikunjaWidget) update(ctx context.Context) {
 }
 
 func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
-	fullURL := widget.URL + "/api/v1/tasks/all"
+	fullURL := widget.URL + "/api/v1/tasks"
 
 	u, err := url.Parse(fullURL)
 	if err != nil {
@@ -158,7 +158,8 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 	q := u.Query()
 	q.Set("sort_by", "due_date")
 	q.Set("order_by", "asc")
-	q.Set("limit", "250")
+	q.Set("per_page", "250")
+	q.Set("filter", "done = false")
 	u.RawQuery = q.Encode()
 
 	request, err := http.NewRequest("GET", u.String(), nil)
