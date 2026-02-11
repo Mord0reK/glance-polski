@@ -97,6 +97,7 @@ func serveApp(configPath string) error {
 	exitChannel := make(chan struct{})
 	hadValidConfigOnStartup := false
 	var stopServer func() error
+	var stopBackgroundUpdates func()
 
 	onChange := func(newContents []byte) {
 		if stopServer != nil {
@@ -129,6 +130,10 @@ func serveApp(configPath string) error {
 			hadValidConfigOnStartup = true
 		}
 
+		if stopBackgroundUpdates != nil {
+			stopBackgroundUpdates()
+		}
+
 		if stopServer != nil {
 			if err := stopServer(); err != nil {
 				log.Printf("Error while trying to stop server: %v", err)
@@ -140,7 +145,7 @@ func serveApp(configPath string) error {
 			startServer, stopServer = app.server()
 
 			// Uruchom pętlę aktualizacji w tle
-			app.startBackgroundUpdates()
+			stopBackgroundUpdates = app.startBackgroundUpdates()
 
 			if err := startServer(); err != nil {
 				log.Printf("Failed to start server: %v", err)
@@ -174,7 +179,7 @@ func serveApp(configPath string) error {
 		}
 
 		// Uruchom pętlę aktualizacji w tle
-		app.startBackgroundUpdates()
+		stopBackgroundUpdates = app.startBackgroundUpdates()
 
 		startServer, _ := app.server()
 		if err := startServer(); err != nil {

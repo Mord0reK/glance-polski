@@ -23,11 +23,11 @@ COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
-COPY --from=builder /app/glance /glance
+COPY --from=builder /app/glance /app/glance
 
 USER appuser
 
 # Dokumentacja portu
 EXPOSE 8080/tcp
 
-ENTRYPOINT ["/glance", "--config", "/app/config/glance.yml"]
+ENTRYPOINT ["/app/glance", "--config", "/app/config/glance.yml"]
