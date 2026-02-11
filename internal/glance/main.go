@@ -139,6 +139,9 @@ func serveApp(configPath string) error {
 			var startServer func() error
 			startServer, stopServer = app.server()
 
+			// Uruchom pętlę aktualizacji w tle
+			app.startBackgroundUpdates()
+
 			if err := startServer(); err != nil {
 				log.Printf("Failed to start server: %v", err)
 			}
@@ -169,6 +172,9 @@ func serveApp(configPath string) error {
 		if err != nil {
 			return fmt.Errorf("creating application: %w", err)
 		}
+
+		// Uruchom pętlę aktualizacji w tle
+		app.startBackgroundUpdates()
 
 		startServer, _ := app.server()
 		if err := startServer(); err != nil {

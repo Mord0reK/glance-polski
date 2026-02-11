@@ -229,6 +229,15 @@ func newApplication(c *config) (*application, error) {
 	}
 	app.parsedManifest = []byte(manifest)
 
+	// Inicjalna aktualizacja widgetów (cold start) - synchroniczna, przed startem serwera
+	log.Println("Performing initial widget update...")
+	for _, page := range app.slugToPage {
+		page.mu.Lock()
+		page.updateOutdatedWidgets()
+		page.mu.Unlock()
+	}
+	log.Println("Initial widget update complete")
+
 	return app, nil
 }
 
@@ -269,6 +278,19 @@ func (p *page) updateOutdatedWidgets() {
 	}
 
 	wg.Wait()
+}
+
+func (a *application) startBackgroundUpdates() {
+	ticker := time.NewTicker(10 * time.Second)
+	go func() {
+		for range ticker.C {
+			for _, page := range a.slugToPage {
+				page.mu.Lock()
+				page.updateOutdatedWidgets()
+				page.mu.Unlock()
+			}
+		}
+	}()
 }
 
 func (a *application) resolveUserDefinedAssetPath(path string) string {
@@ -352,10 +374,9 @@ func (a *application) handlePageContentRequest(w http.ResponseWriter, r *http.Re
 	var responseBytes bytes.Buffer
 
 	func() {
-		page.mu.Lock()
-		defer page.mu.Unlock()
+		page.mu.RLock()
+		defer page.mu.RUnlock()
 
-		page.updateOutdatedWidgets()
 		err = pageContentTemplate.Execute(&responseBytes, pageData)
 	}()
 
