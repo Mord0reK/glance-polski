@@ -152,6 +152,8 @@ type widget interface {
 	setID(uint64)
 	handleRequest(w http.ResponseWriter, r *http.Request)
 	setHideHeader(bool)
+	setUpdating(bool)
+	CheckIsUpdating() bool
 }
 
 type cacheType int
@@ -180,6 +182,7 @@ type widgetBase struct {
 	cacheType           cacheType        `yaml:"-"`
 	nextUpdate          time.Time        `yaml:"-"`
 	updateRetriedTimes  int              `yaml:"-"`
+	IsUpdating          bool             `yaml:"-"`
 }
 
 type widgetProviders struct {
@@ -201,6 +204,14 @@ func (w *widgetBase) requiresUpdate(now *time.Time) bool {
 
 func (w *widgetBase) IsWIP() bool {
 	return w.WIP
+}
+
+func (w *widgetBase) setUpdating(updating bool) {
+	w.IsUpdating = updating
+}
+
+func (w *widgetBase) CheckIsUpdating() bool {
+	return w.IsUpdating
 }
 
 func (w *widgetBase) update(ctx context.Context) {

@@ -144,8 +144,8 @@ func serveApp(configPath string) error {
 			var startServer func() error
 			startServer, stopServer = app.server()
 
-			// Uruchom pętlę aktualizacji w tle
-			stopBackgroundUpdates = app.startBackgroundUpdates()
+			// Pętla aktualizacji w tle wyłączona - odświeżanie tylko przy wejściu na stronę
+			// stopBackgroundUpdates = app.startBackgroundUpdates()
 
 			if err := startServer(); err != nil {
 				log.Printf("Failed to start server: %v", err)
@@ -178,8 +178,8 @@ func serveApp(configPath string) error {
 			return fmt.Errorf("creating application: %w", err)
 		}
 
-		// Uruchom pętlę aktualizacji w tle
-		stopBackgroundUpdates = app.startBackgroundUpdates()
+		// Pętla aktualizacji w tle wyłączona - odświeżanie tylko przy wejściu na stronę
+		// stopBackgroundUpdates = app.startBackgroundUpdates()
 
 		startServer, _ := app.server()
 		if err := startServer(); err != nil {

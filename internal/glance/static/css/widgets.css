@@ -97,3 +97,43 @@
 .widget + .widget {
     margin-top: var(--widget-gap);
 }
+
+/* Widget updating state and loading animation */
+.widget-updating {
+    position: relative;
+}
+
+.widget-updating::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--color-widget-background);
+    opacity: 0.3;
+    border-radius: var(--border-radius);
+    pointer-events: none;
+    animation: widget-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes widget-pulse {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.4; }
+}
+
+.widget-loading-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+}
+
+.widget-loading-spinner {
+    width: 1.4rem;
+    height: 1.4rem;
+    animation: widget-spinner-rotate 1s linear infinite;
+    color: var(--color-primary);
+}
+
+@keyframes widget-spinner-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}

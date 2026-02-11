@@ -250,31 +250,35 @@ func (p *page) updateOutdatedWidgets() {
 	context := context.Background()
 
 	for w := range p.HeadWidgets {
-		widget := p.HeadWidgets[w]
+		wd := p.HeadWidgets[w]
 
-		if !widget.requiresUpdate(&now) {
+		if !wd.requiresUpdate(&now) {
 			continue
 		}
 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			widget.update(context)
+			wd.setUpdating(true)
+			defer wd.setUpdating(false)
+			wd.update(context)
 		}()
 	}
 
 	for c := range p.Columns {
 		for w := range p.Columns[c].Widgets {
-			widget := p.Columns[c].Widgets[w]
+			wd := p.Columns[c].Widgets[w]
 
-			if !widget.requiresUpdate(&now) {
+			if !wd.requiresUpdate(&now) {
 				continue
 			}
 
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				widget.update(context)
+				wd.setUpdating(true)
+				defer wd.setUpdating(false)
+				wd.update(context)
 			}()
 		}
 	}
@@ -283,28 +287,18 @@ func (p *page) updateOutdatedWidgets() {
 }
 
 func (a *application) startBackgroundUpdates() func() {
-	ticker := time.NewTicker(10 * time.Second)
-	done := make(chan struct{})
+	// Automatyczne odświeżanie w tle wyłączone
+	// Widgety odświeżają się tylko przy wejściu użytkownika na stronę (triggerPageUpdate)
+	return func() {}
+}
 
+// Asynchroniczne odświeżanie widgetów strony (wywoływane przy wejściu użytkownika)
+func (a *application) triggerPageUpdate(page *page) {
 	go func() {
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				for _, page := range a.slugToPage {
-					page.mu.Lock()
-					page.updateOutdatedWidgets()
-					page.mu.Unlock()
-				}
-			case <-done:
-				return
-			}
-		}
+		page.mu.Lock()
+		defer page.mu.Unlock()
+		page.updateOutdatedWidgets()
 	}()
-
-	return func() {
-		close(done)
-	}
 }
 
 func (a *application) resolveUserDefinedAssetPath(path string) string {
@@ -352,6 +346,9 @@ func (a *application) handlePageRequest(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Trigger async update when user visits the page
+	a.triggerPageUpdate(page)
+
 	data := templateData{
 		Page: page,
 		App:  a,
@@ -379,6 +376,9 @@ func (a *application) handlePageContentRequest(w http.ResponseWriter, r *http.Re
 	if a.handleUnauthorizedResponse(w, r, showUnauthorizedJSON) {
 		return
 	}
+
+	// Trigger async update when content is requested
+	a.triggerPageUpdate(page)
 
 	pageData := templateData{
 		Page: page,
