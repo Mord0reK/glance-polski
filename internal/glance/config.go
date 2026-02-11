@@ -87,8 +87,8 @@ type page struct {
 		Size    string  `yaml:"size"`
 		Widgets widgets `yaml:"widgets"`
 	} `yaml:"columns"`
-	PrimaryColumnIndex int8       `yaml:"-"`
-	mu                 sync.Mutex `yaml:"-"`
+	PrimaryColumnIndex int8         `yaml:"-"`
+	mu                 sync.RWMutex `yaml:"-"`
 }
 
 func newConfigFromYAML(contents []byte) (*config, error) {

@@ -229,6 +229,17 @@ func newApplication(c *config) (*application, error) {
 	}
 	app.parsedManifest = []byte(manifest)
 
+	// Inicjalna aktualizacja widgetów (cold start) - synchroniczna, przed startem serwera
+	// Używamy config.Pages zamiast slugToPage aby uniknąć duplikatów (slugToPage zawiera pusty slug + slug pierwszej strony)
+	log.Println("Performing initial widget update...")
+	for i := range config.Pages {
+		page := &config.Pages[i]
+		page.mu.Lock()
+		page.updateOutdatedWidgets()
+		page.mu.Unlock()
+	}
+	log.Println("Initial widget update complete")
+
 	return app, nil
 }
 
@@ -269,6 +280,31 @@ func (p *page) updateOutdatedWidgets() {
 	}
 
 	wg.Wait()
+}
+
+func (a *application) startBackgroundUpdates() func() {
+	ticker := time.NewTicker(10 * time.Second)
+	done := make(chan struct{})
+
+	go func() {
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				for _, page := range a.slugToPage {
+					page.mu.Lock()
+					page.updateOutdatedWidgets()
+					page.mu.Unlock()
+				}
+			case <-done:
+				return
+			}
+		}
+	}()
+
+	return func() {
+		close(done)
+	}
 }
 
 func (a *application) resolveUserDefinedAssetPath(path string) string {
@@ -355,7 +391,6 @@ func (a *application) handlePageContentRequest(w http.ResponseWriter, r *http.Re
 		page.mu.Lock()
 		defer page.mu.Unlock()
 
-		page.updateOutdatedWidgets()
 		err = pageContentTemplate.Execute(&responseBytes, pageData)
 	}()
 
