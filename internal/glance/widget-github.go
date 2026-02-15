@@ -15,6 +15,7 @@ type githubWidget struct {
 	Token         string       `yaml:"token"`
 	CollapseAfter int          `yaml:"collapse-after"`
 	Sort          string       `yaml:"sort"`
+	TitleLink     string       `yaml:"title-link"`
 	Repositories  []githubRepo `yaml:"-"`
 }
 
@@ -30,6 +31,10 @@ type githubRepo struct {
 
 func (widget *githubWidget) initialize() error {
 	widget.withTitle("GitHub").withCacheDuration(15 * time.Minute)
+
+	if widget.TitleLink != "" {
+		widget.TitleURL = widget.TitleLink
+	}
 
 	if widget.CollapseAfter == 0 {
 		widget.CollapseAfter = 5

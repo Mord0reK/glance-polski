@@ -11,6 +11,7 @@ Aby skonfigurować widget GitHub, dodaj następującą konfigurację do swojego 
   token: ghp_xxxxx  # Opcjonalny token PAT dla repozytoriów prywatnych
   collapse-after: 5 # Liczba repozytoriów wyświetlanych domyślnie (domyślnie 5)
   sort: updated    # Sortowanie: updated, created, pushed, full_name (domyślnie updated)
+  title-link: https://github.com/twoj-profil # Opcjonalny link przekierowania po kliknięciu w tytuł
 ```
 
 ### Uzyskiwanie tokenu PAT (Personal Access Token)
@@ -43,6 +44,7 @@ Widget wyświetla dla każdego repozytorium:
 | `token` | string | Personal Access Token (opcjonalny) | - |
 | `collapse-after` | int | Liczba repozytoriów wyświetlanych domyślnie (reszta ukryta pod "Pokaż więcej") | 5 |
 | `sort` | string | Sortowanie: `updated`, `created`, `pushed`, `full_name` | `updated` |
+| `title-link` | string | Link przekierowania po kliknięciu w tytuł widgetu | - |
 
 ## Przykładowa konfiguracja
 
@@ -79,6 +81,16 @@ pages:
   token: ghp_xxxxx
   collapse-after: 10
   sort: created
+```
+
+### Przekierowanie tytułu na stronę profilu GitHub
+
+```yaml
+- type: github
+  token: ghp_xxxxx
+  collapse-after: 5
+  sort: updated
+  title-link: https://github.com/twoj-profil
 ```
 
 ## Rozwiązywanie problemów
