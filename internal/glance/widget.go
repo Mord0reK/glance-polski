@@ -63,6 +63,8 @@ func newWidget(widgetType string) (widget, error) {
 		w = &changeDetectionWidget{}
 	case "repository":
 		w = &repositoryWidget{}
+	case "github":
+		w = &githubWidget{}
 	case "search":
 		w = &searchWidget{}
 	case "extension":
