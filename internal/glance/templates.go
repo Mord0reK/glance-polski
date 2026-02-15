@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"math"
 	"strconv"
+	"time"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -48,6 +49,9 @@ var globalTemplateFunctions = template.FuncMap{
 		return a / b
 	},
 	"dynamicRelativeTimeAttrs": dynamicRelativeTimeAttrs,
+	"formatPolishDate":         formatPolishDate,
+	"formatPolishRelativeTime": formatPolishRelativeTime,
+	"languageIcon":             languageIcon,
 	"formatServerMegabytes": func(mb uint64) template.HTML {
 		var value string
 		var label string
@@ -102,4 +106,144 @@ func formatApproxNumber(count int) string {
 
 func dynamicRelativeTimeAttrs(t interface{ Unix() int64 }) template.HTMLAttr {
 	return template.HTMLAttr(`data-dynamic-relative-time="` + strconv.FormatInt(t.Unix(), 10) + `"`)
+}
+
+func formatPolishDate(t interface{ Unix() int64 }) string {
+	days := []string{"niedziela", "poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota"}
+	months := []string{"stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca", "lipca", "sierpnia", "września", "października", "listopada", "grudnia"}
+
+	unix := t.Unix()
+	if unix == 0 {
+		return ""
+	}
+
+	timeObj := time.Unix(unix, 0)
+	weekday := days[timeObj.Weekday()]
+	day := timeObj.Day()
+	month := months[timeObj.Month()-1]
+	year := timeObj.Year()
+
+	return fmt.Sprintf("%s, %d %s %d", weekday, day, month, year)
+}
+
+func formatPolishRelativeTime(t interface{ Unix() int64 }) string {
+	unix := t.Unix()
+	if unix == 0 {
+		return ""
+	}
+
+	now := time.Now().Unix()
+	delta := now - unix
+
+	if delta < 0 {
+		delta = -delta
+	}
+
+	const minuteInSeconds = 60
+	const hourInSeconds = minuteInSeconds * 60
+	const dayInSeconds = hourInSeconds * 24
+	const monthInSeconds = dayInSeconds * 30
+	const yearInSeconds = dayInSeconds * 365
+
+	if delta < minuteInSeconds {
+		return "przed chwilą"
+	}
+	if delta < hourInSeconds {
+		mins := int(delta / minuteInSeconds)
+		return formatPolishPlural(mins, "minutę", "minuty", "minut") + " temu"
+	}
+	if delta < dayInSeconds {
+		hours := int(delta / hourInSeconds)
+		return formatPolishPlural(hours, "godzinę", "godziny", "godz.") + " temu"
+	}
+	if delta < monthInSeconds {
+		days := int(delta / dayInSeconds)
+		return formatPolishPlural(days, "dzień", "dni", "dni") + " temu"
+	}
+	if delta < yearInSeconds {
+		months := int(delta / monthInSeconds)
+		return formatPolishPlural(months, "miesiąc", "miesiące", "mies.") + " temu"
+	}
+
+	years := int(delta / yearInSeconds)
+	return formatPolishPlural(years, "rok", "lata", "lat") + " temu"
+}
+
+func formatPolishPlural(n int, one, twoFour, fivePlus string) string {
+	n = n % 100
+	if n == 1 {
+		return fmt.Sprintf("%d %s", n, one)
+	}
+	if n >= 2 && n <= 4 {
+		return fmt.Sprintf("%d %s", n, twoFour)
+	}
+	return fmt.Sprintf("%d %s", n, fivePlus)
+}
+
+func languageIcon(language string) string {
+	if language == "" {
+		return ""
+	}
+
+	languageSlugs := map[string]string{
+		"JavaScript":   "javascript",
+		"TypeScript":   "typescript",
+		"Python":       "python",
+		"Java":         "java",
+		"C#":           "csharp",
+		"C++":          "cpp",
+		"C":            "c",
+		"Go":           "go",
+		"Rust":         "rust",
+		"Ruby":         "ruby",
+		"PHP":          "php",
+		"Swift":        "swift",
+		"Kotlin":       "kotlin",
+		"Scala":        "scala",
+		"Shell":        "gnubash",
+		"HTML":         "html5",
+		"CSS":          "css3",
+		"SCSS":         "sass",
+		"Vue":          "vuedotjs",
+		"Svelte":       "svelte",
+		"JSON":         "json",
+		"YAML":         "yaml",
+		"Markdown":     "markdown",
+		"SQL":          "postgresql",
+		"Dockerfile":   "docker",
+		"R":            "r",
+		"Matlab":       "matlab",
+		"Haskell":      "haskell",
+		"Elixir":       "elixir",
+		"Clojure":      "clojure",
+		"Perl":         "perl",
+		"Lua":          "lua",
+		"Dart":         "dart",
+		"Groovy":       "gradle",
+		"Objective-C":  "objectivec",
+		"Visual Basic": "visualbasic",
+		"F#":           "fsharp",
+		"OCaml":        "ocaml",
+		"Julia":        "julia",
+		"COBOL":        "cobol",
+		"Fortran":      "fortran",
+		"Crystal":      "crystal",
+		"Zig":          "zig",
+		"Nim":          "nim",
+		"V":            "v",
+		"Nix":          "nix",
+		"Ada":          "ada",
+		"Prolog":       "prolog",
+		"Erlang":       "erlang",
+		"Pascal":       "pascal",
+		"Delphi":       "delphi",
+		"Assembly":     "assemblyscript",
+	}
+
+	slug, exists := languageSlugs[language]
+	if !exists {
+		return ""
+	}
+
+	return "https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/" + slug + ".svg"
 }

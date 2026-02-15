@@ -1,0 +1,26 @@
+{{ template "widget-base.html" . }}
+
+{{ define "widget-content" }}
+<ul class="list list-gap-10 collapsible-container" data-collapse-after="{{ .CollapseAfter }}">
+    {{ range .Repositories }}
+    <li>
+        <a class="size-h4 block color-primary" href="{{ .URL }}" target="_blank" rel="noreferrer">{{ .FullName }}</a>
+        {{ if .Description }}
+        <p class="size-base-on-mobile margin-top-2 color-secondary text-truncate-2-lines">{{ .Description }}</p>
+        {{ end }}
+        <ul class="list-horizontal-text margin-top-3">
+            <li title="{{ .LastCommit | formatPolishDate }}">{{ .LastCommit | formatPolishRelativeTime }}</li>
+            <li>{{ .Stars | formatNumber }} ★</li>
+            {{ if .Language }}
+            {{ $iconUrl := .Language | languageIcon }}
+            {{ if $iconUrl }}
+            <li style="display: inline-flex; align-items: center; gap: 4px;"><img class="flat-icon" src="{{ $iconUrl }}" alt="{{ .Language }}" style="width: 1em; height: 1em;" loading="lazy">{{ .Language }}</li>
+            {{ else }}
+            <li>{{ .Language }}</li>
+            {{ end }}
+            {{ end }}
+        </ul>
+    </li>
+    {{ end }}
+</ul>
+{{ end }}
