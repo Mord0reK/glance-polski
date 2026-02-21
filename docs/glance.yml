@@ -2,6 +2,8 @@ pages:
   - name: Home
     # Optionally, if you only have a single page you can hide the desktop navigation for a cleaner look
     # hide-desktop-navigation: true
+    # Optionally, set page width: default (1600px), wide (1920px), slim (1100px), or full-width (100% browser width)
+    # width: full-width
     columns:
       - size: small
         widgets:

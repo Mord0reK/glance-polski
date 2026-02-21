@@ -490,8 +490,8 @@ func isConfigStateValid(config *config) error {
 			return fmt.Errorf("page %d has no name", i+1)
 		}
 
-		if page.Width != "" && (page.Width != "wide" && page.Width != "slim" && page.Width != "default") {
-			return fmt.Errorf("page %d: width can only be either wide or slim", i+1)
+		if page.Width != "" && (page.Width != "wide" && page.Width != "slim" && page.Width != "default" && page.Width != "full-width") {
+			return fmt.Errorf("page %d: width can only be wide, slim, full-width, or default", i+1)
 		}
 
 		if page.DesktopNavigationWidth != "" {
