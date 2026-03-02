@@ -27,6 +27,7 @@ type githubRepo struct {
 	Language    string
 	LastCommit  time.Time
 	URL         string
+	Visibility  string
 }
 
 func (widget *githubWidget) initialize() error {
@@ -72,6 +73,7 @@ type githubUserRepoResponseJson struct {
 	Language    string `json:"language"`
 	UpdatedAt   string `json:"updated_at"`
 	HTMLURL     string `json:"html_url"`
+	Visibility  string `json:"visibility"`
 }
 
 func fetchUserRepositoriesFromGithub(token string, sort string) ([]githubRepo, error) {
@@ -104,6 +106,7 @@ func fetchUserRepositoriesFromGithub(token string, sort string) ([]githubRepo, e
 			Language:    r.Language,
 			LastCommit:  parseRFC3339Time(r.UpdatedAt),
 			URL:         r.HTMLURL,
+			Visibility:  r.Visibility,
 		})
 	}
 
