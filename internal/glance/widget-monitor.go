@@ -85,22 +85,22 @@ func (widget *monitorWidget) Render() template.HTML {
 
 func statusCodeToText(status int, altStatusCodes []int) string {
 	if status == 200 || slices.Contains(altStatusCodes, status) {
-		return "OK"
+		return "Działa"
 	}
 	if status == 404 {
-		return "Not Found"
+		return "Nie znaleziono"
 	}
 	if status == 403 {
-		return "Forbidden"
+		return "Dostęp zabroniony"
 	}
 	if status == 401 {
-		return "Unauthorized"
+		return "Nieautoryzowany"
 	}
 	if status >= 500 {
-		return "Server Error"
+		return "Błąd serwera"
 	}
 	if status >= 400 {
-		return "Client Error"
+		return "Błąd klienta"
 	}
 
 	return strconv.Itoa(status)

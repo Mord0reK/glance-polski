@@ -31,9 +31,9 @@
         <li title="{{ .Status.Code }}">{{ .StatusText }}</li>
         <li>{{ .Status.ResponseTime.Milliseconds | formatNumber }}ms</li>
         {{ else if .Status.TimedOut }}
-        <li class="color-negative">Timed Out</li>
+        <li class="color-negative">Przekroczony czas oczekiwania</li>
         {{ else }}
-        <li class="color-negative" title="{{ .Status.Error }}">ERROR</li>
+        <li class="color-negative" title="{{ .Status.Error }}">Błąd</li>
         {{ end }}
     </ul>
 </div>
