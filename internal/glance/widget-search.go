@@ -25,7 +25,7 @@ type searchWidget struct {
 	Target           string        `yaml:"target"`
 	Autofocus        bool          `yaml:"autofocus"`
 	Placeholder      string        `yaml:"placeholder"`
-	ShowDropdown     bool          `yaml:"show-dropdown"`
+	HideDropdown     bool          `yaml:"hide-dropdown"`
 	RecentBangsCount int           `yaml:"recent-bangs-count"`
 }
 
@@ -53,10 +53,6 @@ func (widget *searchWidget) initialize() error {
 
 	if widget.Placeholder == "" {
 		widget.Placeholder = "Type here to search…"
-	}
-
-	if !widget.ShowDropdown {
-		widget.ShowDropdown = true
 	}
 
 	if widget.RecentBangsCount == 0 {

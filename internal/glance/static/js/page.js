@@ -107,7 +107,7 @@ function setupSearchBoxes() {
         const defaultSearchUrl = widget.dataset.defaultSearchUrl;
         const target = widget.dataset.target || "_blank";
         const newTab = widget.dataset.newTab === "true";
-        const showDropdownEnabled = widget.dataset.showDropdown !== "false";
+        const showDropdownEnabled = widget.dataset.hideDropdown !== "true";
         const recentBangsCount = parseInt(widget.dataset.recentBangsCount) || 3;
         const inputElement = widget.getElementsByClassName("search-input")[0];
         const bangElement = widget.getElementsByClassName("search-bang")[0];
@@ -205,8 +205,8 @@ function setupSearchBoxes() {
                 }
             }
             
-            // Add recent section if there are recent items
-            if (recentItems.length > 0) {
+            // Add recent section if there are recent items and recentBangsCount > 0
+            if (recentItems.length > 0 && recentBangsCount > 0) {
                 const sectionTitle = document.createElement('div');
                 sectionTitle.className = 'search-dropdown-section';
                 sectionTitle.textContent = 'Ostatnio używane';
@@ -219,7 +219,8 @@ function setupSearchBoxes() {
             
             // Add other section if there are other items
             if (otherItems.length > 0) {
-                if (recentItems.length > 0) {
+                if (recentItems.length === 0 || recentBangsCount === 0) {
+                    // Only show "Wszystkie" if there's no recent section or recent is disabled
                     const sectionTitle = document.createElement('div');
                     sectionTitle.className = 'search-dropdown-section';
                     sectionTitle.textContent = 'Wszystkie';
@@ -234,6 +235,12 @@ function setupSearchBoxes() {
             // Use class for animation
             dropdownElement.classList.add('visible');
             selectedDropdownIndex = -1;
+            
+            // Auto-select first visible item
+            const visibleItems = getVisibleItems();
+            if (visibleItems.length > 0) {
+                visibleItems[0].classList.add('selected');
+            }
         };
 
         const hideDropdown = () => {
@@ -287,7 +294,7 @@ function setupSearchBoxes() {
 
         const getVisibleItems = () => {
             const items = dropdownListElement.querySelectorAll('.search-dropdown-item');
-            return Array.from(items).filter(item => item.style.display !== 'none');
+            return Array.from(items).filter(item => item.style.display !== 'none' && !item.classList.contains('hiding'));
         };
 
         const handleKeyDown = (event) => {
@@ -299,14 +306,16 @@ function setupSearchBoxes() {
                     event.preventDefault();
                     const currentIndex = visibleItems.findIndex(item => item.classList.contains('selected'));
                     if (currentIndex < visibleItems.length - 1) {
-                        // Remove selected from all
-                        visibleItems.forEach(item => item.classList.remove('selected'));
-                        visibleItems[currentIndex + 1].classList.add('selected');
-                        visibleItems[currentIndex + 1].scrollIntoView({ block: 'nearest' });
+                        if (currentIndex > -1) {
+                            visibleItems[currentIndex].classList.remove('selected');
+                        }
+                        const nextItem = visibleItems[currentIndex + 1];
+                        nextItem.classList.add('selected');
+                        nextItem.scrollIntoView({ block: 'nearest' });
                     } else if (currentIndex === -1 && visibleItems.length > 0) {
-                        visibleItems.forEach(item => item.classList.remove('selected'));
-                        visibleItems[0].classList.add('selected');
-                        visibleItems[0].scrollIntoView({ block: 'nearest' });
+                        const firstItem = visibleItems[0];
+                        firstItem.classList.add('selected');
+                        firstItem.scrollIntoView({ block: 'nearest' });
                     }
                     return;
                 }
@@ -315,21 +324,23 @@ function setupSearchBoxes() {
                     event.preventDefault();
                     const currentIndex = visibleItems.findIndex(item => item.classList.contains('selected'));
                     if (currentIndex > 0) {
-                        visibleItems.forEach(item => item.classList.remove('selected'));
-                        visibleItems[currentIndex - 1].classList.add('selected');
-                        visibleItems[currentIndex - 1].scrollIntoView({ block: 'nearest' });
+                        visibleItems[currentIndex].classList.remove('selected');
+                        const prevItem = visibleItems[currentIndex - 1];
+                        prevItem.classList.add('selected');
+                        prevItem.scrollIntoView({ block: 'nearest' });
                     }
                     return;
                 }
                 
                 if (event.key === "Enter") {
                     const selectedItem = visibleItems.find(item => item.classList.contains('selected'));
-                    if (selectedItem) {
+                    if (selectedItem && visibleItems.length > 0) {
                         event.preventDefault();
                         const index = parseInt(selectedItem.dataset.index);
                         selectBangFromDropdown(index);
+                        return;
                     }
-                    return;
+                    // If no dropdown item selected, fall through to normal search
                 }
                 
                 if (event.key === "Escape") {
@@ -440,6 +451,7 @@ function setupSearchBoxes() {
 
         const filterDropdown = (searchTerm) => {
             const items = dropdownListElement.querySelectorAll('.search-dropdown-item');
+            const sections = dropdownListElement.querySelectorAll('.search-dropdown-section');
             const lowerSearchTerm = searchTerm.toLowerCase();
             
             items.forEach(item => {
@@ -447,17 +459,49 @@ function setupSearchBoxes() {
                 const shortcut = item.dataset.shortcut.toLowerCase();
                 const subtitle = (item.dataset.subtitle || '').toLowerCase();
                 
-                // Check if search term matches title, shortcut, or subtitle
                 const matchesTitle = title.startsWith(lowerSearchTerm);
                 const matchesShortcut = shortcut.startsWith(lowerSearchTerm.replace('!', ''));
                 const matchesSubtitle = subtitle.startsWith(lowerSearchTerm);
+                const shouldShow = matchesTitle || matchesShortcut || matchesSubtitle;
                 
-                if (matchesTitle || matchesShortcut || matchesSubtitle) {
+                if (shouldShow) {
+                    item.classList.remove('hiding');
                     item.style.display = '';
                 } else {
-                    item.style.display = 'none';
+                    item.classList.add('hiding');
+                    setTimeout(() => {
+                        if (item.classList.contains('hiding')) {
+                            item.style.display = 'none';
+                        }
+                    }, 150);
                 }
             });
+            
+            sections.forEach(section => {
+                const nextSibling = section.nextElementSibling;
+                let hasVisibleItems = false;
+                
+                let sibling = nextSibling;
+                while (sibling && !sibling.classList.contains('search-dropdown-section')) {
+                    if (sibling.classList.contains('search-dropdown-item') && sibling.style.display !== 'none') {
+                        hasVisibleItems = true;
+                        break;
+                    }
+                    sibling = sibling.nextElementSibling;
+                }
+                
+                section.style.display = hasVisibleItems ? '' : 'none';
+            });
+            
+            const visibleItems = getVisibleItems();
+            items.forEach(item => item.classList.remove('selected'));
+            
+            if (visibleItems.length === 0) {
+                hideDropdown();
+                return;
+            }
+            
+            visibleItems[0].classList.add('selected');
         };
 
         inputElement.addEventListener("focus", () => {

@@ -141,7 +141,16 @@
     gap: 1rem;
     padding: 1rem 1.25rem;
     cursor: pointer;
-    transition: background-color 0.15s;
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, background-color 0.15s;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.search-dropdown-item.hiding {
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    position: absolute;
 }
 
 .search-dropdown-item:hover,
