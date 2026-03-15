@@ -108,7 +108,7 @@ function setupSearchBoxes() {
         const target = widget.dataset.target || "_blank";
         const newTab = widget.dataset.newTab === "true";
         const showDropdownEnabled = widget.dataset.hideDropdown !== "true";
-        const recentBangsCount = parseInt(widget.dataset.recentBangsCount) || 3;
+        const recentBangsCount = parseInt(widget.dataset.recentBangsCount) || 0;
         const inputElement = widget.getElementsByClassName("search-input")[0];
         const bangElement = widget.getElementsByClassName("search-bang")[0];
         const bangs = widget.querySelectorAll(".search-bangs > input");

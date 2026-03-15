@@ -55,10 +55,6 @@ func (widget *searchWidget) initialize() error {
 		widget.Placeholder = "Type here to search…"
 	}
 
-	if widget.RecentBangsCount == 0 {
-		widget.RecentBangsCount = 3
-	}
-
 	if url, ok := searchEngines[widget.SearchEngine]; ok {
 		widget.SearchEngine = url
 	}
