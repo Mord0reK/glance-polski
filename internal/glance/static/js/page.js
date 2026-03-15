@@ -107,6 +107,8 @@ function setupSearchBoxes() {
         const defaultSearchUrl = widget.dataset.defaultSearchUrl;
         const target = widget.dataset.target || "_blank";
         const newTab = widget.dataset.newTab === "true";
+        const showDropdownEnabled = widget.dataset.showDropdown !== "false";
+        const recentBangsCount = parseInt(widget.dataset.recentBangsCount) || 3;
         const inputElement = widget.getElementsByClassName("search-input")[0];
         const bangElement = widget.getElementsByClassName("search-bang")[0];
         const bangs = widget.querySelectorAll(".search-bangs > input");
@@ -114,16 +116,231 @@ function setupSearchBoxes() {
         const kbdElement = widget.getElementsByTagName("kbd")[0];
         const searchIconDefault = widget.querySelector(".search-icon-default");
         const searchIconBang = widget.querySelector(".search-icon-bang");
+        const dropdownElement = widget.querySelector(".search-dropdown");
+        const dropdownListElement = widget.querySelector(".search-dropdown-list");
         let currentBang = null;
         let lastQuery = "";
+        let selectedDropdownIndex = -1;
+        let skipDropdownShow = false;
 
+        // Build dropdown items
         for (let j = 0; j < bangs.length; j++) {
             const bang = bangs[j];
             bangsMap[bang.dataset.shortcut] = bang;
         }
 
+        const STORAGE_KEY = 'glance-search-recent-bangs';
+        
+        const getRecentBangs = () => {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                return stored ? JSON.parse(stored) : [];
+            } catch {
+                return [];
+            }
+        };
+        
+        const saveRecentBang = (shortcut) => {
+            try {
+                let recent = getRecentBangs();
+                recent = recent.filter(s => s !== shortcut);
+                recent.unshift(shortcut);
+                recent = recent.slice(0, recentBangsCount);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(recent));
+            } catch {
+                // localStorage not available
+            }
+        };
+
+        const createDropdownItem = (bang, index) => {
+            const item = document.createElement('div');
+            item.className = 'search-dropdown-item';
+            item.dataset.index = index;
+            item.dataset.shortcut = bang.dataset.shortcut;
+            item.dataset.title = bang.dataset.title;
+            item.dataset.subtitle = bang.dataset.subtitle || '';
+            item.dataset.url = bang.dataset.url;
+            
+            let iconHtml = '';
+            if (bang.dataset.icon) {
+                const autoInvertClass = bang.dataset.iconInvert === 'true' ? 'auto-invert' : '';
+                iconHtml = `<img class="search-dropdown-item-icon ${autoInvertClass}" src="${bang.dataset.icon}" alt="">`;
+            }
+            
+            const subtitleHtml = bang.dataset.subtitle ? `<span class="search-dropdown-item-subtitle">${bang.dataset.subtitle}</span>` : '';
+            
+            item.innerHTML = `
+                ${iconHtml}
+                <div class="search-dropdown-item-content">
+                    <span class="search-dropdown-item-title">${bang.dataset.title}</span>
+                    ${subtitleHtml}
+                </div>
+                <span class="search-dropdown-item-shortcut">!${bang.dataset.shortcut}</span>
+            `;
+            
+            item.addEventListener('click', () => {
+                selectBangFromDropdown(index);
+            });
+            
+            return item;
+        };
+
+        const showDropdown = () => {
+            if (!showDropdownEnabled || bangs.length === 0) return;
+            
+            dropdownListElement.innerHTML = '';
+            
+            const recentShortcuts = getRecentBangs();
+            
+            // Build recent items map for quick lookup
+            const recentItems = [];
+            const otherItems = [];
+            
+            for (let j = 0; j < bangs.length; j++) {
+                const bang = bangs[j];
+                if (recentShortcuts.includes(bang.dataset.shortcut)) {
+                    recentItems.push({ bang, index: j });
+                } else {
+                    otherItems.push({ bang, index: j });
+                }
+            }
+            
+            // Add recent section if there are recent items
+            if (recentItems.length > 0) {
+                const sectionTitle = document.createElement('div');
+                sectionTitle.className = 'search-dropdown-section';
+                sectionTitle.textContent = 'Ostatnio używane';
+                dropdownListElement.appendChild(sectionTitle);
+                
+                recentItems.forEach(({ bang, index }) => {
+                    dropdownListElement.appendChild(createDropdownItem(bang, index));
+                });
+            }
+            
+            // Add other section if there are other items
+            if (otherItems.length > 0) {
+                if (recentItems.length > 0) {
+                    const sectionTitle = document.createElement('div');
+                    sectionTitle.className = 'search-dropdown-section';
+                    sectionTitle.textContent = 'Wszystkie';
+                    dropdownListElement.appendChild(sectionTitle);
+                }
+                
+                otherItems.forEach(({ bang, index }) => {
+                    dropdownListElement.appendChild(createDropdownItem(bang, index));
+                });
+            }
+            
+            // Use class for animation
+            dropdownElement.classList.add('visible');
+            selectedDropdownIndex = -1;
+        };
+
+        const hideDropdown = () => {
+            dropdownElement.classList.remove('visible');
+            selectedDropdownIndex = -1;
+        };
+
+        const selectBangFromDropdown = (index) => {
+            if (index < 0 || index >= bangs.length) return;
+            
+            const bang = bangs[index];
+            const hasQuery = bang.dataset.url.includes('!QUERY!');
+            
+            // Save to recent bangs
+            saveRecentBang(bang.dataset.shortcut);
+            
+            if (!hasQuery) {
+                // Direct URL without query - navigate immediately
+                const url = bang.dataset.url.replace("!QUERY!", "");
+                if (newTab) {
+                    window.open(url, target).focus();
+                } else {
+                    window.location.href = url;
+                }
+                hideDropdown();
+                inputElement.value = "";
+                return;
+            }
+            
+            // URL requires query - set up the bang for searching
+            skipDropdownShow = true;
+            inputElement.value = bang.dataset.shortcut + ' ';
+            changeCurrentBang(bang);
+            hideDropdown();
+            inputElement.focus();
+            setTimeout(() => { skipDropdownShow = false; }, 0);
+        };
+
+        const updateSelectedDropdownItem = () => {
+            const items = dropdownListElement.querySelectorAll('.search-dropdown-item');
+            items.forEach((item, idx) => {
+                if (idx === selectedDropdownIndex) {
+                    item.classList.add('selected');
+                    // Scroll into view
+                    item.scrollIntoView({ block: 'nearest' });
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+        };
+
+        const getVisibleItems = () => {
+            const items = dropdownListElement.querySelectorAll('.search-dropdown-item');
+            return Array.from(items).filter(item => item.style.display !== 'none');
+        };
+
         const handleKeyDown = (event) => {
+            // Handle dropdown navigation
+            if (dropdownElement.classList.contains('visible')) {
+                const visibleItems = getVisibleItems();
+                
+                if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    const currentIndex = visibleItems.findIndex(item => item.classList.contains('selected'));
+                    if (currentIndex < visibleItems.length - 1) {
+                        // Remove selected from all
+                        visibleItems.forEach(item => item.classList.remove('selected'));
+                        visibleItems[currentIndex + 1].classList.add('selected');
+                        visibleItems[currentIndex + 1].scrollIntoView({ block: 'nearest' });
+                    } else if (currentIndex === -1 && visibleItems.length > 0) {
+                        visibleItems.forEach(item => item.classList.remove('selected'));
+                        visibleItems[0].classList.add('selected');
+                        visibleItems[0].scrollIntoView({ block: 'nearest' });
+                    }
+                    return;
+                }
+                
+                if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    const currentIndex = visibleItems.findIndex(item => item.classList.contains('selected'));
+                    if (currentIndex > 0) {
+                        visibleItems.forEach(item => item.classList.remove('selected'));
+                        visibleItems[currentIndex - 1].classList.add('selected');
+                        visibleItems[currentIndex - 1].scrollIntoView({ block: 'nearest' });
+                    }
+                    return;
+                }
+                
+                if (event.key === "Enter") {
+                    const selectedItem = visibleItems.find(item => item.classList.contains('selected'));
+                    if (selectedItem) {
+                        event.preventDefault();
+                        const index = parseInt(selectedItem.dataset.index);
+                        selectBangFromDropdown(index);
+                    }
+                    return;
+                }
+                
+                if (event.key === "Escape") {
+                    hideDropdown();
+                    inputElement.blur();
+                    return;
+                }
+            }
+
             if (event.key == "Escape") {
+                hideDropdown();
                 inputElement.blur();
                 return;
             }
@@ -154,6 +371,7 @@ function setupSearchBoxes() {
 
                 lastQuery = query;
                 inputElement.value = "";
+                hideDropdown();
 
                 return;
             }
@@ -197,13 +415,22 @@ function setupSearchBoxes() {
 
         const handleInput = (event) => {
             const value = event.target.value.trim();
+            
+            // Show dropdown and filter items based on input (skip if selecting from dropdown)
+            if (!skipDropdownShow) {
+                showDropdown();
+                filterDropdown(value);
+            }
+            
             if (value in bangsMap) {
+                hideDropdown();
                 changeCurrentBang(bangsMap[value]);
                 return;
             }
 
             const words = value.split(" ");
             if (words.length >= 2 && words[0] in bangsMap) {
+                hideDropdown();
                 changeCurrentBang(bangsMap[words[0]]);
                 return;
             }
@@ -211,13 +438,42 @@ function setupSearchBoxes() {
             changeCurrentBang(null);
         };
 
+        const filterDropdown = (searchTerm) => {
+            const items = dropdownListElement.querySelectorAll('.search-dropdown-item');
+            const lowerSearchTerm = searchTerm.toLowerCase();
+            
+            items.forEach(item => {
+                const title = item.dataset.title.toLowerCase();
+                const shortcut = item.dataset.shortcut.toLowerCase();
+                const subtitle = (item.dataset.subtitle || '').toLowerCase();
+                
+                // Check if search term matches title, shortcut, or subtitle
+                const matchesTitle = title.startsWith(lowerSearchTerm);
+                const matchesShortcut = shortcut.startsWith(lowerSearchTerm.replace('!', ''));
+                const matchesSubtitle = subtitle.startsWith(lowerSearchTerm);
+                
+                if (matchesTitle || matchesShortcut || matchesSubtitle) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        };
+
         inputElement.addEventListener("focus", () => {
             document.addEventListener("keydown", handleKeyDown);
             document.addEventListener("input", handleInput);
+            showDropdown();
+            // Reset filter when focusing
+            filterDropdown('');
         });
         inputElement.addEventListener("blur", () => {
             document.removeEventListener("keydown", handleKeyDown);
             document.removeEventListener("input", handleInput);
+            // Delay hide to allow click events on dropdown
+            setTimeout(() => {
+                hideDropdown();
+            }, 200);
         });
 
         document.addEventListener("keydown", (event) => {

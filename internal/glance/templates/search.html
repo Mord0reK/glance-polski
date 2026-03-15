@@ -3,10 +3,10 @@
 {{ define "widget-content-classes" }}widget-content-frameless{{ end }}
 
 {{ define "widget-content" }}
-<div class="search widget-content-frame padding-inline-widget flex gap-15 items-center" data-default-search-url="{{ .SearchEngine }}" data-new-tab="{{ .NewTab }}" data-target="{{ .Target }}">
+<div class="search widget-content-frame padding-inline-widget flex gap-15 items-center" data-default-search-url="{{ .SearchEngine }}" data-new-tab="{{ .NewTab }}" data-target="{{ .Target }}" data-show-dropdown="{{ .ShowDropdown }}" data-recent-bangs-count="{{ .RecentBangsCount }}">
     <div class="search-bangs">
         {{ range .Bangs }}
-        <input type="hidden" data-shortcut="{{ .Shortcut }}" data-title="{{ .Title }}" data-url="{{ .URL }}" data-icon="{{ .Icon.URL }}" data-icon-invert="{{ .Icon.AutoInvert }}">
+        <input type="hidden" data-shortcut="{{ .Shortcut }}" data-title="{{ .Title }}" data-subtitle="{{ .Subtitle }}" data-url="{{ .URL }}" data-icon="{{ .Icon.URL }}" data-icon-invert="{{ .Icon.AutoInvert }}">
         {{ end }}
     </div>
 
@@ -21,5 +21,10 @@
 
     <div class="search-bang"></div>
     <kbd class="hide-on-mobile" title="Press [S] to focus the search input">S</kbd>
+
+    <!-- Dropdown for bangs navigation -->
+    <div class="search-dropdown">
+        <div class="search-dropdown-list"></div>
+    </div>
 </div>
 {{ end }}
