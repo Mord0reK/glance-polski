@@ -1190,11 +1190,14 @@ Example:
 ```yaml
 - type: search
   search-engine: duckduckgo
+  recent-bangs-count: 5
+  hide-dropdown: false
   bangs:
     - title: YouTube
       shortcut: "!yt"
       url: https://www.youtube.com/results?search_query={QUERY}
       icon: https://youtube.com/favicon.ico
+      subtitle: Search on YouTube
 ```
 
 Preview:
@@ -1222,6 +1225,8 @@ Preview:
 | autofocus | boolean | no | false |
 | target | string | no | _blank |
 | placeholder | string | no | Type here to search… |
+| hide-dropdown | boolean | no | false |
+| recent-bangs-count | number | no | 3 |
 | bangs | array | no | |
 
 ##### `search-engine`
@@ -1248,6 +1253,12 @@ The target to use when opening the search results in a new tab. Possible values 
 ##### `placeholder`
 When set, modifies the text displayed in the input field before typing.
 
+##### `hide-dropdown`
+When set to `true`, hides the dropdown with available bangs when the search input is focused. When set to `false`, the dropdown is shown. Default is `false`.
+
+##### `recent-bangs-count`
+Controls how many recently used bangs appear in the "Recent" section of the dropdown. Default is `3`. Maximum is 10. When set to `0`, the "Recent" section is completely hidden.
+
 ##### `bangs`
 What now? [Bangs](https://duckduckgo.com/bangs). They're shortcuts that allow you to use the same search box for many different sites. Assuming you have it configured, if for example you start your search input with `!yt` you'd be able to perform a search on YouTube:
 
@@ -1257,8 +1268,16 @@ What now? [Bangs](https://duckduckgo.com/bangs). They're shortcuts that allow yo
 | Name | Type | Required |
 | ---- | ---- | -------- |
 | title | string | no |
+| subtitle | string | no |
 | shortcut | string | yes |
 | url | string | yes |
+| icon | string | no |
+
+###### `title`
+Optional title that will appear on the right side of the search bar when the query starts with the associated shortcut.
+
+###### `subtitle`
+Optional subtitle displayed below the title in the dropdown.
 
 ###### `title`
 Optional title that will appear on the right side of the search bar when the query starts with the associated shortcut.

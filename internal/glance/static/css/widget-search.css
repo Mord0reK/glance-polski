@@ -103,3 +103,111 @@
 .search-bang:empty {
     display: none;
 }
+
+/* Search dropdown styles */
+.search-dropdown {
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--color-widget-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 0.5rem;
+    transform: translateY(-8px);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0.15s;
+}
+
+.search-dropdown.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.search-dropdown-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.search-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, background-color 0.15s;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.search-dropdown-item.hiding {
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    position: absolute;
+}
+
+.search-dropdown-item:hover,
+.search-dropdown-item.selected {
+    background: var(--color-widget-background-highlight);
+}
+
+.search-dropdown-item-icon {
+    width: 2rem;
+    height: 2rem;
+    object-fit: contain;
+    border-radius: calc(var(--border-radius) / 2);
+    flex-shrink: 0;
+}
+
+.search-dropdown-item-icon.auto-invert {
+    filter: invert(var(--color-icon-invert-amount));
+}
+
+.search-dropdown-item-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.search-dropdown-item-title {
+    font-size: var(--font-size-h5);
+    color: var(--color-text-highlight);
+    font-weight: 500;
+}
+
+.search-dropdown-item-subtitle {
+    font-size: var(--font-size-h6);
+    color: var(--color-text-subdue);
+    margin-top: 0.25rem;
+}
+
+.search-dropdown-item-shortcut {
+    font-size: var(--font-size-h6);
+    color: var(--color-text-subdue);
+    font-family: var(--font-family-mono);
+}
+
+.search-dropdown-section {
+    padding: 0.5rem 1rem;
+    font-size: var(--font-size-h6);
+    color: var(--color-text-subdue);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    background: var(--color-widget-background-highlight);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.search-dropdown-section-title {
+    font-size: var(--font-size-h6);
+    color: var(--color-text-subdue);
+    font-weight: 600;
+}
