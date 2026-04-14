@@ -56,6 +56,19 @@ function loadFlatpickr() {
     return flatpickrLoadingPromise;
 }
 
+function formatDateTimeToRFC3339(date) {
+    if (!date) return '';
+
+    const pad = (value) => String(value).padStart(2, '0');
+    const offsetMinutes = -date.getTimezoneOffset();
+    const sign = offsetMinutes >= 0 ? '+' : '-';
+    const absOffset = Math.abs(offsetMinutes);
+    const hoursOffset = pad(Math.floor(absOffset / 60));
+    const minutesOffset = pad(absOffset % 60);
+
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}${sign}${hoursOffset}:${minutesOffset}`;
+}
+
 
 function initVikunjaWidget(widget) {
     if (!widget) return;
@@ -372,10 +385,10 @@ async function openEditModal(widgetID, taskID, title, dueDate, reminderDate, cur
         }
 
 
-        // Convert to RFC3339
+        // Convert to RFC3339 while keeping local timezone offset
         let formattedDueDate = '';
         if (dueDateFP) {
-            formattedDueDate = dueDateFP.toISOString();
+            formattedDueDate = formatDateTimeToRFC3339(dueDateFP);
         }
 
 
@@ -649,10 +662,10 @@ async function openCreateModal(widgetID) {
         }
 
 
-        // Convert datetime-local format to RFC3339
+        // Convert datetime-local format to RFC3339 while keeping local timezone offset
         let formattedDueDate = '';
         if (dueDateFP) {
-            formattedDueDate = dueDateFP.toISOString();
+            formattedDueDate = formatDateTimeToRFC3339(dueDateFP);
         }
 
 

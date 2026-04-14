@@ -12,6 +12,17 @@ import (
 
 var cloudflareWidgetTemplate = mustParseTemplate("cloudflare.html", "widget-base.html")
 
+// Use explicit Europe/Warsaw timezone instead of time.Local to ensure consistent behavior
+var defaultLocation *time.Location
+
+func init() {
+	var err error
+	defaultLocation, err = time.LoadLocation("Europe/Warsaw")
+	if err != nil {
+		defaultLocation = time.UTC
+	}
+}
+
 type cloudflareWidget struct {
 	widgetBase `yaml:",inline"`
 	ApiKey     string          `yaml:"api-key"`
@@ -102,7 +113,7 @@ func fetchCloudflareData(apiKey, zoneID, timeRange string) (*cloudflareData, err
 	var limit int
 	var dateFilter string
 
-	now := time.Now()
+	now := time.Now().In(defaultLocation)
 
 	if timeRange == "24h" {
 		limit = 24
@@ -194,7 +205,8 @@ func fetchCloudflareData(apiKey, zoneID, timeRange string) (*cloudflareData, err
 		var label string
 		if timeRange == "24h" {
 			t, _ := time.Parse(time.RFC3339, g.Dimensions.Datetime)
-			label = t.Format("15")
+			// Convert from UTC to local timezone for display
+			label = t.In(defaultLocation).Format("15")
 		} else {
 			t, _ := time.Parse("2006-01-02", g.Dimensions.Date)
 			label = t.Format("02.01")
