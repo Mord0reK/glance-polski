@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sort"
 	"time"
 )
 
@@ -32,11 +33,13 @@ type cloudflareWidget struct {
 }
 
 type cloudflareData struct {
-	TotalRequests  int
-	UniqueVisitors int
-	ChartPoints    string
-	Series         []cloudflareSeriesPoint
-	AxisLabels     []cloudflareAxisLabel
+	TotalRequests    int
+	CachedRequests   int
+	UncachedRequests int
+	Threats          int
+	ChartPoints      string
+	Series           []cloudflareSeriesPoint
+	AxisLabels       []cloudflareAxisLabel
 }
 
 type cloudflareAxisLabel struct {
@@ -46,9 +49,12 @@ type cloudflareAxisLabel struct {
 }
 
 type cloudflareSeriesPoint struct {
-	Label    string `json:"label"`
-	Requests int    `json:"requests"`
-	Uniques  int    `json:"uniques"`
+	Label            string `json:"label"`
+	Timestamp        string `json:"timestamp"`
+	Requests         int    `json:"requests"`
+	CachedRequests   int    `json:"cachedRequests"`
+	UncachedRequests int    `json:"uncachedRequests"`
+	Threats          int    `json:"threats"`
 }
 
 func (widget *cloudflareWidget) initialize() error {
@@ -79,14 +85,14 @@ func (widget *cloudflareWidget) Render() template.HTML {
 	return widget.renderTemplate(widget, cloudflareWidgetTemplate)
 }
 
-// GraphQL structs
-type cloudflareGraphQLResponse struct {
+type cloudflareSecurityResponse struct {
 	Data struct {
 		Viewer struct {
-			Zones []struct {
-				HttpRequests1dGroups []cloudflareGroup `json:"httpRequests1dGroups"`
-				HttpRequests1hGroups []cloudflareGroup `json:"httpRequests1hGroups"`
-			} `json:"zones"`
+			Scope []struct {
+				MitigatedByWAF     []cloudflareSecurityGroup `json:"mitigatedByWAF"`
+				ServedByCloudflare []cloudflareSecurityGroup `json:"servedByCloudflare"`
+				ServedByOrigin     []cloudflareSecurityGroup `json:"servedByOrigin"`
+			} `json:"scope"`
 		} `json:"viewer"`
 	} `json:"data"`
 	Errors []struct {
@@ -94,84 +100,88 @@ type cloudflareGraphQLResponse struct {
 	} `json:"errors"`
 }
 
-type cloudflareGroup struct {
+type cloudflareSecurityGroup struct {
+	Count int `json:"count"`
+	Avg   struct {
+		SampleInterval float64 `json:"sampleInterval"`
+	} `json:"avg"`
 	Dimensions struct {
-		Date     string `json:"date"`
-		Datetime string `json:"datetime"`
+		Ts string `json:"ts"`
 	} `json:"dimensions"`
-	Sum struct {
-		Requests int `json:"requests"`
-	} `json:"sum"`
-	Uniq struct {
-		Uniques int `json:"uniques"`
-	} `json:"uniq"`
 }
 
 func fetchCloudflareData(apiKey, zoneID, timeRange string) (*cloudflareData, error) {
+<<<<<<< HEAD
 	// Construct GraphQL query
 	var query string
 	var limit int
 	var dateFilter string
 
 	now := time.Now().In(defaultLocation)
+=======
+	now := time.Now()
+>>>>>>> 61bbeb2 (Coś tu robiłem z cloudflare, ogolnie pod czystke repo)
 
-	if timeRange == "24h" {
-		limit = 24
-		dateFilter = now.Add(-24 * time.Hour).Format(time.RFC3339)
-		query = fmt.Sprintf(`
-			query {
-				viewer {
-					zones(filter: {zoneTag: "%s"}) {
-						httpRequests1hGroups(limit: %d, filter: {datetime_geq: "%s"}, orderBy: [datetime_ASC]) {
-							dimensions {
-								datetime
-							}
-							sum {
-								requests
-							}
-							uniq {
-								uniques
-							}
+	startTime := now.Add(-24 * time.Hour).Format(time.RFC3339)
+	endTime := now.Format(time.RFC3339)
+	filterBase := fmt.Sprintf(`datetime_geq: "%s", datetime_leq: "%s", requestSource: "eyeball"`, startTime, endTime)
+	aggInterval := "datetimeFifteenMinutes"
+
+	mitigatedFilter := fmt.Sprintf(`{%s, securityAction_in: ["block", "challenge", "jschallenge", "managed_challenge"]}`, filterBase)
+	servedByCloudflareFilter := fmt.Sprintf(`{%s, securityAction_notin: ["block", "challenge", "jschallenge", "managed_challenge"], cacheStatus_notin: ["miss", "expired", "bypass", "dynamic"]}`, filterBase)
+	servedByOriginFilter := fmt.Sprintf(`{%s, cacheStatus_in: ["miss", "expired", "bypass", "dynamic"]}`, filterBase)
+
+	query := fmt.Sprintf(`
+		query SecurityAnalyticsTimeseries($zoneTag: string) {
+			viewer {
+				scope: zones(filter: {zoneTag: $zoneTag}) {
+					mitigatedByWAF: httpRequestsAdaptiveGroups(limit: 5000, filter: %s, orderBy: [%s_DESC]) {
+						count
+						avg {
+							sampleInterval
+						}
+						dimensions {
+							ts: %s
+						}
+					}
+					servedByCloudflare: httpRequestsAdaptiveGroups(limit: 5000, filter: %s, orderBy: [%s_DESC]) {
+						count
+						avg {
+							sampleInterval
+						}
+						dimensions {
+							ts: %s
+						}
+					}
+					servedByOrigin: httpRequestsAdaptiveGroups(limit: 5000, filter: %s, orderBy: [%s_DESC]) {
+						count
+						avg {
+							sampleInterval
+						}
+						dimensions {
+							ts: %s
 						}
 					}
 				}
 			}
-		`, zoneID, limit, dateFilter)
-	} else {
-		if timeRange == "7d" {
-			limit = 7
-			dateFilter = now.AddDate(0, 0, -7).Format("2006-01-02")
-		} else { // 30d
-			limit = 30
-			dateFilter = now.AddDate(0, 0, -30).Format("2006-01-02")
 		}
-		query = fmt.Sprintf(`
-			query {
-				viewer {
-					zones(filter: {zoneTag: "%s"}) {
-						httpRequests1dGroups(limit: %d, filter: {date_geq: "%s"}, orderBy: [date_ASC]) {
-							dimensions {
-								date
-							}
-							sum {
-								requests
-							}
-							uniq {
-								uniques
-							}
-						}
-					}
-				}
-			}
-		`, zoneID, limit, dateFilter)
+	`, mitigatedFilter, aggInterval, aggInterval, servedByCloudflareFilter, aggInterval, aggInterval, servedByOriginFilter, aggInterval, aggInterval)
+
+	variables := map[string]string{
+		"zoneTag": zoneID,
 	}
 
-	reqBody, _ := json.Marshal(map[string]string{"query": query})
-	req, _ := http.NewRequest("POST", "https://api.cloudflare.com/client/v4/graphql", bytes.NewBuffer(reqBody))
+	reqBody := map[string]interface{}{
+		"query":     query,
+		"variables": variables,
+	}
+
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("POST", "https://api.cloudflare.com/client/v4/graphql", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := decodeJsonFromRequest[cloudflareGraphQLResponse](defaultHTTPClient, req)
+	resp, err := decodeJsonFromRequest[cloudflareSecurityResponse](defaultHTTPClient, req)
 	if err != nil {
 		return nil, err
 	}
@@ -180,28 +190,34 @@ func fetchCloudflareData(apiKey, zoneID, timeRange string) (*cloudflareData, err
 		return nil, fmt.Errorf("cloudflare api error: %s", resp.Errors[0].Message)
 	}
 
-	if len(resp.Data.Viewer.Zones) == 0 {
+	if len(resp.Data.Viewer.Scope) == 0 {
 		return nil, fmt.Errorf("zone not found")
 	}
 
-	zone := resp.Data.Viewer.Zones[0]
-	var groups []cloudflareGroup
-	if timeRange == "24h" {
-		groups = zone.HttpRequests1hGroups
-	} else {
-		groups = zone.HttpRequests1dGroups
+	zone := resp.Data.Viewer.Scope[0]
+
+	mitigated := zone.MitigatedByWAF
+	servedByCF := zone.ServedByCloudflare
+	servedByOrigin := zone.ServedByOrigin
+
+	var totalMitigated, totalServedByCF, totalServedByOrigin int
+
+	for _, g := range mitigated {
+		count := g.Count
+		totalMitigated += count
 	}
 
-	totalRequests := 0
-	uniqueVisitors := 0
-	requestsSeries := make([]float64, len(groups))
-	series := make([]cloudflareSeriesPoint, len(groups))
+	for _, g := range servedByCF {
+		count := g.Count
+		totalServedByCF += count
+	}
 
-	for i, g := range groups {
-		totalRequests += g.Sum.Requests
-		uniqueVisitors += g.Uniq.Uniques
-		requestsSeries[i] = float64(g.Sum.Requests)
+	for _, g := range servedByOrigin {
+		count := g.Count
+		totalServedByOrigin += count
+	}
 
+<<<<<<< HEAD
 		var label string
 		if timeRange == "24h" {
 			t, _ := time.Parse(time.RFC3339, g.Dimensions.Datetime)
@@ -211,34 +227,153 @@ func fetchCloudflareData(apiKey, zoneID, timeRange string) (*cloudflareData, err
 			t, _ := time.Parse("2006-01-02", g.Dimensions.Date)
 			label = t.Format("02.01")
 		}
+=======
+	totalRequests := totalMitigated + totalServedByCF + totalServedByOrigin
+>>>>>>> 61bbeb2 (Coś tu robiłem z cloudflare, ogolnie pod czystke repo)
 
-		series[i] = cloudflareSeriesPoint{
-			Label:    label,
-			Requests: g.Sum.Requests,
-			Uniques:  g.Uniq.Uniques,
-		}
+	series := buildCloudflareSeries(mitigated, servedByCF, servedByOrigin, timeRange)
+
+	requestsSeries := make([]float64, len(series))
+	for i, s := range series {
+		requestsSeries[i] = float64(s.Requests)
 	}
 
 	chartPoints := svgPolylineCoordsFromYValues(100, 50, requestsSeries)
+	axisLabels := buildCloudflareAxisLabels(series, timeRange)
 
+	return &cloudflareData{
+		TotalRequests:    totalRequests,
+		CachedRequests:   totalServedByCF,
+		UncachedRequests: totalServedByOrigin,
+		Threats:          totalMitigated,
+		ChartPoints:      chartPoints,
+		Series:           series,
+		AxisLabels:       axisLabels,
+	}, nil
+}
+
+func buildCloudflareSeries(mitigated, servedByCF, servedByOrigin []cloudflareSecurityGroup, timeRange string) []cloudflareSeriesPoint {
+	type timeData struct {
+		mitigated      int
+		servedByCF     int
+		servedByOrigin int
+	}
+
+	timeMap := make(map[string]timeData)
+
+	for _, g := range mitigated {
+		ts := g.Dimensions.Ts
+		count := g.Count
+		if d, ok := timeMap[ts]; ok {
+			d.mitigated += count
+			timeMap[ts] = d
+		} else {
+			timeMap[ts] = timeData{mitigated: count}
+		}
+	}
+
+	for _, g := range servedByCF {
+		ts := g.Dimensions.Ts
+		count := g.Count
+		if d, ok := timeMap[ts]; ok {
+			d.servedByCF += count
+			timeMap[ts] = d
+		} else {
+			timeMap[ts] = timeData{servedByCF: count}
+		}
+	}
+
+	for _, g := range servedByOrigin {
+		ts := g.Dimensions.Ts
+		count := g.Count
+		if d, ok := timeMap[ts]; ok {
+			d.servedByOrigin += count
+			timeMap[ts] = d
+		} else {
+			timeMap[ts] = timeData{servedByOrigin: count}
+		}
+	}
+
+	var times []string
+	for ts := range timeMap {
+		times = append(times, ts)
+	}
+
+	sortByTimeDesc(times)
+
+	series := make([]cloudflareSeriesPoint, len(times))
+	for i, ts := range times {
+		d := timeMap[ts]
+		label := formatTimeLabel(ts, timeRange)
+
+		series[i] = cloudflareSeriesPoint{
+			Label:            label,
+			Timestamp:        ts,
+			Requests:         d.mitigated + d.servedByCF + d.servedByOrigin,
+			CachedRequests:   d.servedByCF,
+			UncachedRequests: d.servedByOrigin,
+			Threats:          d.mitigated,
+		}
+	}
+
+	return series
+}
+
+func sortByTimeDesc(times []string) {
+	sort.Slice(times, func(i, j int) bool {
+		return times[i] < times[j]
+	})
+}
+
+func sortByDateDesc(times []string) {
+	sort.Slice(times, func(i, j int) bool {
+		return times[i] < times[j]
+	})
+}
+
+func formatTimeLabel(ts, timeRange string) string {
+	if timeRange == "24h" {
+		if len(ts) >= 19 {
+			t, err := time.Parse("2006-01-02T15:04:05Z", ts)
+			if err == nil {
+				hour := t.Hour()
+				return fmt.Sprintf("%02d", hour)
+			}
+		}
+		if len(ts) >= 13 {
+			return ts[11:13]
+		}
+		return ts
+	} else {
+		if len(ts) >= 10 {
+			t, err := time.Parse("2006-01-02", ts[:10])
+			if err == nil {
+				return t.Format("02.01")
+			}
+		}
+		return ts
+	}
+}
+
+func buildCloudflareAxisLabels(series []cloudflareSeriesPoint, timeRange string) []cloudflareAxisLabel {
 	var axisLabels []cloudflareAxisLabel
 	numPoints := len(series)
-	if numPoints > 1 {
-		// Determine indices to show
-		var indices []int
-		if timeRange == "24h" {
-			// 0, 6, 12, 18, last
-			indices = []int{0, 6, 12, 18, numPoints - 1}
-		} else if timeRange == "7d" {
-			// 0, 2, 4, 6
-			indices = []int{0, 2, 4, 6}
-		} else { // 30d
-			// 0, 7, 14, 21, last
-			indices = []int{0, 7, 14, 21, numPoints - 1}
-		}
 
+	if numPoints > 1 {
+		step := numPoints / 5
+		if step < 1 {
+			step = 1
+		}
+		indices := []int{0}
+		for i := step; i < numPoints-1; i += step {
+			indices = append(indices, i)
+		}
+		indices = append(indices, numPoints-1)
+
+		labelSeen := make(map[string]bool)
 		for _, idx := range indices {
 			if idx >= 0 && idx < numPoints {
+				label := series[idx].Label
 				left := (float64(idx) / float64(numPoints-1)) * 100
 				transform := "translateX(-50%)"
 				if idx == 0 {
@@ -247,20 +382,17 @@ func fetchCloudflareData(apiKey, zoneID, timeRange string) (*cloudflareData, err
 					transform = "translateX(-100%)"
 				}
 
-				axisLabels = append(axisLabels, cloudflareAxisLabel{
-					Label:     series[idx].Label,
-					Left:      left,
-					Transform: transform,
-				})
+				if !labelSeen[label] {
+					labelSeen[label] = true
+					axisLabels = append(axisLabels, cloudflareAxisLabel{
+						Label:     label,
+						Left:      left,
+						Transform: transform,
+					})
+				}
 			}
 		}
 	}
 
-	return &cloudflareData{
-		TotalRequests:  totalRequests,
-		UniqueVisitors: uniqueVisitors,
-		ChartPoints:    chartPoints,
-		Series:         series,
-		AxisLabels:     axisLabels,
-	}, nil
+	return axisLabels
 }
