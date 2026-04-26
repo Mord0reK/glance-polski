@@ -111,16 +111,7 @@ type cloudflareSecurityGroup struct {
 }
 
 func fetchCloudflareData(apiKey, zoneID, timeRange string) (*cloudflareData, error) {
-<<<<<<< HEAD
-	// Construct GraphQL query
-	var query string
-	var limit int
-	var dateFilter string
-
-	now := time.Now().In(defaultLocation)
-=======
-	now := time.Now()
->>>>>>> 61bbeb2 (Coś tu robiłem z cloudflare, ogolnie pod czystke repo)
+now := time.Now().In(defaultLocation)
 
 	startTime := now.Add(-24 * time.Hour).Format(time.RFC3339)
 	endTime := now.Format(time.RFC3339)
@@ -217,19 +208,9 @@ func fetchCloudflareData(apiKey, zoneID, timeRange string) (*cloudflareData, err
 		totalServedByOrigin += count
 	}
 
-<<<<<<< HEAD
-		var label string
-		if timeRange == "24h" {
-			t, _ := time.Parse(time.RFC3339, g.Dimensions.Datetime)
-			// Convert from UTC to local timezone for display
-			label = t.In(defaultLocation).Format("15")
-		} else {
-			t, _ := time.Parse("2006-01-02", g.Dimensions.Date)
-			label = t.Format("02.01")
-		}
-=======
+	}
+
 	totalRequests := totalMitigated + totalServedByCF + totalServedByOrigin
->>>>>>> 61bbeb2 (Coś tu robiłem z cloudflare, ogolnie pod czystke repo)
 
 	series := buildCloudflareSeries(mitigated, servedByCF, servedByOrigin, timeRange)
 
