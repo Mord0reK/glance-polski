@@ -208,8 +208,6 @@ now := time.Now().In(defaultLocation)
 		totalServedByOrigin += count
 	}
 
-	}
-
 	totalRequests := totalMitigated + totalServedByCF + totalServedByOrigin
 
 	series := buildCloudflareSeries(mitigated, servedByCF, servedByOrigin, timeRange)
