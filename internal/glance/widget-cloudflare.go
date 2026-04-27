@@ -240,6 +240,14 @@ func buildCloudflareSeries(mitigated, servedByCF, servedByOrigin []cloudflareSec
 
 	timeMap := make(map[string]timeData)
 
+	// Pre-populate timeMap with 15-minute intervals to prevent time jumping
+	now := time.Now().UTC()
+	endTime := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), (now.Minute()/15)*15, 0, 0, time.UTC)
+	for i := 0; i <= 96; i++ {
+		ts := endTime.Add(-time.Duration(i*15) * time.Minute).Format("2006-01-02T15:04:05Z")
+		timeMap[ts] = timeData{}
+	}
+
 	for _, g := range mitigated {
 		ts := g.Dimensions.Ts
 		count := g.Count
