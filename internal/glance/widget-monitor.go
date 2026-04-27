@@ -5,6 +5,7 @@ import (
 	"errors"
 	"html/template"
 	"net/http"
+	"net/http/httptrace"
 	"slices"
 	"strconv"
 	"time"
@@ -144,6 +145,14 @@ func fetchSiteStatusTask(statusRequest *SiteStatusRequest) (siteStatus, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
+	var requestSentAt time.Time
+	trace := &httptrace.ClientTrace{
+		WroteRequest: func(info httptrace.WroteRequestInfo) {
+			requestSentAt = time.Now()
+		},
+	}
+	ctx = httptrace.WithClientTrace(ctx, trace)
+
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return siteStatus{
@@ -155,7 +164,7 @@ func fetchSiteStatusTask(statusRequest *SiteStatusRequest) (siteStatus, error) {
 		request.SetBasicAuth(statusRequest.BasicAuth.Username, statusRequest.BasicAuth.Password)
 	}
 
-	requestSentAt := time.Now()
+	start := time.Now()
 	var response *http.Response
 
 	if !statusRequest.AllowInsecure {
@@ -164,6 +173,9 @@ func fetchSiteStatusTask(statusRequest *SiteStatusRequest) (siteStatus, error) {
 		response, err = defaultInsecureHTTPClient.Do(request)
 	}
 
+	if requestSentAt.IsZero() {
+		requestSentAt = start
+	}
 	status := siteStatus{ResponseTime: time.Since(requestSentAt)}
 
 	if err != nil {
