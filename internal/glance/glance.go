@@ -346,9 +346,6 @@ func (a *application) handlePageRequest(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Trigger async update when user visits the page
-	a.triggerPageUpdate(page)
-
 	data := templateData{
 		Page: page,
 		App:  a,
@@ -364,6 +361,9 @@ func (a *application) handlePageRequest(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Write(responseBytes.Bytes())
+
+	// Trigger async update when user visits the page
+	a.triggerPageUpdate(page)
 }
 
 func (a *application) handlePageContentRequest(w http.ResponseWriter, r *http.Request) {
@@ -377,9 +377,6 @@ func (a *application) handlePageContentRequest(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Trigger async update when content is requested
-	a.triggerPageUpdate(page)
-
 	pageData := templateData{
 		Page: page,
 	}
@@ -388,8 +385,8 @@ func (a *application) handlePageContentRequest(w http.ResponseWriter, r *http.Re
 	var responseBytes bytes.Buffer
 
 	func() {
-		page.mu.Lock()
-		defer page.mu.Unlock()
+		page.mu.RLock()
+		defer page.mu.RUnlock()
 
 		err = pageContentTemplate.Execute(&responseBytes, pageData)
 	}()
@@ -401,6 +398,9 @@ func (a *application) handlePageContentRequest(w http.ResponseWriter, r *http.Re
 	}
 
 	w.Write(responseBytes.Bytes())
+
+	// Trigger async update when content is requested
+	a.triggerPageUpdate(page)
 }
 
 func (a *application) addressOfRequest(r *http.Request) string {

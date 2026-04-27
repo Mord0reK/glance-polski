@@ -153,7 +153,7 @@ func TestBrightSkyCacheCleanupStaleLocations(t *testing.T) {
 	}
 
 	currentDate := "2026-01-09"
-	
+
 	// Add stale location (accessed 8 days ago)
 	staleKey := getCacheKey(52.5200, 13.4050)
 	cache.records[staleKey] = []brightSkyWeatherRecord{{Temperature: 5.0}}

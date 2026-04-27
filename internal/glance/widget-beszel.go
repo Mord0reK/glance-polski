@@ -19,17 +19,17 @@ import (
 var beszelWidgetTemplate = mustParseTemplate("beszel.html", "widget-base.html")
 
 type beszelWidget struct {
-	widgetBase      `yaml:",inline"`
-	URL             string         `yaml:"url"`
-	Token           string         `yaml:"token"`
-	Identity        string         `yaml:"identity"`
-	Password        string         `yaml:"password"`
-	RedirectURL     string         `yaml:"redirect-url"`
-	ShowChartsRaw   *bool          `yaml:"show-charts"`
-	ShowCharts      bool           `yaml:"-"`
-	Systems         []beszelSystem `yaml:"-"`
-	OnlineSystems   []beszelSystem `yaml:"-"`
-	OfflineSystems  []beszelSystem `yaml:"-"`
+	widgetBase     `yaml:",inline"`
+	URL            string         `yaml:"url"`
+	Token          string         `yaml:"token"`
+	Identity       string         `yaml:"identity"`
+	Password       string         `yaml:"password"`
+	RedirectURL    string         `yaml:"redirect-url"`
+	ShowChartsRaw  *bool          `yaml:"show-charts"`
+	ShowCharts     bool           `yaml:"-"`
+	Systems        []beszelSystem `yaml:"-"`
+	OnlineSystems  []beszelSystem `yaml:"-"`
+	OfflineSystems []beszelSystem `yaml:"-"`
 
 	tokenMu        sync.Mutex `yaml:"-"`
 	tokenFetchedAt time.Time  `yaml:"-"`

@@ -1227,14 +1227,16 @@ async function setupPage() {
     try {
         setupPopovers();
         setupClocks()
-        await setupCalendars();
-        await setupTodos();
-        await setupRadyjko();
-        await setupNavidrome();
-        await setupVikunja();
-        await setupCloudflare();
-        await setupGoogleCompute();
-        await setupBeszel();
+        await Promise.all([
+            setupCalendars(),
+            setupTodos(),
+            setupRadyjko(),
+            setupNavidrome(),
+            setupVikunja(),
+            setupCloudflare(),
+            setupGoogleCompute(),
+            setupBeszel()
+        ]);
         setupCarousels();
         setupSearchBoxes();
         setupCollapsibleLists();

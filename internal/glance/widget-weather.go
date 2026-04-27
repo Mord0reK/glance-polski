@@ -432,8 +432,8 @@ type brightSkyWeatherResponseJson struct {
 type brightSkyCache struct {
 	mu         sync.RWMutex
 	records    map[string][]brightSkyWeatherRecord // key: "lat,lon"
-	date       map[string]string                    // key: "lat,lon", value: date (YYYY-MM-DD)
-	lastAccess map[string]time.Time                 // key: "lat,lon", tracks last access time for cleanup
+	date       map[string]string                   // key: "lat,lon", value: date (YYYY-MM-DD)
+	lastAccess map[string]time.Time                // key: "lat,lon", tracks last access time for cleanup
 }
 
 var globalBrightSkyCache = &brightSkyCache{
@@ -442,8 +442,8 @@ var globalBrightSkyCache = &brightSkyCache{
 	lastAccess: make(map[string]time.Time),
 }
 
-const maxCachedLocations = 100      // Maximum number of locations to cache
-const staleLocationThreshold = 7    // Days after which unused locations are removed
+const maxCachedLocations = 100   // Maximum number of locations to cache
+const staleLocationThreshold = 7 // Days after which unused locations are removed
 
 // getCacheKey generates a cache key from latitude and longitude
 func getCacheKey(lat, lon float64) string {
@@ -519,7 +519,7 @@ func (c *brightSkyCache) cleanupStaleLocations() {
 // getRecords retrieves cached weather records for a location
 func (c *brightSkyCache) getRecords(key string, currentDate string) []brightSkyWeatherRecord {
 	c.mu.RLock()
-	
+
 	// Check if cache is for the current day
 	if c.date[key] != currentDate {
 		c.mu.RUnlock()
@@ -545,7 +545,7 @@ func fetchWeatherFromBrightSky(lat, lon float64, units string) (*weather, string
 	omUrl := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&daily=sunrise,sunset&timeformat=unixtime&timezone=auto&forecast_days=1", lat, lon)
 	omRequest, _ := http.NewRequest("GET", omUrl, nil)
 	omResponse, omErr := decodeJsonFromRequest[openMeteoWeatherResponseJson](defaultHTTPClient, omRequest)
-	
+
 	// Determine timezone for the location
 	var locationTZ *time.Location
 	if omErr == nil && omResponse.Timezone != "" {

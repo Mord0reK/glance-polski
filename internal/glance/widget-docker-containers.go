@@ -278,7 +278,6 @@ func isDockerContainerHidden(container *dockerContainerJsonResponse, hideByDefau
 	return hideByDefault
 }
 
-
 func fetchDockerContainersFromSource(
 	source string,
 	category string,
@@ -311,7 +310,6 @@ func fetchDockerContainersFromSource(
 			},
 		}
 	}
-
 
 	fetchAll := ternary(runningOnly, "false", "true")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

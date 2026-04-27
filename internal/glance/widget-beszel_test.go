@@ -44,7 +44,7 @@ func TestBeszelWidget_AuthTokenIsFetchedAndReused(t *testing.T) {
 						"host":   "127.0.0.1",
 						"status": "up",
 						"info": map[string]any{
-							"u":  10,
+							"u":   10,
 							"cpu": 0,
 							"mp":  0,
 							"dp":  0,
@@ -162,7 +162,7 @@ func TestBeszelWidget_FetchChartDataAlsoEnsuresToken(t *testing.T) {
 				"items": []map[string]any{
 					{
 						"created": "2025-01-01 10:00:00.000Z",
-						"stats": map[string]any{"cpu": 1.0, "mp": 2.0, "dp": 3.0, "ns": 4.0, "nr": 5.0},
+						"stats":   map[string]any{"cpu": 1.0, "mp": 2.0, "dp": 3.0, "ns": 4.0, "nr": 5.0},
 					},
 				},
 			})

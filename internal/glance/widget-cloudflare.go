@@ -111,7 +111,7 @@ type cloudflareSecurityGroup struct {
 }
 
 func fetchCloudflareData(apiKey, zoneID, timeRange string) (*cloudflareData, error) {
-now := time.Now().In(defaultLocation)
+	now := time.Now().In(defaultLocation)
 
 	startTime := now.Add(-24 * time.Hour).Format(time.RFC3339)
 	endTime := now.Format(time.RFC3339)
