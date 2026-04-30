@@ -65,7 +65,7 @@ func fetchRadioStations(ctx context.Context) (stationList, error) {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := defaultHTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch stations: %w", err)
 	}

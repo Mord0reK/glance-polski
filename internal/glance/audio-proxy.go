@@ -48,6 +48,9 @@ func (a *application) handleAudioProxyRequest(w http.ResponseWriter, r *http.Req
 	// Create request to upstream
 	client := &http.Client{
 		Timeout: 30 * time.Second,
+		Transport: &userAgentTransport{
+			underlying: &http.Transport{},
+		},
 	}
 
 	proxyReq, err := http.NewRequest("GET", streamURL, nil)

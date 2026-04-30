@@ -288,7 +288,11 @@ func fetchDockerContainersFromSource(
 
 	var client *http.Client
 	if strings.HasPrefix(source, "tcp://") || strings.HasPrefix(source, "http://") {
-		client = &http.Client{}
+		client = &http.Client{
+			Transport: &userAgentTransport{
+				underlying: &http.Transport{},
+			},
+		}
 		parsed, err := url.Parse(source)
 		if err != nil {
 			return nil, fmt.Errorf("parsing URL: %w", err)
@@ -303,9 +307,11 @@ func fetchDockerContainersFromSource(
 	} else {
 		hostname = "docker"
 		client = &http.Client{
-			Transport: &http.Transport{
-				DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-					return net.Dial("unix", source)
+			Transport: &userAgentTransport{
+				underlying: &http.Transport{
+					DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+						return net.Dial("unix", source)
+					},
 				},
 			},
 		}

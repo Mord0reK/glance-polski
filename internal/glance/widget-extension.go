@@ -126,7 +126,7 @@ func fetchExtension(options extensionRequestOptions) (extension, error) {
 		request.Header.Add(key, value)
 	}
 
-	response, err := http.DefaultClient.Do(request)
+	response, err := defaultHTTPClient.Do(request)
 	if err != nil {
 		slog.Error("Failed fetching extension", "url", options.URL, "error", err)
 		return extension{}, fmt.Errorf("%w: request failed: %w", errNoContent, err)

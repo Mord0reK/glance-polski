@@ -195,8 +195,6 @@ func (widget *rssWidget) fetchItemsFromFeedTask(request rssFeedRequest) ([]rssFe
 		return nil, err
 	}
 
-	req.Header.Add("User-Agent", glanceUserAgentString)
-
 	widget.cachedFeedsMutex.Lock()
 	cache, isCached := widget.cachedFeeds[request.URL]
 	if isCached {

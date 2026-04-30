@@ -225,9 +225,11 @@ func (p *proxyOptionsField) UnmarshalYAML(node *yaml.Node) error {
 
 	p.client = &http.Client{
 		Timeout: timeout,
-		Transport: &http.Transport{
-			Proxy:           http.ProxyURL(parsedUrl),
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: p.AllowInsecure},
+		Transport: &userAgentTransport{
+			underlying: &http.Transport{
+				Proxy:           http.ProxyURL(parsedUrl),
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: p.AllowInsecure},
+			},
 		},
 	}
 

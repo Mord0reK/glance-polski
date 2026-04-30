@@ -133,6 +133,9 @@ func (widget *qbittorrentWidget) login() error {
 	widget.client = &http.Client{
 		Jar:     jar,
 		Timeout: 10 * time.Second,
+		Transport: &userAgentTransport{
+			underlying: &http.Transport{},
+		},
 	}
 
 	form := url.Values{}

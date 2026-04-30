@@ -24,18 +24,22 @@ var (
 const defaultClientTimeout = 5 * time.Second
 
 var defaultHTTPClient = &http.Client{
-	Transport: &http.Transport{
-		MaxIdleConnsPerHost: 10,
-		Proxy:               http.ProxyFromEnvironment,
+	Transport: &userAgentTransport{
+		underlying: &http.Transport{
+			MaxIdleConnsPerHost: 10,
+			Proxy:               http.ProxyFromEnvironment,
+		},
 	},
 	Timeout: defaultClientTimeout,
 }
 
 var defaultInsecureHTTPClient = &http.Client{
 	Timeout: defaultClientTimeout,
-	Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		Proxy:           http.ProxyFromEnvironment,
+	Transport: &userAgentTransport{
+		underlying: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			Proxy:           http.ProxyFromEnvironment,
+		},
 	},
 }
 
@@ -43,8 +47,20 @@ type requestDoer interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-var glanceUserAgentString = "Glance/" + buildVersion + " +https://github.com/glanceapp/glance"
+var glanceUserAgentString = "Glance-Polski"
 var userAgentPersistentVersion atomic.Int32
+
+// userAgentTransport is a custom RoundTripper that adds User-Agent to all requests
+type userAgentTransport struct {
+	underlying http.RoundTripper
+}
+
+func (t *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req.Header.Get("User-Agent") == "" {
+		req.Header.Set("User-Agent", glanceUserAgentString)
+	}
+	return t.underlying.RoundTrip(req)
+}
 
 func getBrowserUserAgentHeader() string {
 	if rand.IntN(2000) == 0 {

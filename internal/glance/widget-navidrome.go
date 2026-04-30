@@ -91,7 +91,7 @@ func (w *navidromeWidget) update(ctx context.Context) {
 		return
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := defaultHTTPClient.Do(req)
 	if err != nil {
 		w.canContinueUpdateAfterHandlingErr(fmt.Errorf("failed to fetch playlists: %w", err))
 		return
