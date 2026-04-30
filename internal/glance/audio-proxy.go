@@ -9,6 +9,20 @@ import (
 	"time"
 )
 
+// audioProxyHTTPClient is a reusable HTTP client for audio streaming with connection pooling
+var audioProxyHTTPClient = &http.Client{
+	Timeout: 30 * time.Second,
+	Transport: &userAgentTransport{
+		underlying: &http.Transport{
+			MaxIdleConns:        maxIdleConns,
+			MaxIdleConnsPerHost: maxIdleConnsPerHost,
+			MaxConnsPerHost:     maxOpenConnsPerHost,
+			IdleConnTimeout:     idleConnTimeout,
+			DisableKeepAlives:   false,
+		},
+	},
+}
+
 func (a *application) handleAudioProxyRequest(w http.ResponseWriter, r *http.Request) {
 	streamURL := r.URL.Query().Get("url")
 	if streamURL == "" {
@@ -45,14 +59,7 @@ func (a *application) handleAudioProxyRequest(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Create request to upstream
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-		Transport: &userAgentTransport{
-			underlying: &http.Transport{},
-		},
-	}
-
+	// Use the global pooled HTTP client
 	proxyReq, err := http.NewRequest("GET", streamURL, nil)
 	if err != nil {
 		slog.Error("Failed to create proxy request", "error", err)
@@ -66,7 +73,7 @@ func (a *application) handleAudioProxyRequest(w http.ResponseWriter, r *http.Req
 	}
 
 	// Make request
-	resp, err := client.Do(proxyReq)
+	resp, err := audioProxyHTTPClient.Do(proxyReq)
 	if err != nil {
 		slog.Error("Failed to fetch stream", "error", err, "url", streamURL)
 		http.Error(w, "Failed to fetch stream", http.StatusBadGateway)

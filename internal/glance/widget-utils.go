@@ -23,11 +23,23 @@ var (
 
 const defaultClientTimeout = 5 * time.Second
 
+// Connection pooling constants
+const (
+	maxIdleConns        = 100
+	maxIdleConnsPerHost = 10
+	maxOpenConnsPerHost = 20
+	idleConnTimeout     = 90 * time.Second
+)
+
 var defaultHTTPClient = &http.Client{
 	Transport: &userAgentTransport{
 		underlying: &http.Transport{
-			MaxIdleConnsPerHost: 10,
+			MaxIdleConns:        maxIdleConns,
+			MaxIdleConnsPerHost: maxIdleConnsPerHost,
+			MaxConnsPerHost:     maxOpenConnsPerHost,
+			IdleConnTimeout:     idleConnTimeout,
 			Proxy:               http.ProxyFromEnvironment,
+			DisableKeepAlives:   false,
 		},
 	},
 	Timeout: defaultClientTimeout,
@@ -37,8 +49,13 @@ var defaultInsecureHTTPClient = &http.Client{
 	Timeout: defaultClientTimeout,
 	Transport: &userAgentTransport{
 		underlying: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			Proxy:           http.ProxyFromEnvironment,
+			MaxIdleConns:        maxIdleConns,
+			MaxIdleConnsPerHost: maxIdleConnsPerHost,
+			MaxConnsPerHost:     maxOpenConnsPerHost,
+			IdleConnTimeout:     idleConnTimeout,
+			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+			Proxy:               http.ProxyFromEnvironment,
+			DisableKeepAlives:   false,
 		},
 	},
 }

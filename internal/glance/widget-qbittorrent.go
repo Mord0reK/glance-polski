@@ -134,7 +134,13 @@ func (widget *qbittorrentWidget) login() error {
 		Jar:     jar,
 		Timeout: 10 * time.Second,
 		Transport: &userAgentTransport{
-			underlying: &http.Transport{},
+			underlying: &http.Transport{
+				MaxIdleConns:        maxIdleConns,
+				MaxIdleConnsPerHost: maxIdleConnsPerHost,
+				MaxConnsPerHost:     maxOpenConnsPerHost,
+				IdleConnTimeout:     idleConnTimeout,
+				DisableKeepAlives:   false,
+			},
 		},
 	}
 

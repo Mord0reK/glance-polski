@@ -290,7 +290,13 @@ func fetchDockerContainersFromSource(
 	if strings.HasPrefix(source, "tcp://") || strings.HasPrefix(source, "http://") {
 		client = &http.Client{
 			Transport: &userAgentTransport{
-				underlying: &http.Transport{},
+				underlying: &http.Transport{
+					MaxIdleConns:        maxIdleConns,
+					MaxIdleConnsPerHost: maxIdleConnsPerHost,
+					MaxConnsPerHost:     maxOpenConnsPerHost,
+					IdleConnTimeout:     idleConnTimeout,
+					DisableKeepAlives:   false,
+				},
 			},
 		}
 		parsed, err := url.Parse(source)
@@ -309,6 +315,11 @@ func fetchDockerContainersFromSource(
 		client = &http.Client{
 			Transport: &userAgentTransport{
 				underlying: &http.Transport{
+					MaxIdleConns:        maxIdleConns,
+					MaxIdleConnsPerHost: maxIdleConnsPerHost,
+					MaxConnsPerHost:     maxOpenConnsPerHost,
+					IdleConnTimeout:     idleConnTimeout,
+					DisableKeepAlives:   false,
 					DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
 						return net.Dial("unix", source)
 					},
