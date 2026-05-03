@@ -8,8 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"math/rand/v2"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -31,15 +33,39 @@ const (
 	idleConnTimeout     = 90 * time.Second
 )
 
+// DebugAPI-timing - when set to "true", logs all API requests with duration
+var debugAPITiming = os.Getenv("DEBUG_API_TIMING") == "true"
+var debugAPICounter int32
+
+// debugTransport logs API requests timing when debugAPITiming is enabled
+type debugTransport struct {
+	underlying http.RoundTripper
+}
+
+func (t *debugTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	start := time.Now()
+	resp, err := t.underlying.RoundTrip(req)
+	duration := time.Since(start)
+
+	if debugAPITiming && err == nil {
+		seq := atomic.AddInt32(&debugAPICounter, 1)
+		log.Printf("[API #%d] %s %s - %d - %dms", seq, req.Method, req.URL.String(), resp.StatusCode, duration.Milliseconds())
+	}
+
+	return resp, err
+}
+
 var defaultHTTPClient = &http.Client{
-	Transport: &userAgentTransport{
-		underlying: &http.Transport{
-			MaxIdleConns:        maxIdleConns,
-			MaxIdleConnsPerHost: maxIdleConnsPerHost,
-			MaxConnsPerHost:     maxOpenConnsPerHost,
-			IdleConnTimeout:     idleConnTimeout,
-			Proxy:               http.ProxyFromEnvironment,
-			DisableKeepAlives:   false,
+	Transport: &debugTransport{
+		underlying: &userAgentTransport{
+			underlying: &http.Transport{
+				MaxIdleConns:        maxIdleConns,
+				MaxIdleConnsPerHost: maxIdleConnsPerHost,
+				MaxConnsPerHost:     maxOpenConnsPerHost,
+				IdleConnTimeout:     idleConnTimeout,
+				Proxy:               http.ProxyFromEnvironment,
+				DisableKeepAlives:   false,
+			},
 		},
 	},
 	Timeout: defaultClientTimeout,
@@ -47,15 +73,17 @@ var defaultHTTPClient = &http.Client{
 
 var defaultInsecureHTTPClient = &http.Client{
 	Timeout: defaultClientTimeout,
-	Transport: &userAgentTransport{
-		underlying: &http.Transport{
-			MaxIdleConns:        maxIdleConns,
-			MaxIdleConnsPerHost: maxIdleConnsPerHost,
-			MaxConnsPerHost:     maxOpenConnsPerHost,
-			IdleConnTimeout:     idleConnTimeout,
-			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
-			Proxy:               http.ProxyFromEnvironment,
-			DisableKeepAlives:   false,
+	Transport: &debugTransport{
+		underlying: &userAgentTransport{
+			underlying: &http.Transport{
+				MaxIdleConns:        maxIdleConns,
+				MaxIdleConnsPerHost: maxIdleConnsPerHost,
+				MaxConnsPerHost:     maxOpenConnsPerHost,
+				IdleConnTimeout:     idleConnTimeout,
+				TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+				Proxy:               http.ProxyFromEnvironment,
+				DisableKeepAlives:   false,
+			},
 		},
 	},
 }

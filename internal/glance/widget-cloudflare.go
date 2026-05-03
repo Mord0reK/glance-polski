@@ -70,6 +70,14 @@ func (widget *cloudflareWidget) initialize() error {
 		widget.TimeRange = "24h"
 	}
 
+	// Fetch zone details to get domain name for title URL
+	zoneDetails, err := fetchCloudflareZoneDetails(widget.ApiKey, widget.ZoneID)
+	if err == nil && zoneDetails != nil {
+		accountID := zoneDetails.Account.ID
+		domainName := zoneDetails.Name
+		widget.withTitleURL(fmt.Sprintf("https://dash.cloudflare.com/?to=/%s/%s/security/analytics", accountID, domainName))
+	}
+
 	return nil
 }
 
@@ -108,6 +116,40 @@ type cloudflareSecurityGroup struct {
 	Dimensions struct {
 		Ts string `json:"ts"`
 	} `json:"dimensions"`
+}
+
+type cloudflareZoneDetailsResponse struct {
+	Result cloudflareZoneDetails `json:"result"`
+	Errors []struct {
+		Message string `json:"message"`
+	} `json:"errors"`
+}
+
+type cloudflareZoneDetails struct {
+	Name    string `json:"name"`
+	Account struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"account"`
+}
+
+func fetchCloudflareZoneDetails(apiKey, zoneID string) (*cloudflareZoneDetails, error) {
+	req, err := http.NewRequest("GET", "https://api.cloudflare.com/client/v4/zones/"+zoneID, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	resp, err := decodeJsonFromRequest[cloudflareZoneDetailsResponse](defaultHTTPClient, req)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Errors) > 0 {
+		return nil, fmt.Errorf("cloudflare api error: %s", resp.Errors[0].Message)
+	}
+
+	return &resp.Result, nil
 }
 
 func fetchCloudflareData(apiKey, zoneID, timeRange string) (*cloudflareData, error) {

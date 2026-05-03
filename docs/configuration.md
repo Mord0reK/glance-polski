@@ -46,6 +46,7 @@
   - [Twitch Top Games](#twitch-top-games)
   - [iframe](#iframe)
   - [HTML](#html)
+  - [Debugowanie](#debugowanie)
 
 
 ## Preconfigured page
@@ -3046,5 +3047,42 @@ Example:
   source: |
     <p>Hello, <span class="color-primary">World</span>!</p>
 ```
+
+## Debugowanie
+
+### API Timing
+Jeśli Glance ładuje się wolniej niż powinien, możesz włączyć debugowanie requestów API ustawiając zmienną środowiskową `DEBUG_API_TIMING`:
+
+```yaml
+# docker-compose.yml
+services:
+  glance:
+    environment:
+      - DEBUG_API_TIMING=true
+```
+
+Lub jako comment w docker-compose (odkomentuj aby włączyć):
+
+```yaml
+environment:
+  - TZ=Europe/Warsaw
+  # Debug API timing - odkomentuj aby włączyć logowanie requestów API
+  # - DEBUG_API_TIMING=true
+```
+
+Każdy request API będzie wtedy logowany w formacie:
+
+```
+[API #1] GET https://api.cloudflare.com/client/v4/zones/xxx - 200 - 234ms
+[API #2] POST https://api.cloudflare.com/client/v4/graphql - 200 - 156ms
+```
+
+Gdzie:
+- `#1` - kolejność wykonania requestu
+- `GET/POST` - metoda HTTP
+- `200` - kod odpowiedzi
+- `234ms` - czas wykonania requestu
+
+To pozwala zidentyfikować, które widgety/API wydłużają czas ładowania panelu.
 
 Note the use of `|` after `source:`, this allows you to insert a multi-line string.
