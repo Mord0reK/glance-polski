@@ -5,7 +5,7 @@
         <a class="size-h3" href="https://github.com/Mord0reK/glance-polski" target="_blank" rel="noreferrer">Glance po polsku</a>
         {{ if eq "unknown" .App.CommitSHA }} (dev){{ end }}
         {{ if ne "dev" .App.Version }} <a class="visited-indicator" title="Release notes" href="https://github.com/Mord0reK/glance-polski/releases/tag/{{ .App.Version }}" target="_blank" rel="noreferrer">{{ .App.Version }}</a>{{ end }}
-        {{ if .App.HasUpdate }} <span class="update-badge" title="Dostępna jest nowsza wersja">⚠️ Aktualizacja dostępna</span>{{ end }}
+        {{ if .App.HasUpdate }} <span style="color: var(--color-primary);">Aktualizacja dostępna</span>{{ end }}
     </div>
 {{ else }}
     {{ .App.Config.Branding.CustomFooter }}
