@@ -11,8 +11,11 @@ import (
 )
 
 var buildVersion = "dev"
+var commitSHA = "dev"
 
-func Main() int {
+func Main(commitSHAArg string) int {
+	commitSHA = commitSHAArg
+
 	options, err := parseCliOptions()
 	if err != nil {
 		fmt.Println(err)

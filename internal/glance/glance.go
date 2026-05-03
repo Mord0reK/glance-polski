@@ -30,6 +30,9 @@ var reservedPageSlugs = []string{"login", "logout"}
 
 type application struct {
 	Version   string
+	CommitSHA string
+	HasUpdate bool
+
 	CreatedAt time.Time
 	Config    config
 
@@ -48,11 +51,19 @@ type application struct {
 func newApplication(c *config) (*application, error) {
 	app := &application{
 		Version:    buildVersion,
+		CommitSHA:  commitSHA,
+		HasUpdate:  false,
 		CreatedAt:  time.Now(),
 		Config:     *c,
 		slugToPage: make(map[string]*page),
 		widgetByID: make(map[uint64]widget),
 	}
+
+	// Sprawdź czy jest dostępna aktualizacja (tylko dla prawdziwych commit SHA, nie dla dev/unknown)
+	if commitSHA != "dev" && commitSHA != "unknown" && len(commitSHA) >= 7 {
+		app.HasUpdate = checkForUpdate(commitSHA)
+	}
+
 	config := &app.Config
 
 	//
@@ -1075,4 +1086,40 @@ func (a *application) handleBeszelChartData(w http.ResponseWriter, r *http.Reque
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(chartData)
+}
+
+// checkForUpdate sprawdza czy jest dostępna nowsza wersja na GitHub
+func checkForUpdate(currentCommit string) bool {
+	req, err := http.NewRequest("GET", "https://api.github.com/repos/Mord0reK/glance-polski/commits/main", nil)
+	if err != nil {
+		return false
+	}
+
+	req.Header.Set("User-Agent", "Glance-Polski")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false
+	}
+
+	var commit struct {
+		Sha string `json:"sha"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&commit); err != nil {
+		return false
+	}
+
+	// Porównaj pierwsze 7 znaków (short SHA)
+	if len(currentCommit) >= 7 && len(commit.Sha) >= 7 {
+		return currentCommit[:7] != commit.Sha[:7]
+	}
+
+	return false
 }

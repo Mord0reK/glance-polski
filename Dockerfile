@@ -1,6 +1,8 @@
 # Etap 1: Budowanie (Builder)
 FROM golang:1.26-alpine AS builder
 
+ARG COMMIT_SHA=unknown
+
 RUN apk --no-cache add ca-certificates tzdata && \
     update-ca-certificates && \
     adduser -D -g '' appuser
@@ -13,7 +15,7 @@ RUN go mod download && go mod verify
 COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build \
-    -ldflags="-s -w" \
+    -ldflags="-s -w -X main.commitSHA=${COMMIT_SHA}" \
     -trimpath \
     -o glance .
 
