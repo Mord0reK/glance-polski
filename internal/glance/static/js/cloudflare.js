@@ -50,15 +50,17 @@ export default function setupCloudflare(widgetElement) {
         
         let timeLabel = label;
         if (timestamp) {
-            const ts = timestamp;
-            if (ts.length >= 19) {
+            const date = new Date(timestamp);
+            if (!Number.isNaN(date.getTime())) {
                 try {
-                    const date = new Date(ts);
-                    const hours = date.getHours().toString().padStart(2, '0');
-                    const minutes = date.getMinutes().toString().padStart(2, '0');
-                    timeLabel = hours + ':' + minutes;
+                    timeLabel = new Intl.DateTimeFormat('pl-PL', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                        timeZone: 'Europe/Warsaw',
+                    }).format(date);
                 } catch (e) {
-                    timeLabel = ts.substring(11, 16);
+                    timeLabel = timestamp.substring(11, 16);
                 }
             }
         }

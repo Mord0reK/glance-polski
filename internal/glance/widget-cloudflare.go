@@ -365,7 +365,7 @@ func formatTimeLabel(ts, timeRange string) string {
 		if len(ts) >= 19 {
 			t, err := time.Parse("2006-01-02T15:04:05Z", ts)
 			if err == nil {
-				hour := t.Hour()
+				hour := t.In(defaultLocation).Hour()
 				return fmt.Sprintf("%02d", hour)
 			}
 		}
@@ -377,7 +377,7 @@ func formatTimeLabel(ts, timeRange string) string {
 		if len(ts) >= 10 {
 			t, err := time.Parse("2006-01-02", ts[:10])
 			if err == nil {
-				return t.Format("02.01")
+				return t.In(defaultLocation).Format("02.01")
 			}
 		}
 		return ts
@@ -388,14 +388,78 @@ func buildCloudflareAxisLabels(series []cloudflareSeriesPoint, timeRange string)
 	var axisLabels []cloudflareAxisLabel
 	numPoints := len(series)
 
-	if numPoints > 1 {
-		step := numPoints / 5
-		if step < 1 {
-			step = 1
+	if numPoints > 1 && timeRange == "24h" {
+		// Find unique hours from the data and select key hours (0, 6, 12, 18, 24)
+		hourPositions := make(map[int]int) // hour -> series index
+
+		for i, point := range series {
+			if len(point.Timestamp) >= 19 {
+				if t, err := time.Parse("2006-01-02T15:04:05Z", point.Timestamp); err == nil {
+					hour := t.In(defaultLocation).Hour()
+					// Keep the earliest occurrence of each hour
+					if _, exists := hourPositions[hour]; !exists {
+						hourPositions[hour] = i
+					}
+				}
+			}
 		}
+
+		// Select key hours: every 3 hours (0, 3, 6, 9, 12, 15, 18, 21) and last available
+		keyHours := []int{0, 3, 6, 9, 12, 15, 18, 21}
+		var selectedIndices []int
+
+		for _, h := range keyHours {
+			if idx, ok := hourPositions[h]; ok {
+				selectedIndices = append(selectedIndices, idx)
+			}
+		}
+
+		// Always add last point
+		if numPoints-1 > 0 {
+			lastIdx := numPoints - 1
+			if len(selectedIndices) == 0 || selectedIndices[len(selectedIndices)-1] != lastIdx {
+				selectedIndices = append(selectedIndices, lastIdx)
+			}
+		}
+
+		// Sort indices to maintain chronological order
+		sort.Slice(selectedIndices, func(i, j int) bool {
+			return selectedIndices[i] < selectedIndices[j]
+		})
+
+		labelSeen := make(map[string]bool)
+		for _, idx := range selectedIndices {
+			if idx >= 0 && idx < numPoints {
+				label := series[idx].Label
+				left := (float64(idx) / float64(numPoints-1)) * 100
+
+				transform := "translateX(-50%)"
+				if idx == 0 {
+					transform = "translateX(0)"
+				} else if idx == numPoints-1 {
+					transform = "translateX(-100%)"
+				}
+
+				if !labelSeen[label] {
+					labelSeen[label] = true
+					axisLabels = append(axisLabels, cloudflareAxisLabel{
+						Label:     label,
+						Left:      left,
+						Transform: transform,
+					})
+				}
+			}
+		}
+	}
+
+	// Fallback for other time ranges or if no labels were generated
+	if len(axisLabels) == 0 && numPoints > 1 {
 		indices := []int{0}
-		for i := step; i < numPoints-1; i += step {
-			indices = append(indices, i)
+		for i := 1; i < 5; i++ {
+			idx := (numPoints - 1) * i / 5
+			if idx > 0 && idx < numPoints-1 {
+				indices = append(indices, idx)
+			}
 		}
 		indices = append(indices, numPoints-1)
 
@@ -404,6 +468,7 @@ func buildCloudflareAxisLabels(series []cloudflareSeriesPoint, timeRange string)
 			if idx >= 0 && idx < numPoints {
 				label := series[idx].Label
 				left := (float64(idx) / float64(numPoints-1)) * 100
+
 				transform := "translateX(-50%)"
 				if idx == 0 {
 					transform = "translateX(0)"
