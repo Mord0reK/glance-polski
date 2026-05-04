@@ -25,13 +25,15 @@ var (
 )
 
 const STATIC_ASSETS_CACHE_DURATION = 24 * time.Hour
+const UPDATE_CHECK_INTERVAL = 15 * time.Minute
 
 var reservedPageSlugs = []string{"login", "logout"}
 
 type application struct {
 	Version   string
 	CommitSHA string
-	HasUpdate bool
+	updateMu  sync.RWMutex
+	hasUpdate bool
 
 	CreatedAt time.Time
 	Config    config
@@ -52,16 +54,14 @@ func newApplication(c *config) (*application, error) {
 	app := &application{
 		Version:    buildVersion,
 		CommitSHA:  commitSHA,
-		HasUpdate:  false,
 		CreatedAt:  time.Now(),
 		Config:     *c,
 		slugToPage: make(map[string]*page),
 		widgetByID: make(map[uint64]widget),
 	}
 
-	// Sprawdź czy jest dostępna aktualizacja (tylko dla prawdziwych commit SHA, nie dla dev/unknown)
-	if commitSHA != "dev" && commitSHA != "unknown" && len(commitSHA) >= 7 {
-		app.HasUpdate = checkForUpdate(commitSHA)
+	if err := app.refreshUpdateStatus(); err != nil {
+		log.Printf("Failed to check for update: %v", err)
 	}
 
 	config := &app.Config
@@ -254,6 +254,34 @@ func newApplication(c *config) (*application, error) {
 	return app, nil
 }
 
+func (a *application) HasUpdate() bool {
+	a.updateMu.RLock()
+	defer a.updateMu.RUnlock()
+
+	return a.hasUpdate
+}
+
+func (a *application) setHasUpdate(hasUpdate bool) {
+	a.updateMu.Lock()
+	defer a.updateMu.Unlock()
+
+	a.hasUpdate = hasUpdate
+}
+
+func (a *application) refreshUpdateStatus() error {
+	if a.CommitSHA == "dev" || a.CommitSHA == "unknown" || len(a.CommitSHA) < 7 {
+		return nil
+	}
+
+	hasUpdate, err := checkForUpdate(a.CommitSHA)
+	if err != nil {
+		return err
+	}
+
+	a.setHasUpdate(hasUpdate)
+	return nil
+}
+
 func (p *page) updateOutdatedWidgets() {
 	now := time.Now()
 
@@ -298,9 +326,25 @@ func (p *page) updateOutdatedWidgets() {
 }
 
 func (a *application) startBackgroundUpdates() func() {
-	// Automatyczne odświeżanie w tle wyłączone
-	// Widgety odświeżają się tylko przy wejściu użytkownika na stronę (triggerPageUpdate)
-	return func() {}
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		ticker := time.NewTicker(UPDATE_CHECK_INTERVAL)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				if err := a.refreshUpdateStatus(); err != nil {
+					log.Printf("Failed to refresh update status: %v", err)
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	return cancel
 }
 
 // Asynchroniczne odświeżanie widgetów strony (wywoływane przy wejściu użytkownika)
@@ -1089,10 +1133,10 @@ func (a *application) handleBeszelChartData(w http.ResponseWriter, r *http.Reque
 }
 
 // checkForUpdate sprawdza czy jest dostępna nowsza wersja na GitHub
-func checkForUpdate(currentCommit string) bool {
+func checkForUpdate(currentCommit string) (bool, error) {
 	req, err := http.NewRequest("GET", "https://api.github.com/repos/Mord0reK/glance-polski/commits/main", nil)
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	req.Header.Set("User-Agent", "Glance-Polski")
@@ -1100,12 +1144,12 @@ func checkForUpdate(currentCommit string) bool {
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return false
+		return false, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return false
+		return false, fmt.Errorf("github api returned %s", resp.Status)
 	}
 
 	var commit struct {
@@ -1113,13 +1157,13 @@ func checkForUpdate(currentCommit string) bool {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&commit); err != nil {
-		return false
+		return false, err
 	}
 
 	// Porównaj pierwsze 7 znaków (short SHA)
 	if len(currentCommit) >= 7 && len(commit.Sha) >= 7 {
-		return currentCommit[:7] != commit.Sha[:7]
+		return currentCommit[:7] != commit.Sha[:7], nil
 	}
 
-	return false
+	return false, nil
 }
