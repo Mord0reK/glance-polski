@@ -33,6 +33,7 @@ type tailscaleDevice struct {
 	ID              string
 	Name            string
 	ShortName       string
+	Hostname        string
 	OS              string
 	User            string
 	Addresses       []string
@@ -41,6 +42,7 @@ type tailscaleDevice struct {
 	LastSeenStr     string
 	UpdateAvailable bool
 	IsOnline        bool
+	IsExternal      bool
 	// Fields actually available from API
 	KeyExpiryDisabled         bool
 	BlocksIncomingConnections bool
@@ -79,6 +81,7 @@ type tailscaleAPIDevice struct {
 	AdvertisedRoutes          []string `json:"advertisedRoutes"`
 	EnabledRoutes             []string `json:"enabledRoutes"`
 	TailscaleSSHEnabled       bool     `json:"tailscaleSSHEnabled"`
+	IsExternal                bool     `json:"isExternal"`
 }
 
 // Struktura odpowiedzi z /device/{id}/routes
@@ -173,10 +176,18 @@ func (widget *tailscaleWidget) fetchDevices() ([]tailscaleDevice, error) {
 
 	// Najpierw tworzymy podstawowe dane urządzeń
 	for i, apiDevice := range apiResponse.Devices {
+		// Dla shared devices (isExternal=true) API zwraca puste name i user,
+		// ale hostname jest zawsze dostępne — używamy go jako fallback
+		deviceName := apiDevice.Name
+		if deviceName == "" {
+			deviceName = apiDevice.Hostname
+		}
+
 		device := tailscaleDevice{
 			ID:                        apiDevice.ID,
-			Name:                      apiDevice.Name,
-			ShortName:                 extractShortName(apiDevice.Name),
+			Name:                      deviceName,
+			ShortName:                 extractShortName(deviceName),
+			Hostname:                  apiDevice.Hostname,
 			OS:                        apiDevice.OS,
 			User:                      apiDevice.User,
 			Addresses:                 apiDevice.Addresses,
@@ -184,6 +195,7 @@ func (widget *tailscaleWidget) fetchDevices() ([]tailscaleDevice, error) {
 			KeyExpiryDisabled:         apiDevice.KeyExpiryDisabled,
 			BlocksIncomingConnections: apiDevice.BlocksIncomingConnections,
 			ConnectedToControl:        apiDevice.ConnectedToControl,
+			IsExternal:                apiDevice.IsExternal,
 		}
 
 		// Get primary address

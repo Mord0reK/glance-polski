@@ -215,6 +215,11 @@
     color: #ffffff;
   }
 
+  .tailscale-feature-icon.shared {
+    background-color: #6366f1;
+    color: #ffffff;
+  }
+
   .tailscale-user-email {
     font-size: 0.75em;
     color: var(--color-text-subdue);
@@ -256,7 +261,7 @@
         </span>
         <span style="opacity: 0.6;">{{ .OS }}</span>
       </div>
-      {{ if or .IsExitNode .IsSubnetRouter .TailscaleSSHEnabled }}
+      {{ if or .IsExitNode .IsSubnetRouter .TailscaleSSHEnabled .IsExternal }}
       <div class="tailscale-feature-icons">
         {{ if .IsExitNode }}
         <span class="tailscale-feature-icon exit-node" data-popover-type="text" data-popover-text="Exit Node">Exit</span>
@@ -266,6 +271,9 @@
         {{ end }}
         {{ if .TailscaleSSHEnabled }}
         <span class="tailscale-feature-icon ssh" data-popover-type="text" data-popover-text="Tailscale SSH">SSH</span>
+        {{ end }}
+        {{ if .IsExternal }}
+        <span class="tailscale-feature-icon shared" data-popover-type="text" data-popover-text="Shared from another tailnet">Shared</span>
         {{ end }}
       </div>
       {{ end }}
@@ -310,7 +318,7 @@
         </span>
         <span style="opacity: 0.6;">{{ .OS }}</span>
       </div>
-      {{ if or .IsExitNode .IsSubnetRouter .TailscaleSSHEnabled }}
+      {{ if or .IsExitNode .IsSubnetRouter .TailscaleSSHEnabled .IsExternal }}
       <div class="tailscale-feature-icons">
         {{ if .IsExitNode }}
         <span class="tailscale-feature-icon exit-node" data-popover-type="text" data-popover-text="Exit Node">Exit</span>
@@ -320,6 +328,9 @@
         {{ end }}
         {{ if .TailscaleSSHEnabled }}
         <span class="tailscale-feature-icon ssh" data-popover-type="text" data-popover-text="Tailscale SSH">SSH</span>
+        {{ end }}
+        {{ if .IsExternal }}
+        <span class="tailscale-feature-icon shared" data-popover-type="text" data-popover-text="Shared from another tailnet">Shared</span>
         {{ end }}
       </div>
       {{ end }}
