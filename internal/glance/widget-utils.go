@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -147,6 +148,12 @@ func decodeJsonFromRequest[T any](client requestDoer, request *http.Request) (T,
 
 	err = json.Unmarshal(body, &result)
 	if err != nil {
+		if strings.HasPrefix(strings.TrimSpace(string(body)), "<") {
+			return result, fmt.Errorf(
+				"expected JSON response but received HTML from %s, possible causes: authentication failure, incorrect URL, or service not running",
+				request.URL,
+			)
+		}
 		return result, err
 	}
 
