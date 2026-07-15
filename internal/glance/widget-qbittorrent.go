@@ -191,8 +191,8 @@ func (widget *qbittorrentWidget) login() error {
 
 func (widget *qbittorrentWidget) fetchTorrents() (qbittorrentSummary, error) {
 	summary, err := widget.fetchTorrentsOnce()
-	if err != nil && strings.Contains(err.Error(), "unauthorized") {
-		slog.Debug("qBittorrent session expired, re-logging in...")
+	if err != nil && (strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "expected JSON response but received HTML")) {
+		slog.Debug("qBittorrent session expired or invalid, re-logging in...")
 		if loginErr := widget.login(); loginErr != nil {
 			return qbittorrentSummary{}, loginErr
 		}
