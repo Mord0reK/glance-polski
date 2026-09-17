@@ -29,15 +29,16 @@ func init() {
 }
 
 type vikunjaWidget struct {
-	widgetBase     `yaml:",inline"`
-	URL            string `yaml:"url"`
-	Token          string `yaml:"token"`
-	Limit          int    `yaml:"limit"`
-	ProjectID      int    `yaml:"project-id"` // Project ID for creating new tasks
-	AffineURL      string `yaml:"affine-url"`
-	AffineEmail    string `yaml:"affine-email"`
-	AffinePassword string `yaml:"affine-password"`
-	Tasks          []vikunjaTask
+	widgetBase      `yaml:",inline"`
+	URL             string `yaml:"url"`
+	Token           string `yaml:"token"`
+	Limit           int    `yaml:"limit"`
+	ProjectID       int    `yaml:"project-id"`       // Project ID for creating new tasks
+	IgnoredProjects []int  `yaml:"ignored-projects"` // List of project IDs to ignore (tasks from these projects won't be displayed)
+	AffineURL       string `yaml:"affine-url"`
+	AffineEmail     string `yaml:"affine-email"`
+	AffinePassword  string `yaml:"affine-password"`
+	Tasks           []vikunjaTask
 }
 
 type vikunjaTask struct {
@@ -57,6 +58,7 @@ type vikunjaTask struct {
 	AffineNoteTitle string
 	CustomLinkURL   string
 	CustomLinkTitle string
+	ProjectID       int
 }
 
 type vikunjaLabel struct {
@@ -75,6 +77,7 @@ type vikunjaAPITask struct {
 	Reminders     []vikunjaAPIReminder `json:"reminders"`
 	Description   string               `json:"description"`
 	AffineNoteURL string               `json:"affine_note_url,omitempty"`
+	ProjectID     int                  `json:"project_id"`
 }
 
 type vikunjaAPIReminder struct {
@@ -210,6 +213,7 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 			Done:        apiTask.Done,
 			PercentDone: int(apiTask.PercentDone),
 			TaskURL:     fmt.Sprintf("%s/tasks/%d", strings.TrimRight(widget.URL, "/"), apiTask.ID),
+			ProjectID:   apiTask.ProjectID,
 		}
 
 		if apiTask.DueDate != "" {
@@ -279,6 +283,22 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 		}
 
 		tasks = append(tasks, task)
+	}
+
+	// Filter out tasks from ignored projects
+	if len(widget.IgnoredProjects) > 0 {
+		ignoredSet := make(map[int]bool, len(widget.IgnoredProjects))
+		for _, projectID := range widget.IgnoredProjects {
+			ignoredSet[projectID] = true
+		}
+		filteredTasks := make([]vikunjaTask, 0, len(tasks))
+		for _, task := range tasks {
+			if ignoredSet[task.ProjectID] {
+				continue
+			}
+			filteredTasks = append(filteredTasks, task)
+		}
+		tasks = filteredTasks
 	}
 
 	// Sortowanie zadań po dacie - zadania bez daty na końcu

@@ -12,6 +12,9 @@ Aby skonfigurować widget Vikunja, dodaj następującą konfigurację do swojego
   token: twoj-token-api                     # Token API z Vikunja
   project-id: 1                             # ID projektu do tworzenia nowych zadań (opcjonalnie, domyślnie 1)
   limit: 10                                  # Maksymalna liczba wyświetlanych zadań (opcjonalnie)
+  ignored-projects:                          # Lista ID projektów do zignorowania (opcjonalnie)
+    - 2
+    - 5
   # Integracja z Affine (opcjonalnie)
   affine-url: https://twoja-instancja-affine.pl      # URL do Twojej instancji Affine
   affine-email: twoj-email@example.com                # Email do logowania Affine
@@ -34,6 +37,21 @@ Aby znaleźć ID projektu w Vikunja:
 3. Użyj tego ID w konfiguracji `project-id`
 
 **Uwaga**: Parametr `project-id` określa, w którym projekcie będą tworzone nowe zadania. Jeśli masz wiele projektów, ustaw ID projektu, w którym chcesz tworzyć zadania. Domyślnie używany jest projekt o ID 1.
+
+### Ignorowanie projektów
+
+Opcja `ignored-projects` pozwala na wykluczenie zadań z wybranych projektów z wyświetlania w widgecie. Zadania z projektów znajdujących się na tej liście nie będą wyświetlane, nawet jeśli nie są ukończone.
+
+```yaml
+ignored-projects:
+  - 2    # Ignoruj projekt o ID 2
+  - 5    # Ignoruj projekt o ID 5
+```
+
+Aby znaleźć ID projektów, które chcesz zignorować:
+1. Otwórz projekt w przeglądarce
+2. Sprawdź URL - ID projektu znajduje się w adresie (np. `/projects/5` oznacza ID projektu = 5)
+3. Dodaj ID do listy `ignored-projects`
 
 ## Funkcje widgetu
 
