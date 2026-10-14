@@ -97,6 +97,8 @@ func newWidget(widgetType string) (widget, error) {
 		w = &googleComputeWidget{}
 	case "navidrome":
 		w = &navidromeWidget{}
+	case "opencode-go":
+		w = &openCodeGoWidget{}
 	case "qbittorrent":
 		w = &qbittorrentWidget{}
 	default:

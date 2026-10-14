@@ -1,0 +1,21 @@
+{{ template "widget-base.html" . }}
+
+{{- define "widget-content" }}
+{{- $threshold := .WarningThreshold }}
+<div class="flex flex-column gap-10">
+    {{- range .Windows }}
+    <div>
+        <div class="flex justify-between items-end">
+            <div class="size-h5">{{ .Label }}</div>
+            <div class="color-highlight size-h4">{{ printf "%.0f" .Percent }}<span class="color-base size-h5"> %</span></div>
+        </div>
+        <div style="height: 6px; margin-top: 5px; border-radius: 3px; background: var(--color-separator); overflow: hidden;">
+            <div style="height: 100%; border-radius: 3px; width: {{ .Percent }}%;{{ if gt .Percent 0.0 }} min-width: 3px;{{ end }} background: {{ if or (eq .Status "rate-limited") (ge .Percent $threshold) }}var(--color-negative){{ else }}var(--color-primary){{ end }};"></div>
+        </div>
+        {{- if not .ResetsAt.IsZero }}
+        <div class="color-subdue size-h5 margin-top-3">reset {{ .ResetsAt.Format "02.01 15:04" }}</div>
+        {{- end }}
+    </div>
+    {{- end }}
+</div>
+{{- end }}

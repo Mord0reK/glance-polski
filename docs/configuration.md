@@ -25,6 +25,7 @@
   - [Group](#group)
   - [Split Column](#split-column)
   - [Custom API](#custom-api)
+  - [OpenCode Go](#opencode-go)
   - [Extension](#extension)
   - [Weather](#weather)
   - [Todo](#todo)
@@ -1779,6 +1780,41 @@ parameters:
     - item1
     - item2
 ```
+
+### OpenCode Go
+Display the usage of your [OpenCode Go](https://opencode.ai/) subscription. The widget shows the rolling (5 hour), weekly and monthly usage windows with their reset time, using data from the official quota API `https://opencode.ai/zen/go/v1/usage`.
+
+Example:
+
+```yaml
+- type: opencode-go
+  api-key: ${OPENCODE_GO_KEY}
+```
+
+Preview:
+
+(Three usage bars: 5 godzin, Tydzień and Miesiąc, each with a percentage and a reset time)
+
+#### Properties
+
+| Name | Type | Required | Default |
+| ---- | ---- | -------- | ------- |
+| api-key | string | yes | |
+| url | string | no | https://opencode.ai/zen/go/v1/usage |
+| warning-threshold | number | no | 85 |
+| cache | duration | no | 5m |
+
+##### `api-key`
+Your OpenCode Go API key (the same key used for the API). It is sent as a `Bearer` token. It is recommended to provide it through an [environment variable](#environment-variables) or a [secret](#other-ways-of-providing-tokenspasswordsecrets), for example `api-key: ${OPENCODE_GO_KEY}`.
+
+##### `url`
+The URL of the usage endpoint. You only need to change this if you are pointing at a different (e.g. self-hosted or proxy) endpoint.
+
+##### `warning-threshold`
+The usage percentage at which a window's bar turns into the negative (warning) color. Defaults to `85`.
+
+##### `cache`
+How long to cache the response before fetching it again. Defaults to `5m`.
 
 ### Extension
 Display a widget provided by an external source (3rd party). If you want to learn more about developing extensions, checkout the [extensions documentation](extensions.md) (WIP).
