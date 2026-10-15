@@ -4,6 +4,8 @@ Widget OpenCode Go wyświetla wykorzystanie subskrypcji [OpenCode Go](https://op
 
 Dla każdego okna pokazywany jest procent wykorzystania oraz czas do resetu. Gdy wykorzystanie przekroczy próg ostrzeżenia (domyślnie 85%) lub okno ma status `rate-limited`, pasek zmienia kolor na ostrzegawczy.
 
+Tytuł widgetu jest klikalny i domyślnie przenosi do [panelu OpenCode](https://opencode.ai/console). Możesz to zmienić standardową właściwością `title-url`.
+
 ## Konfiguracja
 
 Aby skonfigurować widget, dodaj następującą konfigurację do swojego pliku `glance.yml`:

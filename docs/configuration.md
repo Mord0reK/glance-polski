@@ -1804,6 +1804,9 @@ Preview:
 | warning-threshold | number | no | 85 |
 | cache | duration | no | 5m |
 
+##### `title-url`
+By default the widget title is a clickable link to the [OpenCode console](https://opencode.ai/console). Use the standard `title-url` property to point it somewhere else.
+
 ##### `api-key`
 Your OpenCode Go API key (the same key used for the API). It is sent as a `Bearer` token. It is recommended to provide it through an [environment variable](#environment-variables) or a [secret](#other-ways-of-providing-tokenspasswordsecrets), for example `api-key: ${OPENCODE_GO_KEY}`.
 

@@ -25,6 +25,22 @@ func TestParseOpenCodeGoResetTime(t *testing.T) {
 	}
 }
 
+func TestOpenCodeGoWidgetInitializeDefaults(t *testing.T) {
+	widget := &openCodeGoWidget{APIKey: "test-key"}
+
+	if err := widget.initialize(); err != nil {
+		t.Fatalf("initialize returned an error: %v", err)
+	}
+
+	if widget.Title != "OpenCode Go" {
+		t.Errorf("unexpected default title: %q", widget.Title)
+	}
+
+	if widget.TitleURL != defaultOpenCodeGoTitleURL {
+		t.Errorf("unexpected default title url: %q", widget.TitleURL)
+	}
+}
+
 func TestOpenCodeGoWidgetRender(t *testing.T) {
 	widget := &openCodeGoWidget{
 		WarningThreshold: defaultOpenCodeGoWarningThreshold,
@@ -35,6 +51,7 @@ func TestOpenCodeGoWidgetRender(t *testing.T) {
 		},
 	}
 	widget.Title = "OpenCode Go"
+	widget.TitleURL = defaultOpenCodeGoTitleURL
 	widget.ContentAvailable = true
 
 	rendered := string(widget.Render())
@@ -43,6 +60,10 @@ func TestOpenCodeGoWidgetRender(t *testing.T) {
 		if !strings.Contains(rendered, expected) {
 			t.Errorf("expected rendered output to contain %q", expected)
 		}
+	}
+
+	if !strings.Contains(rendered, `href="`+defaultOpenCodeGoTitleURL+`"`) {
+		t.Error("expected the title to link to the OpenCode console")
 	}
 
 	if !strings.Contains(rendered, "var(--color-negative)") {

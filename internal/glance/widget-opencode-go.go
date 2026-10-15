@@ -13,6 +13,7 @@ var openCodeGoWidgetTemplate = mustParseTemplate("opencode-go.html", "widget-bas
 
 const (
 	defaultOpenCodeGoURL              = "https://opencode.ai/zen/go/v1/usage"
+	defaultOpenCodeGoTitleURL         = "https://opencode.ai/console"
 	defaultOpenCodeGoWarningThreshold = 85.0
 )
 
@@ -50,7 +51,10 @@ type openCodeGoUsageWindow struct {
 }
 
 func (widget *openCodeGoWidget) initialize() error {
-	widget.withTitle("OpenCode Go").withCacheDuration(5 * time.Minute)
+	widget.
+		withTitle("OpenCode Go").
+		withTitleURL(defaultOpenCodeGoTitleURL).
+		withCacheDuration(5 * time.Minute)
 
 	if widget.URL == "" {
 		widget.URL = defaultOpenCodeGoURL
