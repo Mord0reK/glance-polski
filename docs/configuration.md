@@ -30,14 +30,21 @@
   - [Extension](#extension)
   - [Pogoda](#weather)
   - [Todo](#todo)
+  - [Vikunja](#vikunja)
   - [Monitor](#monitor)
   - [Releases](#releases)
   - [Docker Containers](#docker-containers)
+  - [qBittorrent](#qbittorrent)
   - [Google Compute Engine](#google-compute-engine)
+  - [Tailscale](#tailscale)
   - [DNS Stats](#dns-stats)
+  - [Cloudflare](#cloudflare)
   - [Server Stats](#server-stats)
+  - [Beszel](#beszel)
+  - [GitHub](#github)
   - [Repository](#repository)
   - [Radyjko](#radyjko)
+  - [Navidrome](#navidrome)
   - [Zakładki](#bookmarks)
   - [Kalendarz](#calendar)
   - [Kalendarz (legacy)](#calendar-legacy)
@@ -1855,6 +1862,27 @@ Określa, czy pokazywać szacowane zużycie na koniec cyklu dla okna miesięczne
 ##### `cache`
 Jak długo cache'ować odpowiedź przed ponownym pobraniem. Domyślnie `5m`.
 
+##### Klucz API
+
+Widget korzysta z tego samego klucza co API OpenCode Go. Klucz jest przekazywany w nagłówku:
+
+```http
+Authorization: Bearer <api-key>
+```
+
+Jeśli subskrypcja Go nie jest aktywna dla danego klucza, API zwróci błąd `403 EntitlementError`, który pojawi się w widgecie jako komunikat błędu.
+
+#### Rozwiązywanie problemów
+
+##### Widget nie wyświetla danych
+Sprawdź, czy `api-key` jest ustawiony i poprawny oraz czy serwer Glance ma dostęp do `https://opencode.ai/zen/go/v1/usage`.
+
+##### „Unauthorized” / „EntitlementError”
+`Unauthorized` (HTTP 401) oznacza nieprawidłowy lub nieistniejący klucz API. `EntitlementError` (HTTP 403, „OpenCode Go subscription required”) oznacza, że klucz nie ma aktywnej subskrypcji Go.
+
+##### Wartości różnią się od panelu OpenCode
+Endpoint API zaokrągla procenty w dół, a panel webowy pokazuje jedną cyfrę po przecinku, więc wynik może różnić się o około 1 punkt procentowy.
+
 <a id="extension"></a>
 ### Extension
 Wyświetla widget dostarczany przez zewnętrzne źródło (stronę trzecią). Jeśli chcesz dowiedzieć się więcej o tworzeniu rozszerzeń, zapoznaj się z [dokumentacją rozszerzeń](extensions.md) (WIP).
@@ -2019,6 +2047,104 @@ Identyfikator listy zadań. Jeśli chcesz mieć wiele list zadań, musisz podać
 | <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | Dodaje zadanie na górę listy | Gdy pole „Add a task” ma fokus |
 | <kbd>Down Arrow</kbd> | Ustawia fokus na ostatnio dodanym zadaniu | Gdy pole „Add a task” ma fokus |
 | <kbd>Escape</kbd> | Ustawia fokus na polu „Add a task” | Gdy zadanie ma fokus |
+
+<a id="vikunja"></a>
+### Vikunja
+Wyświetla zadania z Vikunja i pozwala dodawać, edytować oraz oznaczać je jako wykonane bezpośrednio z dashboardu.
+
+Przykład:
+
+```yaml
+- type: vikunja
+  url: https://vikunja.example.com
+  token: twoj-token-api
+```
+
+#### Właściwości
+
+| Nazwa | Typ | Wymagane | Domyślnie |
+| ----- | --- | -------- | --------- |
+| url | string | tak | |
+| token | string | tak | |
+| limit | integer | nie | 10 |
+| project-id | integer | nie | 1 |
+| ignored-projects | array | nie | |
+| affine-url | string | nie | |
+| affine-email | string | nie | |
+| affine-password | string | nie | |
+
+##### `url`
+Adres URL Twojej instancji Vikunja.
+
+##### `token`
+Token API Vikunja z uprawnieniami do odczytu i modyfikacji zadań oraz etykiet.
+
+##### `limit`
+Maksymalna liczba wyświetlanych zadań.
+
+##### `project-id`
+ID projektu, w którym będą tworzone nowe zadania. Można je znaleźć w adresie URL projektu, np. `/projects/5` oznacza ID `5`.
+
+##### `ignored-projects`
+Lista ID projektów, których zadania mają być pomijane w widgecie.
+
+##### `affine-url`
+Adres URL instancji Affine. Włącza integrację z Affine.
+
+##### `affine-email`
+Adres e-mail używany do logowania w Affine.
+
+##### `affine-password`
+Hasło do konta Affine.
+
+#### Funkcje
+
+Widget wyświetla niewykonane zadania posortowane według terminu, wraz z czasem pozostałym do końca, tytułem i etykietami. Możesz oznaczać zadania jako wykonane, dodawać nowe zadania oraz edytować istniejące, w tym zmieniać tytuł, termin, etykiety i link do notatki Affine.
+
+#### Integracja z Affine
+
+Integracja z Affine jest opcjonalna i pozwala powiązać zadanie Vikunja z notatką w Affine. Aby ją włączyć, podaj `affine-url`, `affine-email` i `affine-password`.
+
+```yaml
+- type: vikunja
+  url: https://vikunja.example.com
+  token: twoj-token-api
+  affine-url: https://affine.example.com
+  affine-email: user@example.com
+  affine-password: twoje-haslo
+```
+
+Link do notatki podaje się w polu „Link do notatki Affine” podczas tworzenia lub edycji zadania. URL notatki ma format:
+
+```
+https://affine.example.com/workspace/WORKSPACE_ID/PAGE_ID
+```
+
+Po dodaniu linku w tabeli zadań pojawi się ikona dokumentu z tytułem notatki; kliknięcie otworzy notatkę w nowej karcie. Tytuł jest pobierany z Affine przy każdym odświeżeniu widgetu.
+
+> [!NOTE]
+>
+> Dane logowania do Affine są przechowywane w pliku konfiguracyjnym. Zabezpiecz plik odpowiednimi uprawnieniami i nie commituj go z hasłami do repozytorium. Hasło możesz przekazać przez zmienną środowiskową, np. `affine-password: ${AFFINE_PASSWORD}`.
+
+#### Rozwiązywanie problemów
+
+##### Widget nie wyświetla zadań
+Sprawdź poprawność `url` i `token` oraz konsolę przeglądarki pod kątem błędów połączenia.
+
+##### Nie można oznaczyć zadania jako wykonane lub utworzyć zadania
+Upewnij się, że token API ma uprawnienia do modyfikacji zadań, a instancja Vikunja działa poprawnie.
+
+##### Etykiety nie są wyświetlane
+Sprawdź, czy w Vikunja istnieją etykiety i czy token ma uprawnienia do ich odczytu.
+
+##### Tytuł notatki Affine się nie pojawia
+Sprawdź dane logowania do Affine i format URL notatki. URL musi mieć postać `https://affine-url/workspace/WORKSPACE_ID/PAGE_ID`.
+
+##### Błąd „failed to sign in to Affine”
+Sprawdź e-mail i hasło oraz dostępność Affine pod podanym adresem. URL musi zaczynać się od `https://` lub `http://`.
+
+##### Błąd „could not extract workspace ID and page ID from URL”
+Sprawdź format URL notatki — musi zawierać segmenty `/workspace/WORKSPACE_ID/PAGE_ID`.
 
 <a id="monitor"></a>
 ### Monitor
@@ -2426,6 +2552,85 @@ Określa, czy pokazywać tylko działające kontenery. Po ustawieniu na `true` w
 | glance.parent | Identyfikator kontenera nadrzędnego. Używany do grupowania kontenerów pod jednym elementem nadrzędnym. |
 | glance.category | Kategoria kontenera. Używana do filtrowania kontenerów według kategorii. |
 
+<a id="qbittorrent"></a>
+### qBittorrent
+Wyświetla status torrentów z qBittorrent wraz z podsumowaniem pobierania i listą torrentów.
+
+Przykład:
+
+```yaml
+- type: qbittorrent
+  url: http://localhost:8080
+  username: admin
+  password: adminadmin
+```
+
+Podgląd:
+
+![](images/qbittorrent-widget-preview.png)
+
+#### Właściwości
+
+| Nazwa | Typ | Wymagane | Domyślnie |
+| ----- | --- | -------- | --------- |
+| url | string | tak | |
+| username | string | tak | |
+| password | string | tak | |
+| hide-seeding | boolean | nie | false |
+| hide-completed | boolean | nie | false |
+| show-only-active | boolean | nie | false |
+| limit | integer | nie | 10 |
+| sort-by | string | nie | progress |
+
+##### `url`
+Adres URL interfejsu webowego qBittorrent.
+
+##### `username`
+Nazwa użytkownika używana do logowania.
+
+##### `password`
+Hasło używane do logowania.
+
+##### `hide-seeding`
+Po ustawieniu na `true` ukrywa torrenty, które seedują.
+
+##### `hide-completed`
+Po ustawieniu na `true` ukrywa ukończone torrenty.
+
+##### `show-only-active`
+Po ustawieniu na `true` pokazuje tylko aktywne torrenty (z prędkością większą od 0).
+
+##### `limit`
+Maksymalna liczba wyświetlanych torrentów.
+
+##### `sort-by`
+Sposób sortowania torrentów. Możliwe wartości: `name`, `progress`, `speed` i `eta`.
+
+#### Wyświetlane informacje
+
+Widget pokazuje podsumowanie z liczbą pobieranych, seedujących i wstrzymanych torrentów oraz łączną prędkością pobierania i wysyłania. Poniżej znajduje się lista torrentów z nazwą, paskiem postępu, procentem ukończenia, kategorią, statusem, prędkością pobierania, szacowanym czasem zakończenia (ETA) i prędkością wysyłania.
+
+#### Stany torrentów
+
+| Ikona | Stan |
+| ----- | ---- |
+| 🔵 (niebieski) | Pobieranie |
+| 🟢 (zielony) | Seedowanie |
+| ⏸️ (szary) | Wstrzymany |
+| ⚠️ (szary) | Zablokowany (stalled) |
+| 🕐 (szary) | W kolejce |
+| 🔄 (szary) | Sprawdzanie |
+| 🔴 (czerwony) | Błąd |
+
+#### Wymagania
+
+- qBittorrent z włączonym interfejsem webowym (Tools → Options → Web UI).
+- Prawidłowe dane uwierzytelniające.
+
+#### Uwagi dotyczące bezpieczeństwa
+
+Widget automatycznie zarządza sesją i loguje się ponownie po jej wygaśnięciu. Po 3 nieudanych próbach logowania blokuje dalsze próby na 30 minut. Hasło jest przesyłane bezpośrednio do API qBittorrent, dlatego zaleca się używanie HTTPS, jeśli qBittorrent jest dostępny z zewnątrz.
+
 <a id="google-compute-engine"></a>
 ### Google Compute Engine
 Wyświetla instancje Google Compute Engine dla projektu i pozwala uruchamiać, restartować lub zatrzymywać je bezpośrednio z Glance.
@@ -2447,6 +2652,82 @@ Klucz konta usługi z uprawnieniami do listowania instancji oraz wykonywania ope
 
 ##### `zones`
 Opcjonalna lista stref. Po podaniu widget wyświetla i kontroluje tylko instancje z tych stref.
+
+<a id="tailscale"></a>
+### Tailscale
+Wyświetla listę urządzeń w sieci Tailscale wraz ze statusem połączenia i opcjonalnymi znacznikami.
+
+Przykład:
+
+```yaml
+- type: tailscale
+  token: twoj_token
+```
+
+#### Właściwości
+
+| Nazwa | Typ | Wymagane | Domyślnie |
+| ----- | --- | -------- | --------- |
+| token | string | tak | |
+| tailnet | string | nie | - |
+| url | string | nie | https://api.tailscale.com/api/v2/tailnet/-/devices |
+| collapse-after | integer | nie | 5 |
+| show-online-indicator | boolean | nie | false |
+| show-expiry-disabled | boolean | nie | false |
+| hide-offline | boolean | nie | false |
+| show-disconnected | boolean | nie | false |
+| show-blocks-incoming | boolean | nie | false |
+| show-joined-date | boolean | nie | false |
+
+##### `token`
+Token API Tailscale z uprawnieniami do odczytu urządzeń (`Devices: Read only`). Można go wygenerować na stronie https://login.tailscale.com/admin/settings/keys.
+
+##### `tailnet`
+Identyfikator tailnetu, z którego mają być pobierane urządzenia. Wartość `-` oznacza tailnet powiązany z tokenem.
+
+##### `url`
+Pełny adres URL API Tailscale. Domyślnie jest generowany na podstawie `tailnet`; podawaj go tylko w celu nadpisania domyślnego zachowania.
+
+##### `collapse-after`
+Po ilu urządzeniach lista ma zostać zwinięta. Ustaw `-1`, aby nigdy nie zwijać.
+
+##### `show-online-indicator`
+Określa, czy pokazywać zielony (online) lub czerwony (offline) punkt przy nazwie urządzenia.
+
+##### `show-expiry-disabled`
+Pokazuje znacznik „Expiry disabled”, gdy klucz urządzenia nie wygasa automatycznie.
+
+##### `hide-offline`
+Po ustawieniu na `true` ukrywa urządzenia, które są offline.
+
+##### `show-disconnected`
+Pokazuje znacznik „Disconnected”, gdy urządzenie nie jest połączone z panelem kontrolnym Tailscale.
+
+##### `show-blocks-incoming`
+Pokazuje znacznik „Blocks Incoming”, gdy urządzenie blokuje połączenia przychodzące.
+
+##### `show-joined-date`
+Pokazuje datę dodania urządzenia do sieci Tailscale.
+
+> [!NOTE]
+>
+> Publiczne API Tailscale nie udostępnia informacji o exit node, subnetach, SSH, tagach ani urządzeniach współdzielonych. Dane te są widoczne tylko w panelu webowym Tailscale.
+
+#### Rozwiązywanie problemów
+
+##### Brak urządzeń
+Sprawdź, czy token ma uprawnienia `Devices: Read only` i czy jest poprawny. Możesz go przetestować poleceniem:
+
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  https://api.tailscale.com/api/v2/tailnet/-/devices
+```
+
+##### Znaczniki się nie pokazują
+Upewnij się, że włączyłeś odpowiednie opcje `show-*: true` i że API zwraca dane pola dla urządzenia.
+
+##### Widget działa wolno
+Zwiększ wartość `cache`, na przykład do `30m` lub `1h`.
 
 <a id="dns-stats"></a>
 ### DNS Stats
@@ -2514,6 +2795,42 @@ Określa, czy ukryć listę najczęściej blokowanych domen.
 
 ##### `hour-format`
 Określa, czy wyświetlać czas względny na wykresie w formacie `12h`, czy `24h`.
+
+<a id="cloudflare"></a>
+### Cloudflare
+Wyświetla liczbę zapytań do stron chronionych przez Cloudflare wraz z liczbą zablokowanych użytkowników.
+
+Przykład:
+
+```yaml
+- type: cloudflare
+  api-key: KLUCZ
+  zone-id: ID_STREFY
+  time-range: 24h
+```
+
+#### Właściwości
+
+| Nazwa | Typ | Wymagane | Domyślnie |
+| ----- | --- | -------- | --------- |
+| api-key | string | tak | |
+| zone-id | string | tak | |
+| time-range | string | nie | 24h |
+
+##### `api-key`
+Klucz API Cloudflare z uprawnieniami do odczytu analityki i logów. Można go wygenerować w sekcji „Get your API token” po wejściu na domenę w Cloudflare (wystarczy szablon „Read analytics and Logs”).
+
+##### `zone-id`
+Identyfikator strefy (Zone ID), widoczny w panelu Cloudflare nad sekcją pobierania klucza API.
+
+##### `time-range`
+Zakres czasu pobieranych danych. Możliwe wartości: `24h`, `7d` i `30d`.
+
+#### `title-url`
+Domyślnie tytuł prowadzi do statystyk bezpieczeństwa strefy w panelu Cloudflare. Możesz to zmienić standardową właściwością `title-url`, na przykład:
+
+- `https://dash.cloudflare.com/?to=/{account_id}/{domena}/security/analytics`
+- `https://dash.cloudflare.com/?to=/{account_id}/{domena}/analytics/traffic`
 
 <a id="server-stats"></a>
 ### Server Stats
@@ -2634,6 +2951,118 @@ Token uwierzytelniający używany podczas pobierania statystyk.
 ###### `timeout`
 Maksymalny czas oczekiwania na odpowiedź serwera. Wartość jest ciągiem znaków i musi być liczbą, po której następuje jedna z liter s, m, h, d. Przykład: `10s` dla 10 sekund, `1m` dla 1 minuty itp.
 
+<a id="beszel"></a>
+### Beszel
+Wyświetla status serwerów monitorowanych przez Beszel wraz z użyciem procesora, pamięci i dysku.
+
+Przykład:
+
+```yaml
+- type: beszel
+  url: https://beszel.example.com
+  token: twoj-token
+```
+
+#### Właściwości
+
+| Nazwa | Typ | Wymagane | Domyślnie |
+| ----- | --- | -------- | --------- |
+| url | string | tak | |
+| token | string | nie | |
+| identity | string | nie | |
+| password | string | nie | |
+| redirect-url | string | nie | |
+| show-charts | boolean | nie | true |
+| cache | duration | nie | 10s |
+
+##### `url`
+Adres URL API Twojej instancji Beszel.
+
+##### `token`
+Token JWT używany do autoryzacji. Jeśli go nie podasz, możesz użyć `identity` i `password`.
+
+##### `identity`
+Login lub e-mail użytkownika Beszel. Wymaga jednoczesnego podania `password`.
+
+##### `password`
+Hasło użytkownika Beszel. Wymaga jednoczesnego podania `identity`.
+
+> [!NOTE]
+>
+> Jeśli podasz `identity` i `password`, widget automatycznie pobierze token i będzie go odświeżał co 3 dni. Token jest przechowywany tylko w pamięci procesu.
+
+##### `redirect-url`
+Adres URL interfejsu webowego Beszel. Po podaniu kliknięcie nazwy serwera otworzy jego szczegóły w panelu Beszel.
+
+##### `show-charts`
+Określa, czy pokazywać interaktywne wykresy historyczne. Domyślnie `true`.
+
+#### Funkcje
+
+Widget pokazuje listę serwerów ze statusem online/offline, czasem działania oraz paskami użycia CPU, RAM i dysku. Po najechaniu na serwer lub pasek wyświetlane są dodatkowe informacje, takie jak host, wersja jądra, model procesora i średnie obciążenie. Wykresy historyczne obsługują metryki CPU, RAM, dysk i sieć oraz zakresy 1h, 12h, 24h, 7d i 30d.
+
+#### Rozwiązywanie problemów
+
+##### Widget nie wyświetla danych
+Sprawdź, czy adres URL instancji Beszel jest poprawny i dostępny z serwera Glance oraz czy endpoint `/api/collections/systems/records` odpowiada. Jeśli instancja wymaga autoryzacji, upewnij się, że token lub dane logowania są poprawne.
+
+##### Brakujące metryki
+Niektóre metryki, np. Load Average, mogą być niedostępne w zależności od wersji agenta Beszel.
+
+##### Wykresy się nie ładują
+Sprawdź, czy endpoint `/api/collections/system_stats/records` jest dostępny i czy Beszel zbiera dane historyczne.
+
+<a id="github"></a>
+### GitHub
+Wyświetla listę repozytoriów GitHub, do których masz dostęp — publicznych i prywatnych.
+
+Przykład:
+
+```yaml
+- type: github
+  token: ghp_xxxxx
+  collapse-after: 5
+  sort: updated
+```
+
+#### Właściwości
+
+| Nazwa | Typ | Wymagane | Domyślnie |
+| ----- | --- | -------- | --------- |
+| token | string | nie | |
+| collapse-after | integer | nie | 5 |
+| sort | string | nie | updated |
+| title-link | string | nie | |
+
+##### `token`
+Personal Access Token (PAT). Bez tokena widget wyświetla tylko publiczne repozytoria i podlega limitowi 60 żądań na godzinę. Token zwiększa limit do 5000 żądań na godzinę i umożliwia dostęp do prywatnych repozytoriów.
+
+Aby utworzyć token, przejdź do **Settings → Developer settings → Personal access tokens → Tokens (classic)** i wygeneruj token z uprawnieniem `repo`.
+
+##### `collapse-after`
+Liczba repozytoriów widocznych przed pojawieniem się przycisku „Pokaż więcej”.
+
+##### `sort`
+Sposób sortowania repozytoriów. Możliwe wartości: `updated`, `created`, `pushed` i `full_name`.
+
+##### `title-link`
+Link otwierany po kliknięciu tytułu widgetu. Jeśli nie zostanie podany, tytuł nie jest klikalny.
+
+#### Wyświetlane informacje
+
+Dla każdego repozytorium widget pokazuje nazwę z linkiem do GitHub, opis, czas od ostatniej aktywności, liczbę gwiazdek oraz główny język programowania.
+
+#### Rozwiązywanie problemów
+
+##### Widget wyświetla błąd
+Sprawdź, czy token PAT jest poprawny, nie wygasł i ma uprawnienie `repo`.
+
+##### Widoczne są tylko publiczne repozytoria
+Token musi mieć uprawnienie `repo`, aby uzyskać dostęp do prywatnych repozytoriów.
+
+##### Przekroczono limit zapytań
+Dodaj ważny token PAT, aby zwiększyć limit do 5000 żądań na godzinę, lub zwiększ wartość `cache`.
+
 <a id="repository"></a>
 ### Repository
 Wyświetla ogólne informacje o repozytorium oraz listę najnowszych otwartych pull requestów i zgłoszeń.
@@ -2706,6 +3135,56 @@ Obecnie widget nie ma konfigurowalnych właściwości. Automatycznie pobiera lis
 - **Responsywny design**: działa bezproblemowo na komputerach, tabletach i urządzeniach mobilnych
 - **Obsługa strumieni HLS**: obsługuje zarówno strumienie HLS (m3u8), jak i standardowe strumienie audio
 - **Informacja zwrotna**: aktywna stacja jest wyróżniona, aby ułatwić jej identyfikację
+
+<a id="navidrome"></a>
+### Navidrome
+Odtwarza muzykę z serwera Navidrome (lub innego serwera zgodnego z API Subsonic) bezpośrednio z dashboardu Glance.
+
+Przykład:
+
+```yaml
+- type: navidrome
+  url: https://navidrome.example.com
+  user: twoj_login
+  token: twoje_haslo
+```
+
+#### Właściwości
+
+| Nazwa | Typ | Wymagane | Domyślnie |
+| ----- | --- | -------- | --------- |
+| url | string | tak | |
+| user | string | tak | |
+| token | string | tak | |
+| salt | string | nie | generowany automatycznie |
+
+##### `url`
+Adres URL serwera Navidrome.
+
+##### `user`
+Nazwa użytkownika.
+
+##### `token`
+Hasło użytkownika lub token.
+
+##### `salt`
+Własny ciąg „salt” używany do autoryzacji. Domyślnie generowany automatycznie.
+
+#### Funkcje
+
+Widget oferuje odtwarzacz z wyborem playlisty, okładką albumu, informacjami o utworze oraz przyciskami Play/Pauza, Poprzedni i Następny. Dostępne są również losowe odtwarzanie (Shuffle), pętla (Loop) i regulacja głośności. Ostatnio wybrana playlista, utwór, poziom głośności oraz stan Shuffle i Loop są zapamiętywane w przeglądarce.
+
+#### Wymagania
+
+Serwer musi obsługiwać endpointy `getPlaylists`, `getPlaylist`, `stream` i `getCoverArt` API Subsonic.
+
+#### Rozwiązywanie problemów
+
+##### Brak playlist
+Sprawdź poprawność `url`, `user` i `token`, uprawnienia użytkownika do API oraz dostępność serwera z sieci, w której działa Glance.
+
+##### Utwory się nie odtwarzają
+Sprawdź konsolę przeglądarki pod kątem błędów CORS lub Mixed Content (HTTPS/HTTP) oraz upewnij się, że format plików jest obsługiwany przez przeglądarkę.
 
 <a id="bookmarks"></a>
 ### Zakładki
