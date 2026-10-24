@@ -2,19 +2,35 @@
 
 {{- define "widget-content" }}
 {{- $threshold := .WarningThreshold }}
-<div class="flex flex-column gap-10">
+{{- $showForecast := .ShowForecast }}
+<div class="opencode-go">
     {{- range .Windows }}
-    <div>
-        <div class="flex justify-between items-end">
+    <div class="opencode-go-window">
+        <div class="opencode-go-header">
             <div class="size-h5">{{ .Label }}</div>
             <div class="color-highlight size-h4">{{ printf "%.0f" .Percent }}<span class="color-base size-h5"> %</span></div>
         </div>
-        <div style="height: 6px; margin-top: 5px; border-radius: 3px; background: var(--color-separator); overflow: hidden;">
-            <div style="height: 100%; border-radius: 3px; width: {{ .Percent }}%;{{ if gt .Percent 0.0 }} min-width: 3px;{{ end }} background: {{ if or (eq .Status "rate-limited") (ge .Percent $threshold) }}var(--color-negative){{ else }}var(--color-primary){{ end }};"></div>
+        <div class="opencode-go-track">
+            <div class="opencode-go-bar{{ if or (eq .Status "rate-limited") (ge .Percent $threshold) }} opencode-go-bar-danger{{ end }}" style="width: {{ .Percent }}%;{{ if gt .Percent 0.0 }} min-width: 3px;{{ end }}"></div>
+            {{- if and $showForecast .HasForecast }}
+            <div class="opencode-go-forecast-bar{{ if ge .ForecastPercent 100 }} opencode-go-forecast-bar-danger{{ end }}" style="left: {{ .Percent }}%; width: {{ .ForecastWidth }}%;" title="Prognoza na koniec cyklu: {{ .ForecastPercent }}% (średnio {{ printf "%.1f" .DailyAveragePercent }}%/dzień)"></div>
+            {{- end }}
         </div>
-        {{- if not .ResetsAt.IsZero }}
-        <div class="color-subdue size-h5 margin-top-3">reset {{ .ResetsAt.Format "02.01 15:04" }}</div>
-        {{- end }}
+        <div class="opencode-go-meta">
+            {{- if not .ResetsAt.IsZero }}
+            <div class="color-subdue size-h5">reset {{ .ResetsAt.Format "02.01 15:04" }}</div>
+            {{- end }}
+            {{- if and $showForecast .HasForecast }}
+            <div class="opencode-go-forecast{{ if ge .ForecastPercent 100 }} opencode-go-forecast-danger{{ end }}" title="Szacowana prognoza na koniec cyklu: {{ .ForecastPercent }}% (średnio {{ printf "%.1f" .DailyAveragePercent }}%/dzień)">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="opencode-go-forecast-icon" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M12.577 4.878a.75.75 0 0 1 .919-.53l4.78 1.281a.75.75 0 0 1 .531.919l-1.281 4.78a.75.75 0 0 1-1.449-.387l.81-3.022a19.407 19.407 0 0 0-5.594 5.203.75.75 0 0 1-1.139.093L7.75 10.061l-4.72 4.72a.75.75 0 0 1-1.06-1.061l5.25-5.25a.75.75 0 0 1 1.06 0l3.074 3.073a20.923 20.923 0 0 1 5.545-4.931l-3.004-.804a.75.75 0 0 1-.53-.919Z" clip-rule="evenodd" />
+                </svg>
+                <span class="opencode-go-forecast-label">prognoza</span>
+                <span class="opencode-go-forecast-value">{{ .ForecastPercent }}%</span>
+                <span class="opencode-go-forecast-average">{{ printf "%.1f" .DailyAveragePercent }}%/dzień</span>
+            </div>
+            {{- end }}
+        </div>
     </div>
     {{- end }}
 </div>

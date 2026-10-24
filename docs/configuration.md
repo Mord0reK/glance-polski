@@ -1784,6 +1784,8 @@ parameters:
 ### OpenCode Go
 Display the usage of your [OpenCode Go](https://opencode.ai/) subscription. The widget shows the rolling (5 hour), weekly and monthly usage windows with their reset time, using data from the official quota API `https://opencode.ai/zen/go/v1/usage`.
 
+For the monthly window it can also show a forecast of where the usage will end up at the end of the billing cycle, together with the average daily usage.
+
 Example:
 
 ```yaml
@@ -1793,7 +1795,7 @@ Example:
 
 Preview:
 
-(Three usage bars: 5 godzin, Tydzień and Miesiąc, each with a percentage and a reset time)
+(Three usage bars: 5 godzin, Tydzień and Miesiąc, each with a percentage and a reset time; the monthly bar also has a hatched projection segment and a `PROGNOZA 61% · 2.0%/dzień` badge)
 
 #### Properties
 
@@ -1802,6 +1804,7 @@ Preview:
 | api-key | string | yes | |
 | url | string | no | https://opencode.ai/zen/go/v1/usage |
 | warning-threshold | number | no | 85 |
+| show-forecast | boolean | no | true |
 | cache | duration | no | 5m |
 
 ##### `title-url`
@@ -1815,6 +1818,13 @@ The URL of the usage endpoint. You only need to change this if you are pointing 
 
 ##### `warning-threshold`
 The usage percentage at which a window's bar turns into the negative (warning) color. Defaults to `85`.
+
+##### `show-forecast`
+Whether to show the estimated end-of-cycle usage for the monthly window. Defaults to `true`.
+
+> [!NOTE]
+>
+> The quota API does not expose a forecast. It only returns the current percentage (floored to a whole number) and the reset time, while the OpenCode console uses the exact micro-cent usage and the exact start of the billing period. The widget therefore estimates the forecast locally: it assumes the billing cycle is one calendar month long, adds half a percentage point to compensate for the flooring, and linearly extrapolates the average daily usage. A small difference from the console is expected — usually 1–2 percentage points, and more at very low usage. The forecast is hidden during the first day of a cycle, when there is not enough data.
 
 ##### `cache`
 How long to cache the response before fetching it again. Defaults to `5m`.

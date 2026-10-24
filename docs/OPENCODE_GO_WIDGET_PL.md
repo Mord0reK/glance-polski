@@ -4,6 +4,8 @@ Widget OpenCode Go wyświetla wykorzystanie subskrypcji [OpenCode Go](https://op
 
 Dla każdego okna pokazywany jest procent wykorzystania oraz czas do resetu. Gdy wykorzystanie przekroczy próg ostrzeżenia (domyślnie 85%) lub okno ma status `rate-limited`, pasek zmienia kolor na ostrzegawczy.
 
+Dla okna miesięcznego widget może dodatkowo pokazać prognozę wykorzystania na koniec cyklu rozliczeniowego: kreskowany odcinek na pasku (prognozowany przyrost) oraz czytelną plakietkę z ikoną trendu, np. `PROGNOZA 61% · 2.0%/dzień`.
+
 Tytuł widgetu jest klikalny i domyślnie przenosi do [panelu OpenCode](https://opencode.ai/console). Możesz to zmienić standardową właściwością `title-url`.
 
 ## Konfiguracja
@@ -22,6 +24,7 @@ Aby skonfigurować widget, dodaj następującą konfigurację do swojego pliku `
 | api-key | string | tak | |
 | url | string | nie | https://opencode.ai/zen/go/v1/usage |
 | warning-threshold | number | nie | 85 |
+| show-forecast | boolean | nie | true |
 | cache | duration | nie | 5m |
 
 #### `api-key`
@@ -32,6 +35,20 @@ Adres endpointu z danymi o wykorzystaniu. Zmieniaj tylko wtedy, gdy chcesz wskaz
 
 #### `warning-threshold`
 Procent wykorzystania, od którego pasek danego okna zmienia kolor na negatywny (ostrzegawczy). Domyślnie `85`.
+
+#### `show-forecast`
+Czy pokazywać prognozę wykorzystania na koniec cyklu dla okna miesięcznego. Domyślnie `true`.
+
+Prognoza liczona jest lokalnie, ponieważ API OpenCode Go **nie udostępnia** prognozy — zwraca tylko aktualny procent (ucinany w dół do liczby całkowitej) i czas resetu (`status`, `percent`, `resetsAt`). Konsola OpenCode używa natomiast dokładnego zużycia w mikrogroszach i dokładnej daty startu okresu rozliczeniowego.
+
+Widget zakłada, że cykl rozliczeniowy trwa jeden miesiąc kalendarzowy (start = `resetsAt` minus jeden miesiąc), dodaje pół punktu procentowego, aby skompensować ucinanie procentu, a następnie liniowo ekstrapoluje średnie dzienne zużycie:
+
+```
+średnia_dzienna = (percent + 0.5) / dni_od_startu_cyklu
+prognoza        = średnia_dzienna * dni_cyklu
+```
+
+Ograniczenia: API ucina `percent` w dół, a cykl może nie być dokładnie miesięczny — dlatego prognoza może różnić się od konsoli OpenCode o 1–2 punkty procentowe (więcej przy bardzo niskim zużyciu). Prognoza jest ukryta przez pierwszy dzień cyklu (zbyt mało danych) oraz gdy zużycie wynosi 0%.
 
 #### `cache`
 Jak długo cache'owana jest odpowiedź przed ponownym pobraniem. Domyślnie `5m`.
@@ -58,6 +75,7 @@ pages:
             title: OpenCode Go
             api-key: ${OPENCODE_GO_KEY}
             warning-threshold: 85
+            show-forecast: true
             cache: 5m
 ```
 

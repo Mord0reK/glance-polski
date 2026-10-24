@@ -1,0 +1,108 @@
+.opencode-go {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+.opencode-go-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.8rem;
+}
+
+.opencode-go-track {
+    position: relative;
+    height: 6px;
+    margin-top: 0.5rem;
+    border-radius: 3px;
+    background: var(--color-separator);
+    overflow: hidden;
+}
+
+.opencode-go-bar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    border-radius: 3px;
+    background: var(--color-primary);
+    transition: width 0.3s ease;
+}
+
+.opencode-go-bar-danger {
+    background: var(--color-negative);
+}
+
+/* Forecast extension drawn on the usage bar with a hatched pattern */
+.opencode-go-forecast-bar {
+    --opencode-go-forecast-color: var(--color-primary);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-radius: 0 3px 3px 0;
+    background-image: repeating-linear-gradient(
+        135deg,
+        var(--opencode-go-forecast-color) 0,
+        var(--opencode-go-forecast-color) 2px,
+        transparent 2px,
+        transparent 5px
+    );
+    border-left: 1px solid var(--opencode-go-forecast-color);
+    opacity: 0.45;
+}
+
+.opencode-go-forecast-bar-danger {
+    --opencode-go-forecast-color: var(--color-negative);
+}
+
+.opencode-go-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.opencode-go-forecast {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-left: auto;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--color-widget-content-border);
+    border-radius: 0.3rem;
+    background: var(--color-widget-background-highlight);
+    color: var(--color-text-highlight);
+    font-size: var(--font-size-h6);
+    line-height: 1.6;
+    white-space: nowrap;
+}
+
+.opencode-go-forecast-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    flex-shrink: 0;
+    color: var(--color-primary);
+}
+
+.opencode-go-forecast-label {
+    color: var(--color-text-subdue);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.opencode-go-forecast-value {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.opencode-go-forecast-average {
+    color: var(--color-text-subdue);
+}
+
+.opencode-go-forecast-danger .opencode-go-forecast-icon,
+.opencode-go-forecast-danger .opencode-go-forecast-value {
+    color: var(--color-negative);
+}
