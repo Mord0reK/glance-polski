@@ -1,10 +1,10 @@
-[Jump to function definitions](#functions)
+[Przejdź do definicji funkcji](#functions)
 
-## Examples
+## Przykłady
 
-The best way to get an idea of how the templates work would be with a bunch examples. Here are the most common use cases:
+Najlepszym sposobem na zrozumienie działania szablonów jest zapoznanie się z wieloma przykładami. Oto najczęstsze przypadki użycia:
 
-JSON response:
+Odpowiedź JSON:
 
 ```json
 {
@@ -13,14 +13,14 @@ JSON response:
 }
 ```
 
-To access the two fields in the JSON response, you would use the following:
+Aby uzyskać dostęp do obu pól odpowiedzi JSON, użyj następującego kodu:
 
 ```html
 <div>{{ .JSON.String "title" }}</div>
 <div>{{ .JSON.String "content" }}</div>
 ```
 
-Output:
+Wynik:
 
 ```html
 <div>My Title</div>
@@ -29,7 +29,7 @@ Output:
 
 <hr>
 
-JSON response:
+Odpowiedź JSON:
 
 ```json
 {
@@ -47,7 +47,7 @@ JSON response:
 }
 ```
 
-To loop through the array of posts, you would use the following:
+Aby przeiterować po tablicy postów, użyj następującego kodu:
 
 ```html
 {{ range .JSON.Array "posts" }}
@@ -56,7 +56,7 @@ To loop through the array of posts, you would use the following:
 {{ end }}
 ```
 
-Output:
+Wynik:
 
 ```html
 <div>My Title</div>
@@ -65,9 +65,9 @@ Output:
 <div>My Content 2</div>
 ```
 
-Notice the missing `.JSON` when accessing the title and content, this is because the range function sets the context to the current array element.
+Zwróć uwagę na brak `.JSON` przy dostępie do tytułu i zawartości — wynika to z faktu, że funkcja `range` ustawia kontekst na bieżący element tablicy.
 
-If you want to access the top-level context within the range, you can use the following:
+Jeśli chcesz uzyskać dostęp do kontekstu najwyższego poziomu wewnątrz `range`, możesz użyć następującego kodu:
 
 ```html
 {{ range .JSON.Array "posts" }}
@@ -77,7 +77,7 @@ If you want to access the top-level context within the range, you can use the fo
 {{ end }}
 ```
 
-Output:
+Wynik:
 
 ```html
 <div>My Title</div>
@@ -90,7 +90,7 @@ Output:
 
 <hr>
 
-JSON response:
+Odpowiedź JSON:
 
 ```json
 [
@@ -101,7 +101,7 @@ JSON response:
 ]
 ```
 
-Somewhat awkwardly, when the current context is a basic type that isn't an object, the way you specify its type is to use an empty string as the key. So, to loop through the array of strings, you would use the following:
+Nieco niezręcznie: gdy bieżący kontekst jest typem podstawowym, który nie jest obiektem, jego typ określa się, używając pustego ciągu znaków jako klucza. Aby przeiterować po tablicy ciągów znaków, użyj następującego kodu:
 
 ```html
 {{ range .JSON.Array "" }}
@@ -109,7 +109,7 @@ Somewhat awkwardly, when the current context is a basic type that isn't an objec
 {{ end }}
 ```
 
-Output:
+Wynik:
 
 ```html
 <div>Apple</div>
@@ -118,13 +118,13 @@ Output:
 <div>Watermelon</div>
 ```
 
-To access an item at a specific index, you could use the following:
+Aby uzyskać dostęp do elementu o określonym indeksie, możesz użyć następującego kodu:
 
 ```html
 <div>{{ .JSON.String "0" }}</div>
 ```
 
-Output:
+Wynik:
 
 ```html
 <div>Apple</div>
@@ -132,7 +132,7 @@ Output:
 
 <hr>
 
-JSON response:
+Odpowiedź JSON:
 
 ```json
 {
@@ -145,21 +145,21 @@ JSON response:
 }
 ```
 
-To easily access deeply nested objects, you can use the following dot notation:
+Aby łatwo uzyskać dostęp do głęboko zagnieżdżonych obiektów, możesz użyć notacji kropkowej:
 
 ```html
 <div>{{ .JSON.String "user.address.city" }}</div>
 <div>{{ .JSON.String "user.address.state" }}</div>
 ```
 
-Output:
+Wynik:
 
 ```html
 <div>New York</div>
 <div>NY</div>
 ```
 
-Using indexes anywhere in the path is also supported:
+Obsługiwane jest również używanie indeksów w dowolnym miejscu ścieżki:
 
 ```json
 {
@@ -179,7 +179,7 @@ Using indexes anywhere in the path is also supported:
 <div>{{ .JSON.String "users.1.name" }}</div>
 ```
 
-Output:
+Wynik:
 
 ```html
 <div>John Doe</div>
@@ -188,7 +188,7 @@ Output:
 
 <hr>
 
-JSON response:
+Odpowiedź JSON:
 
 ```json
 {
@@ -199,7 +199,7 @@ JSON response:
 }
 ```
 
-To check if a field exists, you can use the following:
+Aby sprawdzić, czy pole istnieje, możesz użyć następującego kodu:
 
 ```html
 {{ if .JSON.Exists "user.age" }}
@@ -209,7 +209,7 @@ To check if a field exists, you can use the following:
 {{ end }}
 ```
 
-Output:
+Wynik:
 
 ```html
 <div>30</div>
@@ -217,7 +217,7 @@ Output:
 
 <hr>
 
-JSON response:
+Odpowiedź JSON:
 
 ```json
 {
@@ -226,23 +226,23 @@ JSON response:
 }
 ```
 
-Calculations can be performed on either ints or floats. If both numbers are ints, an int will be returned, otherwise a float will be returned. If you try to divide by zero, 0 will be returned. If you provide non-numeric values, `NaN` will be returned.
+Obliczenia można wykonywać zarówno na liczbach całkowitych, jak i zmiennoprzecinkowych. Jeśli obie liczby są całkowite, zwracana jest liczba całkowita; w przeciwnym razie zwracana jest liczba zmiennoprzecinkowa. Przy próbie dzielenia przez zero zwracane jest 0. Jeśli podasz wartości nienumeryczne, zwrócone zostanie `NaN`.
 
 ```html
 <div>{{ sub (.JSON.Int "price") (.JSON.Int "discount") }}</div>
 ```
 
-Output:
+Wynik:
 
 ```html
 <div>90</div>
 ```
 
-Other operations include `add`, `mul`, `div` and `mod`.
+Inne dostępne operacje to `add`, `mul`, `div` oraz `mod`.
 
 <hr>
 
-JSON response:
+Odpowiedź JSON:
 
 ```json
 {
@@ -263,7 +263,7 @@ JSON response:
 }
 ```
 
-To parse the date and display the relative time (e.g. 2h, 1d, etc), you would use the following:
+Aby sparsować datę i wyświetlić czas względny (np. 2h, 1d itp.), użyj następującego kodu:
 
 ```
 {{ range .JSON.Array "posts" }}
@@ -272,9 +272,9 @@ To parse the date and display the relative time (e.g. 2h, 1d, etc), you would us
 {{ end }}
 ```
 
-The `parseTime` function takes two arguments: the layout of the date string and the date string itself. The layout can be one of the following: "RFC3339", "RFC3339Nano", "DateTime", "DateOnly", "TimeOnly" or a custom layout in Go's [date format](https://pkg.go.dev/time#pkg-constants).
+Funkcja `parseTime` przyjmuje dwa argumenty: układ daty oraz sam ciąg znaków z datą. Układ może być jednym z następujących: "RFC3339", "RFC3339Nano", "DateTime", "DateOnly", "TimeOnly" lub własnym układem zgodnym z [formatem daty](https://pkg.go.dev/time#pkg-constants) Go.
 
-Output:
+Wynik:
 
 ```html
 <div>Exploring the Depths of Quantum Computing</div>
@@ -287,13 +287,13 @@ Output:
 <div data-dynamic-relative-time="1701621922"></div>
 ```
 
-You don't have to worry about the internal implementation, this will then be dynamically populated by Glance on the client side to show the correct relative time.
+Nie musisz martwić się o wewnętrzną implementację — Glance dynamicznie uzupełni te wartości po stronie klienta, aby wyświetlić prawidłowy czas względny.
 
-The important thing to notice here is that the return value of `toRelativeTime` must be used as an attribute in an HTML tag, be it a `div`, `li`, `span`, etc.
+Warto zauważyć, że wartość zwracana przez `toRelativeTime` musi być użyta jako atrybut znacznika HTML, np. `div`, `li`, `span` itp.
 
 <hr>
 
-In some instances, you may want to know the status code of the response. This can be done using the following:
+W niektórych przypadkach możesz chcieć poznać kod statusu odpowiedzi. Możesz to zrobić w następujący sposób:
 
 ```html
 {{ if eq .Response.StatusCode 200 }}
@@ -303,7 +303,7 @@ In some instances, you may want to know the status code of the response. This ca
 {{ end }}
 ```
 
-You can also access the response headers:
+Możesz również uzyskać dostęp do nagłówków odpowiedzi:
 
 ```html
 <div>{{ .Response.Header.Get "Content-Type" }}</div>
@@ -311,7 +311,7 @@ You can also access the response headers:
 
 <hr>
 
-JSON response:
+Odpowiedź JSON:
 
 ```json
 {"name": "Steve", "age": 30}
@@ -319,14 +319,14 @@ JSON response:
 {"name": "John", "age": 35}
 ```
 
-The above format is "[ndjson](https://docs.mulesoft.com/dataweave/latest/dataweave-formats-ndjson)" or "[JSON Lines](https://jsonlines.org/)", where each line is a separate JSON object. To parse this format, you must first disable the JSON validation check in your config, since by default the response is expected to be a single valid JSON object:
+Powyższy format to "[ndjson](https://docs.mulesoft.com/dataweave/latest/dataweave-formats-ndjson)" lub "[JSON Lines](https://jsonlines.org/)", gdzie każda linia jest osobnym obiektem JSON. Aby sparsować ten format, musisz najpierw wyłączyć sprawdzanie poprawności JSON w konfiguracji, ponieważ domyślnie oczekiwana jest pojedyncza poprawna odpowiedź JSON:
 
 ```yaml
 - type: custom-api
   skip-json-validation: true
 ```
 
-Then, to iterate over each object you can use `.JSONLines`:
+Następnie, aby przeiterować po każdym obiekcie, możesz użyć `.JSONLines`:
 
 ```html
 {{ range .JSONLines }}
@@ -334,7 +334,7 @@ Then, to iterate over each object you can use `.JSONLines`:
 {{ end }}
 ```
 
-Output:
+Wynik:
 
 ```html
 <p>Steve is 30 years old</p>
@@ -342,7 +342,7 @@ Output:
 <p>John is 35 years old</p>
 ```
 
-For other ways of selecting data from a JSON Lines response, have a look at the docs for [tidwall/gjson](https://github.com/tidwall/gjson/tree/master?tab=readme-ov-file#json-lines). For example, to  get an array of all names, you can use the following:
+Inne sposoby wybierania danych z odpowiedzi JSON Lines znajdziesz w dokumentacji [tidwall/gjson](https://github.com/tidwall/gjson/tree/master?tab=readme-ov-file#json-lines). Na przykład, aby uzyskać tablicę wszystkich imion, możesz użyć następującego kodu:
 
 ```html
 {{ range .JSON.Array "..#.name" }}
@@ -350,7 +350,7 @@ For other ways of selecting data from a JSON Lines response, have a look at the 
 {{ end }}
 ```
 
-Output:
+Wynik:
 
 ```html
 <p>Steve</p>
@@ -360,7 +360,7 @@ Output:
 
 <hr>
 
-In some instances, you may need to make two consecutive API calls, where you use the result of the first call in the second call. To achieve this, you can make additional HTTP requests from within the template itself using the following syntax:
+W niektórych przypadkach możesz potrzebować wykonać dwa kolejne wywołania API, gdzie wynik pierwszego wywołania wykorzystasz w drugim. Aby to osiągnąć, możesz wykonać dodatkowe żądania HTTP bezpośrednio z poziomu szablonu, używając następującej składni:
 
 ```yaml
 - type: custom-api
@@ -378,9 +378,9 @@ In some instances, you may need to make two consecutive API calls, where you use
     {{ $something.JSON.String "title" }}
 ```
 
-Here, `$theID` gets retrieved from the result of the first API call and used in the second API call. The `newRequest` function creates a new request, and the `getResponse` function executes it. You can also use `withParameter` and `withHeader` to optionally add parameters and headers to the request.
+Tutaj `$theID` jest pobierany z wyniku pierwszego wywołania API i używany w drugim wywołaniu. Funkcja `newRequest` tworzy nowe żądanie, a `getResponse` je wykonuje. Możesz także użyć `withParameter` i `withHeader`, aby opcjonalnie dodać parametry i nagłówki do żądania.
 
-If you need to make a request to a URL that requires dynamic parameters, you can omit the `url` property in the YAML and run the request entirely from within the template itself:
+Jeśli musisz wykonać żądanie do adresu URL wymagającego dynamicznych parametrów, możesz pominąć właściwość `url` w YAML i wykonać żądanie w całości z poziomu szablonu:
 
 ```yaml
 - type: custom-api
@@ -402,74 +402,75 @@ If you need to make a request to a URL that requires dynamic parameters, you can
     {{ end }}
 ```
 
-*Note that you need to manually check for the correct status code.*
+*Pamiętaj, że musisz ręcznie sprawdzić poprawność kodu statusu.*
 
-## Functions
+<a id="functions"></a>
+## Funkcje
 
-The following functions are available on the `JSON` object:
+W obiekcie `JSON` dostępne są następujące funkcje:
 
-- `String(key string) string`: Returns the value of the key as a string.
-- `Int(key string) int`: Returns the value of the key as an integer.
-- `Float(key string) float`: Returns the value of the key as a float.
-- `Bool(key string) bool`: Returns the value of the key as a boolean.
-- `Array(key string) []JSON`: Returns the value of the key as an array of `JSON` objects.
-- `Exists(key string) bool`: Returns true if the key exists in the JSON object.
+- `String(key string) string`: Zwraca wartość klucza jako ciąg znaków.
+- `Int(key string) int`: Zwraca wartość klucza jako liczbę całkowitą.
+- `Float(key string) float`: Zwraca wartość klucza jako liczbę zmiennoprzecinkową.
+- `Bool(key string) bool`: Zwraca wartość klucza jako wartość logiczną.
+- `Array(key string) []JSON`: Zwraca wartość klucza jako tablicę obiektów `JSON`.
+- `Exists(key string) bool`: Zwraca `true`, jeśli klucz istnieje w obiekcie JSON.
 
-The following functions are available on the `Options` object:
+W obiekcie `Options` dostępne są następujące funkcje:
 
-- `StringOr(key string, default string) string`: Returns the value of the key as a string, or the default value if the key does not exist.
-- `IntOr(key string, default int) int`: Returns the value of the key as an integer, or the default value if the key does not exist.
-- `FloatOr(key string, default float) float`: Returns the value of the key as a float, or the default value if the key does not exist.
-- `BoolOr(key string, default bool) bool`: Returns the value of the key as a boolean, or the default value if the key does not exist.
-- `JSON(key string) JSON`: Returns the value of the key as a stringified `JSON` object, or throws an error if the key does not exist.
+- `StringOr(key string, default string) string`: Zwraca wartość klucza jako ciąg znaków lub wartość domyślną, jeśli klucz nie istnieje.
+- `IntOr(key string, default int) int`: Zwraca wartość klucza jako liczbę całkowitą lub wartość domyślną, jeśli klucz nie istnieje.
+- `FloatOr(key string, default float) float`: Zwraca wartość klucza jako liczbę zmiennoprzecinkową lub wartość domyślną, jeśli klucz nie istnieje.
+- `BoolOr(key string, default bool) bool`: Zwraca wartość klucza jako wartość logiczną lub wartość domyślną, jeśli klucz nie istnieje.
+- `JSON(key string) JSON`: Zwraca wartość klucza jako zserializowany obiekt `JSON` lub zgłasza błąd, jeśli klucz nie istnieje.
 
-The following helper functions provided by Glance are available:
+Dostępne są następujące funkcje pomocnicze udostępniane przez Glance:
 
-- `toFloat(i int) float`: Converts an integer to a float.
-- `toInt(f float) int`: Converts a float to an integer.
-- `toRelativeTime(t time.Time) template.HTMLAttr`: Converts Time to a relative time such as 2h, 1d, etc which dynamically updates. **NOTE:** the value of this function should be used as an attribute in an HTML tag, e.g. `<span {{ toRelativeTime .Time }}></span>`.
-- `now() time.Time`: Returns the current time.
-- `offsetNow(offset string) time.Time`: Returns the current time with an offset. The offset can be positive or negative and must be in the format "3h" "-1h" or "2h30m10s".
-- `duration(str string) time.Duration`: Parses a string such as `1h`, `24h`, `5h30m`, etc into a `time.Duration`.
-- `parseTime(layout string, s string) time.Time`: Parses a string into time.Time. The layout must be provided in Go's [date format](https://pkg.go.dev/time#pkg-constants). You can alternatively use these values instead of the literal format: "unix", "RFC3339", "RFC3339Nano", "DateTime", "DateOnly".
-- `formatTime(layout string, s string) time.Time`: Formats a `time.Time` into a string. The layout uses the same format as `parseTime`.
-- `parseLocalTime(layout string, s string) time.Time`: Same as the above, except in the absence of a timezone, it will use the local timezone instead of UTC.
-- `parseRelativeTime(layout string, s string) time.Time`: A shorthand for `{{ .String "date" | parseTime "rfc3339" | toRelativeTime }}`.
-- `add(a, b float) float`: Adds two numbers.
-- `sub(a, b float) float`: Subtracts two numbers.
-- `mul(a, b float) float`: Multiplies two numbers.
-- `div(a, b float) float`: Divides two numbers.
-- `mod(a, b int) int`: Remainder after dividing a by b (a % b).
-- `formatApproxNumber(n int) string`: Formats a number to be more human-readable, e.g. 1000 -> 1k.
-- `formatNumber(n float|int) string`: Formats a number with commas, e.g. 1000 -> 1,000.
-- `trimPrefix(prefix string, str string) string`: Trims the prefix from a string.
-- `trimSuffix(suffix string, str string) string`: Trims the suffix from a string.
-- `trimSpace(str string) string`: Trims whitespace from a string on both ends.
-- `replaceAll(old string, new string, str string) string`: Replaces all occurrences of a string in a string.
-- `replaceMatches(pattern string, replacement string, str string) string`: Replaces all occurrences of a regular expression in a string.
-- `findMatch(pattern string, str string) string`: Finds the first match of a regular expression in a string.
-- `findSubmatch(pattern string, str string) string`: Finds the first submatch of a regular expression in a string.
-- `sortByString(key string, order string, arr []JSON): []JSON`: Sorts an array of JSON objects by a string key in either ascending or descending order.
-- `sortByInt(key string, order string, arr []JSON): []JSON`: Sorts an array of JSON objects by an integer key in either ascending or descending order.
-- `sortByFloat(key string, order string, arr []JSON): []JSON`: Sorts an array of JSON objects by a float key in either ascending or descending order.
-- `sortByTime(key string, layout string, order string, arr []JSON): []JSON`: Sorts an array of JSON objects by a time key in either ascending or descending order. The format must be provided in Go's [date format](https://pkg.go.dev/time#pkg-constants).
-- `concat(strings ...string) string`: Concatenates multiple strings together.
-- `unique(key string, arr []JSON) []JSON`: Returns a unique array of JSON objects based on the given key.
-- `percentChange(current float, previous float) float`: Calculates the percentage change between two numbers.
-- `startOfDay(t time.Time) time.Time`: Returns the start of the day for a given time.
-- `endOfDay(t time.Time) time.Time`: Returns the end of the day for a given time.
+- `toFloat(i int) float`: Konwertuje liczbę całkowitą na liczbę zmiennoprzecinkową.
+- `toInt(f float) int`: Konwertuje liczbę zmiennoprzecinkową na liczbę całkowitą.
+- `toRelativeTime(t time.Time) template.HTMLAttr`: Konwertuje czas na czas względny, np. 2h, 1d itp., który dynamicznie się aktualizuje. **UWAGA:** wartość tej funkcji należy użyć jako atrybutu znacznika HTML, np. `<span {{ toRelativeTime .Time }}></span>`.
+- `now() time.Time`: Zwraca bieżący czas.
+- `offsetNow(offset string) time.Time`: Zwraca bieżący czas z przesunięciem. Przesunięcie może być dodatnie lub ujemne i musi mieć format "3h", "-1h" lub "2h30m10s".
+- `duration(str string) time.Duration`: Parsuje ciąg znaków taki jak `1h`, `24h`, `5h30m` itp. do typu `time.Duration`.
+- `parseTime(layout string, s string) time.Time`: Parsuje ciąg znaków do `time.Time`. Układ musi być zgodny z [formatem daty](https://pkg.go.dev/time#pkg-constants) Go. Zamiast dosłownego formatu możesz użyć następujących wartości: "unix", "RFC3339", "RFC3339Nano", "DateTime", "DateOnly".
+- `formatTime(layout string, s string) time.Time`: Formatuje `time.Time` do ciągu znaków. Układ jest zgodny z formatem używanym przez `parseTime`.
+- `parseLocalTime(layout string, s string) time.Time`: Działa jak powyższa funkcja, z tym że w razie braku strefy czasowej używa strefy lokalnej zamiast UTC.
+- `parseRelativeTime(layout string, s string) time.Time`: Skrót dla `{{ .String "date" | parseTime "rfc3339" | toRelativeTime }}`.
+- `add(a, b float) float`: Dodaje dwie liczby.
+- `sub(a, b float) float`: Odejmuje dwie liczby.
+- `mul(a, b float) float`: Mnoży dwie liczby.
+- `div(a, b float) float`: Dzieli dwie liczby.
+- `mod(a, b int) int`: Reszta z dzielenia `a` przez `b` (a % b).
+- `formatApproxNumber(n int) string`: Formatuje liczbę w bardziej czytelny sposób, np. 1000 -> 1k.
+- `formatNumber(n float|int) string`: Formatuje liczbę z separatorami tysięcy, np. 1000 -> 1,000.
+- `trimPrefix(prefix string, str string) string`: Usuwa prefiks z ciągu znaków.
+- `trimSuffix(suffix string, str string) string`: Usuwa sufiks z ciągu znaków.
+- `trimSpace(str string) string`: Usuwa białe znaki z obu końców ciągu znaków.
+- `replaceAll(old string, new string, str string) string`: Zastępuje wszystkie wystąpienia ciągu znaków w innym ciągu.
+- `replaceMatches(pattern string, replacement string, str string) string`: Zastępuje wszystkie wystąpienia wyrażenia regularnego w ciągu znaków.
+- `findMatch(pattern string, str string) string`: Znajduje pierwsze dopasowanie wyrażenia regularnego w ciągu znaków.
+- `findSubmatch(pattern string, str string) string`: Znajduje pierwsze dopasowanie podgrup wyrażenia regularnego w ciągu znaków.
+- `sortByString(key string, order string, arr []JSON): []JSON`: Sortuje tablicę obiektów JSON według klucza tekstowego w porządku rosnącym lub malejącym.
+- `sortByInt(key string, order string, arr []JSON): []JSON`: Sortuje tablicę obiektów JSON według klucza całkowitego w porządku rosnącym lub malejącym.
+- `sortByFloat(key string, order string, arr []JSON): []JSON`: Sortuje tablicę obiektów JSON według klucza zmiennoprzecinkowego w porządku rosnącym lub malejącym.
+- `sortByTime(key string, layout string, order string, arr []JSON): []JSON`: Sortuje tablicę obiektów JSON według klucza czasu w porządku rosnącym lub malejącym. Format musi być zgodny z [formatem daty](https://pkg.go.dev/time#pkg-constants) Go.
+- `concat(strings ...string) string`: Łączy wiele ciągów znaków w jeden.
+- `unique(key string, arr []JSON) []JSON`: Zwraca tablicę unikalnych obiektów JSON na podstawie podanego klucza.
+- `percentChange(current float, previous float) float`: Oblicza procentową zmianę między dwiema liczbami.
+- `startOfDay(t time.Time) time.Time`: Zwraca początek dnia dla podanego czasu.
+- `endOfDay(t time.Time) time.Time`: Zwraca koniec dnia dla podanego czasu.
 
-The following helper functions provided by Go's `text/template` are available:
+Dostępne są następujące funkcje pomocnicze udostępniane przez `text/template` Go:
 
-- `eq(a, b any) bool`: Compares two values for equality.
-- `ne(a, b any) bool`: Compares two values for inequality.
-- `lt(a, b any) bool`: Compares two values for less than.
-- `le(a, b any) bool`: Compares two values for less than or equal to.
-- `gt(a, b any) bool`: Compares two values for greater than.
-- `ge(a, b any) bool`: Compares two values for greater than or equal to.
-- `and(args ...bool) bool`: Returns true if **all** arguments are true; accepts two or more boolean values.
-- `or(args ...bool) bool`: Returns true if **any** argument is true; accepts two or more boolean values.
-- `not(a bool) bool`: Returns the opposite of the value.
-- `index(a any, b int) any`: Returns the value at the specified index of an array.
-- `len(a any) int`: Returns the length of an array.
-- `printf(format string, a ...any) string`: Returns a formatted string.
+- `eq(a, b any) bool`: Porównuje dwie wartości pod kątem równości.
+- `ne(a, b any) bool`: Porównuje dwie wartości pod kątem nierówności.
+- `lt(a, b any) bool`: Sprawdza, czy pierwsza wartość jest mniejsza od drugiej.
+- `le(a, b any) bool`: Sprawdza, czy pierwsza wartość jest mniejsza lub równa drugiej.
+- `gt(a, b any) bool`: Sprawdza, czy pierwsza wartość jest większa od drugiej.
+- `ge(a, b any) bool`: Sprawdza, czy pierwsza wartość jest większa lub równa drugiej.
+- `and(args ...bool) bool`: Zwraca `true`, jeśli **wszystkie** argumenty są prawdziwe; przyjmuje dwie lub więcej wartości logicznych.
+- `or(args ...bool) bool`: Zwraca `true`, jeśli **którykolwiek** argument jest prawdziwy; przyjmuje dwie lub więcej wartości logicznych.
+- `not(a bool) bool`: Zwraca przeciwieństwo wartości.
+- `index(a any, b int) any`: Zwraca wartość pod podanym indeksem tablicy.
+- `len(a any) int`: Zwraca długość tablicy.
+- `printf(format string, a ...any) string`: Zwraca sformatowany ciąg znaków.

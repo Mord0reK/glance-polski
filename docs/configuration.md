@@ -1,33 +1,34 @@
-# Configuring Glance
+<a id="configuring-glance"></a>
+# Konfiguracja Glance
 
-- [Preconfigured page](#preconfigured-page)
-- [The config file](#the-config-file)
-  - [Auto reload](#auto-reload)
-  - [Environment variables](#environment-variables)
-    - [Other ways of providing tokens/passwords/secrets](#other-ways-of-providing-tokenspasswordssecrets)
-  - [Including other config files](#including-other-config-files)
-  - [Icons](#icons)
-  - [Config schema](#config-schema)
-- [Authentication](#authentication)
-- [Server](#server)
-- [Document](#document)
+- [Gotowa strona](#preconfigured-page)
+- [Plik konfiguracyjny](#the-config-file)
+  - [Automatyczne przeładowywanie](#auto-reload)
+  - [Zmienne środowiskowe](#environment-variables)
+    - [Inne sposoby przekazywania tokenów/haseł/sekretów](#other-ways-of-providing-tokenspasswordssecrets)
+  - [Dołączanie innych plików konfiguracyjnych](#including-other-config-files)
+  - [Ikony](#icons)
+  - [Schemat konfiguracji](#config-schema)
+- [Uwierzytelnianie](#authentication)
+- [Serwer](#server)
+- [Dokument](#document)
 - [Branding](#branding)
-- [Theme](#theme)
-  - [Available themes](#available-themes)
-- [Pages & Columns](#pages--columns)
-- [Widgets](#widgets)
+- [Motyw](#theme)
+  - [Dostępne motywy](#available-themes)
+- [Strony i kolumny](#pages--columns)
+- [Widgety](#widgets)
   - [RSS](#rss)
-  - [Videos](#videos)
+  - [Wideo](#videos)
   - [Hacker News](#hacker-news)
   - [Lobsters](#lobsters)
   - [Reddit](#reddit)
-  - [Search](#search-widget)
+  - [Wyszukiwarka](#search-widget)
   - [Group](#group)
   - [Split Column](#split-column)
   - [Custom API](#custom-api)
   - [OpenCode Go](#opencode-go)
   - [Extension](#extension)
-  - [Weather](#weather)
+  - [Pogoda](#weather)
   - [Todo](#todo)
   - [Monitor](#monitor)
   - [Releases](#releases)
@@ -37,11 +38,11 @@
   - [Server Stats](#server-stats)
   - [Repository](#repository)
   - [Radyjko](#radyjko)
-  - [Bookmarks](#bookmarks)
-  - [Calendar](#calendar)
-  - [Calendar (legacy)](#calendar-legacy)
+  - [Zakładki](#bookmarks)
+  - [Kalendarz](#calendar)
+  - [Kalendarz (legacy)](#calendar-legacy)
   - [ChangeDetection.io](#changedetectionio)
-  - [Clock](#clock)
+  - [Zegar](#clock)
   - [Markets](#markets)
   - [Twitch Channels](#twitch-channels)
   - [Twitch Top Games](#twitch-top-games)
@@ -50,28 +51,32 @@
   - [Debugowanie](#debugowanie)
 
 
-## Preconfigured page
-If you don't want to spend time reading through all the available configuration options and just want something to get you going quickly you can use [this `glance.yml` file](glance.yml) and make changes to it as you see fit. It will give you a page that looks like the following:
+<a id="preconfigured-page"></a>
+## Gotowa strona
+Jeśli nie chcesz spędzać czasu na czytaniu wszystkich dostępnych opcji konfiguracji i chcesz szybko zacząć, możesz użyć [tego pliku `glance.yml`](glance.yml) i zmienić go według własnych potrzeb. Otrzymasz stronę wyglądającą następująco:
 
 ![](images/preconfigured-page-preview.png)
 
-Configure the widgets, add more of them, add extra pages, etc. Make it your own!
+Skonfiguruj widgety, dodaj ich więcej, dodaj dodatkowe strony itp. Zrób ją swoją!
 
-## The config file
+<a id="the-config-file"></a>
+## Plik konfiguracyjny
 
-### Auto reload
-Automatic config reload is supported, meaning that you can make changes to the config file and have them take effect on save without having to restart the container/service. Making changes to environment variables does not trigger a reload and requires manual restart. Deleting a config file will stop that file from being watched, even if it is recreated.
+<a id="auto-reload"></a>
+### Automatyczne przeładowywanie
+Obsługiwane jest automatyczne przeładowywanie konfiguracji, co oznacza, że możesz zmieniać plik konfiguracyjny, a zmiany zostaną zastosowane po zapisaniu, bez konieczności restartowania kontenera/usługi. Zmiany zmiennych środowiskowych nie powodują przeładowania i wymagają ręcznego restartu. Usunięcie pliku konfiguracyjnego spowoduje zaprzestanie obserwowania tego pliku, nawet jeśli zostanie on ponownie utworzony.
 
 > [!NOTE]
 >
-> If you attempt to start Glance with an invalid config it will exit with an error outright. If you successfully started Glance with a valid config and then made changes to it which result in an error, you'll see that error in the console and Glance will continue to run with the old configuration. You can then continue to make changes and when there are no errors the new configuration will be loaded.
+> Jeśli spróbujesz uruchomić Glance z nieprawidłową konfiguracją, zakończy się ona błędem. Jeśli pomyślnie uruchomiłeś Glance z poprawną konfiguracją, a następnie wprowadziłeś zmiany powodujące błąd, zobaczysz ten błąd w konsoli, a Glance będzie dalej działać ze starą konfiguracją. Możesz wtedy kontynuować zmiany, a gdy nie będzie błędów, nowa konfiguracja zostanie załadowana.
 
 > [!CAUTION]
 >
-> Reloading the configuration file clears your cached data, meaning that you have to request the data anew each time you do this. This can lead to rate limiting for some APIs if you do it too frequently. Having a cache that persists between reloads will be added in the future.
+> Przeładowanie pliku konfiguracyjnego czyści pamięć podręczną danych, co oznacza, że dane trzeba pobrać od nowa za każdym razem. Przy zbyt częstym przeładowywaniu może to prowadzić do limitów zapytań w niektórych API. Trwały cache między przeładowaniami zostanie dodany w przyszłości.
 
-### Environment variables
-Inserting environment variables is supported anywhere in the config. This is done via the `${ENV_VAR}` syntax. Attempting to use an environment variable that doesn't exist will result in an error and Glance will either not start or load your new config on save. Example:
+<a id="environment-variables"></a>
+### Zmienne środowiskowe
+Wstawianie zmiennych środowiskowych jest obsługiwane w dowolnym miejscu konfiguracji. Odbywa się to za pomocą składni `${ENV_VAR}`. Użycie nieistniejącej zmiennej środowiskowej spowoduje błąd i Glance albo nie uruchomi się, albo nie załaduje nowej konfiguracji po zapisaniu. Przykład:
 
 ```yaml
 server:
@@ -79,7 +84,7 @@ server:
   port: ${PORT}
 ```
 
-Can also be in the middle of a string:
+Można jej również użyć w środku ciągu znaków:
 
 ```yaml
 - type: rss
@@ -88,30 +93,31 @@ Can also be in the middle of a string:
     - url: http://domain.com/rss/${RSS_CATEGORY}.xml
 ```
 
-Works with any type of value, not just strings:
+Działa z każdym typem wartości, nie tylko z ciągami znaków:
 
 ```yaml
 - type: rss
   limit: ${RSS_LIMIT}
 ```
 
-If you need to use the syntax `${NAME}` in your config without it being interpreted as an environment variable, you can escape it by prefixing with a backslash `\`:
+Jeśli musisz użyć składni `${NAME}` w konfiguracji bez interpretowania jej jako zmiennej środowiskowej, możesz ją poprzedzić znakiem ucieczki `\`:
 
 ```yaml
 something: \${NOT_AN_ENV_VAR}
 ```
 
-#### Other ways of providing tokens/passwords/secrets
+<a id="other-ways-of-providing-tokenspasswordssecrets"></a>
+#### Inne sposoby przekazywania tokenów/haseł/sekretów
 
-You can use [Docker secrets](https://docs.docker.com/compose/how-tos/use-secrets/) with the following syntax:
+Możesz używać [Docker secrets](https://docs.docker.com/compose/how-tos/use-secrets/) za pomocą następującej składni:
 
 ```yaml
-# This will be replaced with the contents of the file /run/secrets/github_token
-# so long as the secret `github_token` is provided to the container
+# Zostanie to zastąpione zawartością pliku /run/secrets/github_token
+# pod warunkiem, że sekret `github_token` jest przekazany do kontenera
 token: ${secret:github_token}
 ```
 
-Alternatively, you can load the contents of a file who's path is provided by an environment variable:
+Alternatywnie możesz załadować zawartość pliku, którego ścieżka jest przekazywana przez zmienną środowiskową:
 
 `docker-compose.yml`
 ```yaml
@@ -131,10 +137,11 @@ token: ${readFileFromEnv:TOKEN_FILE}
 
 > [!NOTE]
 >
-> The contents of the file will be stripped of any leading/trailing whitespace before being used.
+> Białe znaki na początku i końcu zawartości pliku zostaną usunięte przed użyciem.
 
-### Including other config files
-Including config files from within your main config file is supported. This is done via the `$include` directive along with a relative or absolute path to the file you want to include. If the path is relative, it will be relative to the main config file. Additionally, environment variables can be used within included files, and changes to the included files will trigger an automatic reload. Example:
+<a id="including-other-config-files"></a>
+### Dołączanie innych plików konfiguracyjnych
+Obsługiwane jest dołączanie plików konfiguracyjnych do głównego pliku konfiguracyjnego. Odbywa się to za pomocą dyrektywy `$include` wraz ze względną lub bezwzględną ścieżką do pliku, który chcesz dołączyć. Jeśli ścieżka jest względna, będzie liczona względem głównego pliku konfiguracyjnego. Dodatkowo w dołączanych plikach można używać zmiennych środowiskowych, a zmiany w dołączonych plikach powodują automatyczne przeładowanie. Przykład:
 
 ```yaml
 pages:
@@ -143,7 +150,7 @@ pages:
   - $include: homelab.yml
 ```
 
-The file you are including should not have any additional indentation, its values should be at the top level and the appropriate amount of indentation will be added automatically depending on where the file is included. Example:
+Dołączany plik nie powinien mieć dodatkowego wcięcia — jego wartości powinny znajdować się na najwyższym poziomie, a odpowiednie wcięcie zostanie dodane automatycznie w zależności od miejsca dołączenia pliku. Przykład:
 
 `glance.yml`
 
@@ -174,57 +181,60 @@ pages:
     - url: ${RSS_URL}
 ```
 
-The `$include` directive can be used anywhere in the config file, not just in the `pages` property, however it must be on its own line and have the appropriate indentation.
+Dyrektywy `$include` można użyć w dowolnym miejscu pliku konfiguracyjnego, nie tylko we właściwości `pages`, jednak musi ona znajdować się w osobnym wierszu i mieć odpowiednie wcięcie.
 
-If you encounter YAML parsing errors when using the `$include` directive, the reported line numbers will likely be incorrect. This is because the inclusion of files is done before the YAML is parsed, as YAML itself does not support file inclusion. To help with debugging in cases like this, you can use the `config:print` command and pipe it into `less -N` to see the full config file with includes resolved and line numbers added:
+Jeśli podczas używania dyrektywy `$include` napotkasz błędy parsowania YAML, podane numery wierszy prawdopodobnie będą nieprawidłowe. Wynika to z faktu, że dołączanie plików odbywa się przed sparsowaniem YAML, ponieważ sam YAML nie obsługuje dołączania plików. Aby ułatwić debugowanie w takich przypadkach, możesz użyć polecenia `config:print` i przekazać jego wynik do `less -N`, aby zobaczyć pełny plik konfiguracyjny z rozwiązanymi dołączeniami i numerami wierszy:
 
 ```sh
 glance --config /path/to/glance.yml config:print | less -N
 ```
 
-This is a bit more convoluted when running Glance inside a Docker container:
+Jest to nieco bardziej skomplikowane, gdy uruchamiasz Glance w kontenerze Docker:
 
 ```sh
 docker run --rm -v ./glance.yml:/app/config/glance.yml glanceapp/glance config:print | less -N
 ```
 
-This assumes that the config you want to print is in your current working directory and is named `glance.yml`.
+Zakłada się, że konfiguracja, którą chcesz wyświetlić, znajduje się w bieżącym katalogu roboczym i nazywa się `glance.yml`.
 
-## Icons
+<a id="icons"></a>
+## Ikony
 
-For widgets which provide you with the ability to specify icons such as the monitor, bookmarks, docker containers, etc, you can use the `icon` property to specify a URL to an image or use icon names from multiple libraries via prefixes:
+W widgetach, które umożliwiają określenie ikon, takich jak monitor, zakładki, kontenery Docker itp., możesz użyć właściwości `icon`, aby podać adres URL obrazu lub nazwę ikony z wielu bibliotek za pomocą prefiksów:
 
 ```yml
-icon: si:immich # si for Simple icons https://simpleicons.org/
-icon: sh:immich # sh for selfh.st icons https://selfh.st/icons/
-icon: di:immich # di for Dashboard icons https://github.com/homarr-labs/dashboard-icons
-icon: mdi:camera # mdi for Material Design icons https://pictogrammers.com/library/mdi/
+icon: si:immich # si dla Simple icons https://simpleicons.org/
+icon: sh:immich # sh dla ikon selfh.st https://selfh.st/icons/
+icon: di:immich # di dla Dashboard icons https://github.com/homarr-labs/dashboard-icons
+icon: mdi:camera # mdi dla ikon Material Design https://pictogrammers.com/library/mdi/
 ```
 
 > [!NOTE]
 >
-> The icons are loaded externally and are hosted on `cdn.jsdelivr.net`, if you do not wish to depend on a 3rd party you are free to download the icons individually and host them locally.
+> Ikony są ładowane z zewnątrz i hostowane na `cdn.jsdelivr.net`. Jeśli nie chcesz zależeć od strony trzeciej, możesz pobrać ikony osobno i hostować je lokalnie.
 
-Icons from the Simple icons library as well as Material Design icons will automatically invert their color to match your light or dark theme, however you may want to enable this manually for other icons. To do this, you can use the `auto-invert` prefix:
+Ikony z biblioteki Simple icons oraz ikony Material Design automatycznie odwracają kolor, aby dopasować się do jasnego lub ciemnego motywu. W przypadku innych ikon możesz włączyć to ręcznie, używając prefiksu `auto-invert`:
 
 ```yaml
-icon: auto-invert https://example.com/path/to/icon.png # with a URL
-icon: auto-invert sh:glance-dark # with a selfh.st icon
+icon: auto-invert https://example.com/path/to/icon.png # z adresem URL
+icon: auto-invert sh:glance-dark # z ikoną selfh.st
 ```
 
-This expects the icon to be black and will automatically invert it to white when using a dark theme.
+Zakłada się, że ikona jest czarna, i zostanie automatycznie odwrócona na białą podczas korzystania z ciemnego motywu.
 
-## Config schema
+<a id="config-schema"></a>
+## Schemat konfiguracji
 
-For property descriptions, validation and autocompletion of the config within your IDE, @not-first has kindly created a [schema](https://github.com/not-first/glance-schema). Massive thanks to them for this, go check it out and give them a star!
+Aby uzyskać opisy właściwości, walidację i autouzupełnianie konfiguracji w swoim IDE, @not-first uprzejmie stworzył [schemat](https://github.com/not-first/glance-schema). Ogromne podziękowania dla niego — sprawdź go i zostaw gwiazdkę!
 
-## Authentication
+<a id="authentication"></a>
+## Uwierzytelnianie
 
-To make sure that only you and the people you want to share your dashboard with have access to it, you can set up authentication via username and password. This is done through a top level `auth` property. Example:
+Aby upewnić się, że tylko Ty i osoby, z którymi chcesz udostępnić pulpit, mają do niego dostęp, możesz skonfigurować uwierzytelnianie za pomocą nazwy użytkownika i hasła. Odbywa się to przez właściwość najwyższego poziomu `auth`. Przykład:
 
 ```yaml
 auth:
-  secret-key: # this must be set to a random value generated using the secret:make CLI command
+  secret-key: # musi to być losowa wartość wygenerowana poleceniem CLI secret:make
   users:
     admin:
       password: 123456
@@ -232,55 +242,56 @@ auth:
       password: 123456
 ```
 
-To generate a secret key, run the following command:
+Aby wygenerować klucz sekretny, uruchom następujące polecenie:
 
 ```sh
 ./glance secret:make
 ```
 
-Or with Docker:
+Lub z Dockerem:
 
 ```sh
 docker run --rm glanceapp/glance secret:make
 ```
 
-### Using hashed passwords
+### Korzystanie z hashy haseł
 
-If you do not want to store plain passwords in your config file or in environment variables, you can hash your password and provide its hash instead:
+Jeśli nie chcesz przechowywać haseł w postaci jawnej w pliku konfiguracyjnym ani w zmiennych środowiskowych, możesz zahashować hasło i podać jego hash:
 
 ```sh
 ./glance password:hash mysecretpassword
 ```
 
-Or with Docker:
+Lub z Dockerem:
 
 ```sh
 docker run --rm glanceapp/glance password:hash mysecretpassword
 ```
 
-Then, in your config file use the `password-hash` property instead of `password`:
+Następnie w pliku konfiguracyjnym użyj właściwości `password-hash` zamiast `password`:
 
 ```yaml
 auth:
-  secret-key: # this must be set to a random value generated using the secret:make CLI command
+  secret-key: # musi to być losowa wartość wygenerowana poleceniem CLI secret:make
   users:
     admin:
       password-hash: $2a$10$o6SXqiccI3DDP2dN4ADumuOeIHET6Q4bUMYZD6rT2Aqt6XQ3DyO.6
 ```
 
-### Preventing brute-force attacks
+### Zapobieganie atakom brute-force
 
-Glance will automatically block IP addresses of users who fail to authenticate 5 times in a row in the span of 5 minutes. In order for this feature to work correctly, Glance must know the real IP address of requests. If you're using a reverse proxy such as nginx, Traefik, NPM, etc, you must set the `proxied` property in the `server` configuration to `true`:
+Glance automatycznie blokuje adresy IP użytkowników, którzy 5 razy z rzędu nie zdołają się uwierzytelnić w ciągu 5 minut. Aby ta funkcja działała poprawnie, Glance musi znać rzeczywisty adres IP żądań. Jeśli używasz odwrotnego proxy, takiego jak nginx, Traefik, NPM itp., musisz ustawić właściwość `proxied` w konfiguracji `server` na `true`:
 
 ```yaml
 server:
   proxied: true
 ```
 
-When set to `true`, Glance will use the `X-Forwarded-For` header to determine the original IP address of the request, so make sure that your reverse proxy is correctly configured to send that header.
+Po ustawieniu na `true` Glance będzie używać nagłówka `X-Forwarded-For` do określenia oryginalnego adresu IP żądania, więc upewnij się, że Twoje odwrotne proxy jest poprawnie skonfigurowane do wysyłania tego nagłówka.
 
-## Server
-Server configuration is done through a top level `server` property. Example:
+<a id="server"></a>
+## Serwer
+Konfiguracja serwera odbywa się przez właściwość najwyższego poziomu `server`. Przykład:
 
 ```yaml
 server:
@@ -288,71 +299,72 @@ server:
   assets-path: /home/user/glance-assets
 ```
 
-### Properties
+### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| host | string | no |  |
-| port | number | no | 8080 |
-| proxied | boolean | no | false |
-| base-url | string | no | |
-| assets-path | string | no |  |
+| host | string | nie |  |
+| port | number | nie | 8080 |
+| proxied | boolean | nie | false |
+| base-url | string | nie | |
+| assets-path | string | nie |  |
 
 #### `host`
-The address which the server will listen on. Setting it to `localhost` means that only the machine that the server is running on will be able to access the dashboard. By default it will listen on all interfaces.
+Adres, na którym będzie nasłuchiwał serwer. Ustawienie go na `localhost` oznacza, że tylko maszyna, na której działa serwer, będzie miała dostęp do pulpitu. Domyślnie nasłuchuje na wszystkich interfejsach.
 
 #### `port`
-A number between 1 and 65,535, so long as that port isn't already used by anything else.
+Liczba z zakresu od 1 do 65 535, o ile port nie jest już używany przez coś innego.
 
 #### `proxied`
-Set to `true` if you're using a reverse proxy in front of Glance. This will make Glance use the `X-Forwarded-*` headers to determine the original request details.
+Ustaw na `true`, jeśli używasz odwrotnego proxy przed Glance. Spowoduje to, że Glance będzie używać nagłówków `X-Forwarded-*` do określenia oryginalnych szczegółów żądania.
 
 #### `base-url`
-The base URL that Glance is hosted under. No need to specify this unless you're using a reverse proxy and are hosting Glance under a directory. If that's the case then you can set this value to `/glance` or whatever the directory is called. Note that the forward slash (`/`) in the beginning is required unless you specify the full domain and path.
+Bazowy adres URL, pod którym hostowany jest Glance. Nie musisz go podawać, chyba że używasz odwrotnego proxy i hostujesz Glance w podkatalogu. W takim przypadku możesz ustawić tę wartość na `/glance` lub inną nazwę katalogu. Zwróć uwagę, że początkowy ukośnik (`/`) jest wymagany, chyba że podajesz pełną domenę i ścieżkę.
 
 > [!IMPORTANT]
-> You need to strip the `base-url` prefix before forwarding the request to the Glance server.
-> In Caddy you can do this using [`handle_path`](https://caddyserver.com/docs/caddyfile/directives/handle_path) or [`uri strip_prefix`](https://caddyserver.com/docs/caddyfile/directives/uri).
+> Musisz usunąć prefiks `base-url` przed przekazaniem żądania do serwera Glance.
+> W Caddy możesz to zrobić za pomocą [`handle_path`](https://caddyserver.com/docs/caddyfile/directives/handle_path) lub [`uri strip_prefix`](https://caddyserver.com/docs/caddyfile/directives/uri).
 
 #### `assets-path`
-The path to a directory that will be served by the server under the `/assets/` path. This is handy for widgets like the Monitor where you have to specify an icon URL and you want to self host all the icons rather than pointing to an external source.
+Ścieżka do katalogu, który będzie udostępniany przez serwer pod ścieżką `/assets/`. Jest to przydatne w widgetach takich jak Monitor, gdzie trzeba podać adres URL ikony, a chcesz hostować wszystkie ikony samodzielnie zamiast wskazywać zewnętrzne źródło.
 
 > [!IMPORTANT]
 >
-> When installing through docker the path will point to the files inside the container. Don't forget to mount your assets path to the same path inside the container.
-> Example:
+> Podczas instalacji przez Docker ścieżka będzie wskazywać pliki wewnątrz kontenera. Nie zapomnij zamontować ścieżki zasobów pod tę samą ścieżkę wewnątrz kontenera.
+> Przykład:
 >
-> If your assets are in:
+> Jeśli Twoje zasoby znajdują się w:
 > ```
 > /home/user/glance-assets
 > ```
 >
-> You should mount:
+> Powinieneś zamontować:
 > ```
 > /home/user/glance-assets:/app/assets
 > ```
 >
-> And your config should contain:
+> A Twoja konfiguracja powinna zawierać:
 > ```
 > assets-path: /app/assets
 > ```
 
-##### Examples
+##### Przykłady
 
-Say you have a directory `glance-assets` with a file `gitea-icon.png` in it and you specify your assets path like:
+Załóżmy, że masz katalog `glance-assets` z plikiem `gitea-icon.png` i podajesz ścieżkę zasobów w następujący sposób:
 
 ```yaml
 assets-path: /home/user/glance-assets
 ```
 
-To be able to point to an asset from your assets path, use the `/assets/` path like such:
+Aby wskazać zasób ze ścieżki zasobów, użyj ścieżki `/assets/` w następujący sposób:
 
 ```yaml
 icon: /assets/gitea-icon.png
 ```
 
-## Document
-If you want to insert custom HTML into the `<head>` of the document for all pages, you can do so by using the `document` property. Example:
+<a id="document"></a>
+## Dokument
+Jeśli chcesz wstawić własny kod HTML do sekcji `<head>` dokumentu na wszystkich stronach, możesz to zrobić za pomocą właściwości `document`. Przykład:
 
 ```yaml
 document:
@@ -360,8 +372,9 @@ document:
     <script src="/assets/custom.js"></script>
 ```
 
+<a id="branding"></a>
 ## Branding
-You can adjust the various parts of the branding through a top level `branding` property. Example:
+Możesz dostosować różne elementy brandingu za pomocą właściwości najwyższego poziomu `branding`. Przykład:
 
 ```yaml
 branding:
@@ -374,51 +387,52 @@ branding:
   app-background-color: "#151519"
 ```
 
-### Properties
+### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| hide-footer | bool | no | false |
-| custom-footer | string | no |  |
-| logo-text | string | no | G |
-| logo-url | string | no | |
-| favicon-url | string | no | |
-| app-name | string | no | Glance |
-| app-icon-url | string | no | Glance's default icon |
-| app-background-color | string | no | Glance's default background color |
+| hide-footer | bool | nie | false |
+| custom-footer | string | nie |  |
+| logo-text | string | nie | G |
+| logo-url | string | nie | |
+| favicon-url | string | nie | |
+| app-name | string | nie | Glance |
+| app-icon-url | string | nie | Domyślna ikona Glance |
+| app-background-color | string | nie | Domyślny kolor tła Glance |
 
 #### `hide-footer`
-Hides the footer when set to `true`.
+Ukrywa stopkę po ustawieniu na `true`.
 
 #### `custom-footer`
-Specify custom HTML to use for the footer.
+Określa własny kod HTML używany w stopce.
 
 #### `logo-text`
-Specify custom text to use instead of the "G" found in the navigation.
+Określa własny tekst używany zamiast litery „G” widocznej w nawigacji.
 
 #### `logo-url`
-Specify a URL to a custom image to use instead of the "G" found in the navigation. If both `logo-text` and `logo-url` are set, only `logo-url` will be used.
+Określa adres URL własnego obrazu używanego zamiast litery „G” widocznej w nawigacji. Jeśli ustawione są zarówno `logo-text`, jak i `logo-url`, używany będzie tylko `logo-url`.
 
 #### `favicon-url`
-Specify a URL to a custom image to use for the favicon.
+Określa adres URL własnego obrazu używanego jako favikona.
 
 #### `app-name`
-Specify the name of the web app shown in browser tab and PWA.
+Określa nazwę aplikacji webowej wyświetlaną na karcie przeglądarki i w PWA.
 
 #### `app-icon-url`
-Specify URL for PWA and browser tab icon (512x512 PNG).
+Określa adres URL ikony PWA i karty przeglądarki (PNG 512x512).
 
 #### `app-background-color`
-Specify background color for PWA. Must be a valid CSS color.
+Określa kolor tła PWA. Musi to być prawidłowy kolor CSS.
 
-## Theme
-Theming is done through a top level `theme` property. Values for the colors are in [HSL](https://giggster.com/guide/basics/hue-saturation-lightness/) (hue, saturation, lightness) format. You can use a color picker [like this one](https://hslpicker.com/) to convert colors from other formats to HSL. The values are separated by a space and `%` is not required for any of the numbers.
+<a id="theme"></a>
+## Motyw
+Motyw konfiguruje się przez właściwość najwyższego poziomu `theme`. Wartości kolorów są w formacie [HSL](https://giggster.com/guide/basics/hue-saturation-lightness/) (odcień, nasycenie, jasność). Możesz użyć próbnika kolorów [takiego jak ten](https://hslpicker.com/), aby przekonwertować kolory z innych formatów na HSL. Wartości oddziela się spacją, a znak `%` nie jest wymagany przy żadnej z liczb.
 
-Example:
+Przykład:
 
 ```yaml
 theme:
-  # This will be the default theme
+  # To będzie motyw domyślny
   background-color: 100 20 10
   primary-color: 40 90 40
   contrast-multiplier: 1.1
@@ -438,48 +452,49 @@ theme:
       negative-color: 0 90 50
 ```
 
-### Available themes
-If you don't want to spend time configuring your own theme, there are [several available themes](themes.md) which you can simply copy the values for.
+<a id="available-themes"></a>
+### Dostępne motywy
+Jeśli nie chcesz tracić czasu na konfigurowanie własnego motywu, dostępnych jest [kilka gotowych motywów](themes.md), z których możesz po prostu skopiować wartości.
 
-### Properties
-| Name | Type | Required | Default |
+### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| light | boolean | no | false |
-| background-color | HSL | no | 240 8 9 |
-| primary-color | HSL | no | 43 50 70 |
-| positive-color | HSL | no | same as `primary-color` |
-| negative-color | HSL | no | 0 70 70 |
-| contrast-multiplier | number | no | 1 |
-| text-saturation-multiplier | number | no | 1 |
-| custom-css-file | string | no | |
+| light | boolean | nie | false |
+| background-color | HSL | nie | 240 8 9 |
+| primary-color | HSL | nie | 43 50 70 |
+| positive-color | HSL | nie | tak samo jak `primary-color` |
+| negative-color | HSL | nie | 0 70 70 |
+| contrast-multiplier | number | nie | 1 |
+| text-saturation-multiplier | number | nie | 1 |
+| custom-css-file | string | nie | |
 | disable-picker | bool | false | |
-| presets | object | no | |
+| presets | object | nie | |
 
 #### `light`
-Whether the scheme is light or dark. This does not change the background color, it inverts the text colors so that they look appropriately on a light background.
+Określa, czy schemat jest jasny, czy ciemny. Nie zmienia koloru tła — odwraca kolory tekstu, aby wyglądały odpowiednio na jasnym tle.
 
 #### `background-color`
-Color of the page and widgets.
+Kolor strony i widgetów.
 
 #### `primary-color`
-Color used across the page, largely to indicate unvisited links.
+Kolor używany w całej witrynie, głównie do oznaczania nieodwiedzonych linków.
 
 #### `positive-color`
-Used to indicate that something is positive, such as stock price being up, twitch channel being live or a monitored site being online. If not set, the value of `primary-color` will be used.
+Używany do oznaczania pozytywnych sytuacji, takich jak wzrost ceny akcji, aktywny kanał Twitch lub działająca monitorowana witryna. Jeśli nie zostanie ustawiony, użyty zostanie kolor `primary-color`.
 
 #### `negative-color`
-Oppposite of `positive-color`.
+Przeciwieństwo `positive-color`.
 
 #### `contrast-multiplier`
-Used to increase or decrease the contrast (in other words visibility) of the text. A value of `1.3` means that the text will be 30% lighter/darker depending on the scheme. Use this if you think that some of the text on the page is too dark and hard to read. Example:
+Służy do zwiększania lub zmniejszania kontrastu (czyli widoczności) tekstu. Wartość `1.3` oznacza, że tekst będzie o 30% jaśniejszy/ciemniejszy w zależności od schematu. Użyj tego, jeśli uważasz, że niektóre teksty na stronie są zbyt ciemne i trudne do odczytania. Przykład:
 
-![difference between 1 and 1.3 contrast](images/contrast-multiplier-example.png)
+![różnica między kontrastem 1 i 1.3](images/contrast-multiplier-example.png)
 
 #### `text-saturation-multiplier`
-Used to increase or decrease the saturation of text, useful when using a custom background color with a high amount of saturation and needing the text to have a more neutral color. `0.5` means that the saturation will be 50% lower and `1.5` means that it'll be 50% higher.
+Służy do zwiększania lub zmniejszania nasycenia tekstu. Przydatne przy niestandardowym kolorze tła o wysokim nasyceniu, gdy tekst powinien mieć bardziej neutralny kolor. Wartość `0.5` oznacza, że nasycenie będzie o 50% niższe, a `1.5` — o 50% wyższe.
 
 #### `custom-css-file`
-Path to a custom CSS file, either external or one from within the server configured assets path. Example:
+Ścieżka do niestandardowego pliku CSS — zewnętrznego lub znajdującego się w skonfigurowanej ścieżce zasobów serwera. Przykład:
 
 ```yaml
 theme:
@@ -488,7 +503,7 @@ theme:
 
 > [!TIP]
 >
-> Because Glance uses a lot of utility classes it might be difficult to target some elements. To make it easier to style specific widgets, each widget has a `widget-type-{name}` class, so for example if you wanted to make the links inside just the RSS widget bigger you could use the following selector:
+> Ponieważ Glance używa wielu klas użytkowych, stylowanie niektórych elementów może być trudne. Aby ułatwić stylowanie konkretnych widgetów, każdy widget ma klasę `widget-type-{name}`. Na przykład, jeśli chcesz powiększyć linki tylko w widgecie RSS, możesz użyć następującego selektora:
 >
 > ```css
 > .widget-type-rss a {
@@ -496,15 +511,15 @@ theme:
 > }
 > ```
 >
-> In addition, you can also use the `css-class` property which is available on every widget to set custom class names for individual widgets.
+> Dodatkowo możesz użyć właściwości `css-class`, dostępnej w każdym widgecie, aby ustawić niestandardowe nazwy klas dla poszczególnych widgetów.
 
 #### `disable-picker`
-When set to `true` hides the theme picker and disables the abiltity to switch between themes. All users who previously picked a non-default theme will be switched over to the default theme.
+Po ustawieniu na `true` ukrywa próbnik motywów i wyłącza możliwość przełączania się między motywami. Wszyscy użytkownicy, którzy wcześniej wybrali motyw inny niż domyślny, zostaną przełączeni na motyw domyślny.
 
 #### `presets`
-Define additional theme presets that can be selected from the theme picker on the page. For each preset, you can specify the same properties as for the default theme, such as `background-color`, `primary-color`, `positive-color`, `negative-color`, `contrast-multiplier`, etc., except for the `custom-css-file` property.
+Definiuje dodatkowe presety motywów, które można wybrać z próbnika motywów na stronie. Dla każdego presetu możesz określić te same właściwości co dla motywu domyślnego, takie jak `background-color`, `primary-color`, `positive-color`, `negative-color`, `contrast-multiplier` itp., z wyjątkiem właściwości `custom-css-file`.
 
-Example:
+Przykład:
 
 ```yaml
 theme:
@@ -524,15 +539,16 @@ theme:
       negative-color: 347 87 44
 ```
 
-To override the default dark and light themes, use the key names `default-dark` and `default-light`.
+Aby nadpisać domyślne motywy ciemny i jasny, użyj nazw kluczy `default-dark` i `default-light`.
 
-## Pages & Columns
-![illustration of pages and columns](images/pages-and-columns-illustration.png)
+<a id="pages--columns"></a>
+## Strony i kolumny
+![ilustracja stron i kolumn](images/pages-and-columns-illustration.png)
 
-Using pages and columns is how widgets are organized. Each page contains up to 3 columns and each column can have any number of widgets.
+Strony i kolumny służą do organizacji widgetów. Każda strona zawiera maksymalnie 3 kolumny, a każda kolumna może mieć dowolną liczbę widgetów.
 
-### Pages
-Pages are defined through a top level `pages` property. The page defined first becomes the home page and all pages get automatically added to the navigation bar in the order that they were defined. Example:
+### Strony
+Strony definiuje się przez właściwość najwyższego poziomu `pages`. Strona zdefiniowana jako pierwsza staje się stroną główną, a wszystkie strony są automatycznie dodawane do paska nawigacji w kolejności ich definiowania. Przykład:
 
 ```yaml
 pages:
@@ -546,32 +562,32 @@ pages:
     columns: ...
 ```
 
-### Properties
-| Name | Type | Required | Default |
+### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| name | string | yes | |
-| slug | string | no | |
-| width | string | no | |
-| desktop-navigation-width | string | no | |
-| center-vertically | boolean | no | false |
-| hide-desktop-navigation | boolean | no | false |
-| show-mobile-header | boolean | no | false |
-| head-widgets | array | no | |
-| columns | array | yes | |
+| name | string | tak | |
+| slug | string | nie | |
+| width | string | nie | |
+| desktop-navigation-width | string | nie | |
+| center-vertically | boolean | nie | false |
+| hide-desktop-navigation | boolean | nie | false |
+| show-mobile-header | boolean | nie | false |
+| head-widgets | array | nie | |
+| columns | array | tak | |
 
 #### `name`
-The name of the page which gets shown in the navigation bar.
+Nazwa strony wyświetlana na pasku nawigacji.
 
 #### `slug`
-The URL friendly version of the title which is used to access the page. For example if the title of the page is "RSS Feeds" you can make the page accessible via `localhost:8080/feeds` by setting the slug to `feeds`. If not defined, it will automatically be generated from the title.
+Przyjazna dla adresów URL wersja tytułu, używana do uzyskania dostępu do strony. Na przykład, jeśli tytuł strony to „RSS Feeds”, możesz udostępnić stronę pod adresem `localhost:8080/feeds`, ustawiając slug na `feeds`. Jeśli nie zostanie zdefiniowany, zostanie automatycznie wygenerowany z tytułu.
 
 #### `width`
-The maximum width of the page on desktop. Possible values are `default`, `slim` and `wide`.
+Maksymalna szerokość strony na pulpicie. Możliwe wartości: `default`, `slim` i `wide`.
 
 #### `desktop-navigation-width`
-The maximum width of the desktop navigation. Useful if you have a few pages that use a different width than the rest and don't want the navigation to jump abruptly when going to and away from those pages. Possible values are `default`, `slim` and `wide`.
+Maksymalna szerokość nawigacji na pulpicie. Przydatne, gdy masz kilka stron o innej szerokości niż pozostałe i nie chcesz, aby nawigacja gwałtownie się przeskakiwała podczas przechodzenia do tych stron i z powrotem. Możliwe wartości: `default`, `slim` i `wide`.
 
-Here are the pixel equivalents for each value:
+Odpowiedniki w pikselach dla każdej wartości:
 
 * default: `1600px`
 * slim: `1100px`
@@ -579,24 +595,24 @@ Here are the pixel equivalents for each value:
 
 > [!NOTE]
 >
-> When using `slim`, the maximum number of columns allowed for that page is `2`.
+> Przy użyciu `slim` maksymalna liczba kolumn dozwolonych na stronie wynosi `2`.
 
 #### `center-vertically`
-When set to `true`, vertically centers the content on the page. Has no effect if the content is taller than the height of the viewport.
+Po ustawieniu na `true` zawartość strony jest centrowana w pionie. Nie ma efektu, jeśli zawartość jest wyższa niż wysokość okna widoku.
 
 #### `hide-desktop-navigation`
-Whether to show the navigation links at the top of the page on desktop.
+Określa, czy na pulpicie mają być wyświetlane linki nawigacyjne u góry strony.
 
 #### `show-mobile-header`
-Whether to show a header displaying the name of the page on mobile. The header purposefully has a lot of vertical whitespace in order to push the content down and make it easier to reach on tall devices.
+Określa, czy na urządzeniach mobilnych ma być wyświetlany nagłówek z nazwą strony. Nagłówek celowo ma dużo pionowego odstępu, aby odsunąć zawartość w dół i ułatwić jej dosięgnięcie na wysokich urządzeniach.
 
-Preview:
+Podgląd:
 
 ![](images/mobile-header-preview.png)
 
 #### `head-widgets`
 
-Head widgets will be shown at the top of the page, above the columns, and take up the combined width of all columns. You can specify any widget, though some will look better than others, such as the markets, RSS feed with `horizontal-cards` style, and videos widgets. Example:
+Widgety nagłówkowe będą wyświetlane u góry strony, nad kolumnami, i zajmą łączną szerokość wszystkich kolumn. Możesz podać dowolny widget, choć niektóre będą wyglądać lepiej niż inne — na przykład markets, kanał RSS w stylu `horizontal-cards` oraz widgety videos. Przykład:
 
 ![](images/head-widgets-preview.png)
 
@@ -631,8 +647,8 @@ pages:
             location: London, United Kingdom
 ```
 
-### Columns
-Columns are defined for each page using a `columns` property. There are two types of columns - `full` and `small`, which refers to their width. A small column takes up a fixed amount of width (300px) and a full column takes up the all of the remaining width. You can have up to 3 columns per page and you must have either 1 or 2 full columns. Example:
+### Kolumny
+Kolumny definiuje się dla każdej strony za pomocą właściwości `columns`. Istnieją dwa typy kolumn — `full` i `small` — które określają ich szerokość. Kolumna mała zajmuje stałą szerokość (300px), a kolumna pełna zajmuje całą pozostałą szerokość. Na stronie możesz mieć maksymalnie 3 kolumny i musisz mieć 1 lub 2 kolumny pełne. Przykład:
 
 ```yaml
 pages:
@@ -646,15 +662,15 @@ pages:
         widgets: ...
 ```
 
-### Properties
-| Name | Type | Required |
+### Właściwości
+| Nazwa | Typ | Wymagane |
 | ---- | ---- | -------- |
-| size | string | yes |
-| widgets | array | no |
+| size | string | tak |
+| widgets | array | nie |
 
-Here are some of the possible column configurations:
+Oto niektóre z możliwych konfiguracji kolumn:
 
-![column configuration small-full-small](images/column-configuration-1.png)
+![konfiguracja kolumn small-full-small](images/column-configuration-1.png)
 
 ```yaml
 columns:
@@ -666,7 +682,7 @@ columns:
     widgets: ...
 ```
 
-![column configuration small-full-small](images/column-configuration-2.png)
+![konfiguracja kolumn small-full-small](images/column-configuration-2.png)
 
 ```yaml
 columns:
@@ -676,7 +692,7 @@ columns:
     widgets: ...
 ```
 
-![column configuration small-full-small](images/column-configuration-3.png)
+![konfiguracja kolumn small-full-small](images/column-configuration-3.png)
 
 ```yaml
 columns:
@@ -686,8 +702,9 @@ columns:
     widgets: ...
 ```
 
-## Widgets
-Widgets are defined for each column using a `widgets` property. Example:
+<a id="widgets"></a>
+## Widgety
+Widgety definiuje się dla każdej kolumny za pomocą właściwości `widgets`. Przykład:
 
 ```yaml
 pages:
@@ -701,55 +718,56 @@ pages:
 
 > [!NOTE]
 >
-> Currently not all widgets are designed to fit every column size, however some widgets offer different "styles" that help alleviate this limitation.
+> Obecnie nie wszystkie widgety są zaprojektowane tak, aby pasować do każdego rozmiaru kolumny, jednak niektóre oferują różne „style”, które pomagają obejść to ograniczenie.
 
-### Shared Properties
-| Name | Type | Required |
+### Wspólne właściwości
+| Nazwa | Typ | Wymagane |
 | ---- | ---- | -------- |
-| type | string | yes |
-| title | string | no |
-| title-url | string | no |
-| hide-header | boolean | no | false |
-| cache | string | no |
-| css-class | string | no |
+| type | string | tak |
+| title | string | nie |
+| title-url | string | nie |
+| hide-header | boolean | nie | false |
+| cache | string | nie |
+| css-class | string | nie |
 
 #### `type`
-Used to specify the widget.
+Służy do określenia widgetu.
 
 #### `title`
-The title of the widget. If left blank it will be defined by the widget.
+Tytuł widgetu. Jeśli pozostanie pusty, zostanie określony przez widget.
 
 #### `title-url`
-The URL to go to when clicking on the widget's title. If left blank it will be defined by the widget (if available).
+Adres URL otwierany po kliknięciu tytułu widgetu. Jeśli pozostanie pusty, zostanie określony przez widget (jeśli jest dostępny).
 
 #### `hide-header`
-When set to `true`, the header (title) of the widget will be hidden. You cannot hide the header of the group widget.
+Po ustawieniu na `true` nagłówek (tytuł) widgetu zostanie ukryty. Nie można ukryć nagłówka widgetu group.
 
 > [!NOTE]
 >
-> If a widget fails to update, a red dot or circle is shown next to the title of that widget indicating that the it is not working. You will not be able to see this if you hide the header.
+> Jeśli widget nie zdoła się zaktualizować, obok jego tytułu pojawi się czerwona kropka lub okrąg informujący o tym, że nie działa. Nie będzie tego widać, jeśli nagłówek jest ukryty.
 
 #### `cache`
-How long to keep the fetched data in memory. The value is a string and must be a number followed by one of s, m, h, d. Examples:
+Jak długo przechowywać pobrane dane w pamięci. Wartość jest ciągiem znaków i musi być liczbą, po której następuje jedna z liter s, m, h, d. Przykłady:
 
 ```yaml
-cache: 30s # 30 seconds
-cache: 5m  # 5 minutes
-cache: 2h  # 2 hours
-cache: 1d  # 1 day
+cache: 30s # 30 sekund
+cache: 5m  # 5 minut
+cache: 2h  # 2 godziny
+cache: 1d  # 1 dzień
 ```
 
 > [!NOTE]
 >
-> Not all widgets can have their cache duration modified. The calendar and weather widgets update on the hour and this cannot be changed.
+> Nie we wszystkich widgetach można zmienić czas cache. Widgety kalendarza i pogody aktualizują się o pełnej godzinie i nie można tego zmienić.
 
 #### `css-class`
-Set custom CSS classes for the specific widget instance.
+Ustawia niestandardowe klasy CSS dla konkretnej instancji widgetu.
 
+<a id="rss"></a>
 ### RSS
-Display a list of articles from multiple RSS feeds.
+Wyświetla listę artykułów z wielu kanałów RSS.
 
-Example:
+Przykład:
 
 ```yaml
 - type: rss
@@ -764,84 +782,84 @@ Example:
       title: Fox Business
 ```
 
-#### Properties
-| Name | Type | Required | Default |
+#### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| style | string | no | vertical-list |
-| feeds | array | yes |
-| thumbnail-height | float | no | 10 |
-| card-height | float | no | 27 |
-| limit | integer | no | 25 |
-| preserve-order | bool | no | false |
-| single-line-titles | boolean | no | false |
-| collapse-after | integer | no | 5 |
+| style | string | nie | vertical-list |
+| feeds | array | tak |
+| thumbnail-height | float | nie | 10 |
+| card-height | float | nie | 27 |
+| limit | integer | nie | 25 |
+| preserve-order | bool | nie | false |
+| single-line-titles | boolean | nie | false |
+| collapse-after | integer | nie | 5 |
 
 ##### `limit`
-The maximum number of articles to show.
+Maksymalna liczba artykułów do wyświetlenia.
 
 ##### `collapse-after`
-How many articles are visible before the "SHOW MORE" button appears. Set to `-1` to never collapse.
+Liczba widocznych artykułów, po której pojawia się przycisk „SHOW MORE”. Ustaw `-1`, aby nigdy nie zwijać.
 
 ##### `preserve-order`
-When set to `true`, the order of the articles will be preserved as they are in the feeds. Useful if a feed uses its own sorting order which denotes the importance of the articles. If you use this property while having a lot of feeds, it's recommended to set a `limit` to each individual feed since if the first defined feed has 15 articles, the articles from the second feed will start after the 15th article in the list.
+Po ustawieniu na `true` kolejność artykułów zostanie zachowana tak, jak w kanałach. Przydatne, jeśli kanał używa własnej kolejności sortowania oznaczającej ważność artykułów. Jeśli używasz tej właściwości przy dużej liczbie kanałów, zaleca się ustawienie `limit` dla każdego kanału osobno, ponieważ jeśli pierwszy zdefiniowany kanał ma 15 artykułów, artykuły z drugiego kanału zaczną się po 15. artykule na liście.
 
 ##### `single-line-titles`
-When set to `true`, truncates the title of each post if it exceeds one line. Only applies when the style is set to `vertical-list`.
+Po ustawieniu na `true` obcina tytuł każdego wpisu, jeśli przekracza jedną linię. Ma zastosowanie tylko wtedy, gdy styl jest ustawiony na `vertical-list`.
 
 ##### `style`
-Used to change the appearance of the widget. Possible values are:
+Służy do zmiany wyglądu widgetu. Możliwe wartości:
 
-* `vertical-list` - suitable for `full` and `small` columns
-* `detailed-list` - suitable for `full` columns
-* `horizontal-cards` - suitable for `full` columns
-* `horizontal-cards-2` - suitable for `full` columns
+* `vertical-list` — odpowiedni dla kolumn `full` i `small`
+* `detailed-list` — odpowiedni dla kolumn `full`
+* `horizontal-cards` — odpowiedni dla kolumn `full`
+* `horizontal-cards-2` — odpowiedni dla kolumn `full`
 
-Below is a preview of each style:
+Poniżej znajduje się podgląd każdego stylu:
 
 `vertical-list`
 
-![preview of vertical-list style for RSS widget](images/rss-feed-vertical-list-preview.png)
+![podgląd stylu vertical-list dla widgetu RSS](images/rss-feed-vertical-list-preview.png)
 
 `detailed-list`
 
-![preview of detailed-list style for RSS widget](images/rss-widget-detailed-list-preview.png)
+![podgląd stylu detailed-list dla widgetu RSS](images/rss-widget-detailed-list-preview.png)
 
 `horizontal-cards`
 
-![preview of horizontal-cards style for RSS widget](images/rss-feed-horizontal-cards-preview.png)
+![podgląd stylu horizontal-cards dla widgetu RSS](images/rss-feed-horizontal-cards-preview.png)
 
 `horizontal-cards-2`
 
-![preview of horizontal-cards-2 style for RSS widget](images/rss-widget-horizontal-cards-2-preview.png)
+![podgląd stylu horizontal-cards-2 dla widgetu RSS](images/rss-widget-horizontal-cards-2-preview.png)
 
 ##### `thumbnail-height`
-Used to modify the height of the thumbnails. Works only when the style is set to `horizontal-cards`. The default value is `10` and the units are `rem`, if you want to for example double the height of the thumbnails you can set it to `20`.
+Służy do zmiany wysokości miniatur. Działa tylko wtedy, gdy styl jest ustawiony na `horizontal-cards`. Wartość domyślna to `10`, a jednostką jest `rem`. Jeśli chcesz na przykład dwukrotnie zwiększyć wysokość miniatur, ustaw ją na `20`.
 
 ##### `card-height`
-Used to modify the height of cards when using the `horizontal-cards-2` style. The default value is `27` and the units are `rem`.
+Służy do zmiany wysokości kart w stylu `horizontal-cards-2`. Wartość domyślna to `27`, a jednostką jest `rem`.
 
 ##### `feeds`
-An array of RSS/atom feeds. The title can optionally be changed.
+Tablica kanałów RSS/Atom. Tytuł można opcjonalnie zmienić.
 
-###### Properties for each feed
-| Name | Type | Required | Default | Notes |
+###### Właściwości każdego kanału
+| Nazwa | Typ | Wymagane | Domyślnie | Uwagi |
 | ---- | ---- | -------- | ------- | ----- |
-| url | string | yes | | |
-| title | string | no | the title provided by the feed | |
-| hide-categories | boolean | no | false | Only applicable for `detailed-list` style |
-| hide-description | boolean | no | false | Only applicable for `detailed-list` style |
-| limit | integer | no | | |
-| item-link-prefix | string | no | | |
-| headers | key (string) & value (string) | no | | |
+| url | string | tak | | |
+| title | string | nie | tytuł podany przez kanał | |
+| hide-categories | boolean | nie | false | Dotyczy tylko stylu `detailed-list` |
+| hide-description | boolean | nie | false | Dotyczy tylko stylu `detailed-list` |
+| limit | integer | nie | | |
+| item-link-prefix | string | nie | | |
+| headers | klucz (string) i wartość (string) | nie | | |
 
 ###### `limit`
-The maximum number of articles to show from that specific feed. Useful if you have a feed which posts a lot of articles frequently and you want to prevent it from excessively pushing down articles from other feeds.
+Maksymalna liczba artykułów do wyświetlenia z tego konkretnego kanału. Przydatne, jeśli masz kanał publikujący często wiele artykułów i chcesz zapobiec nadmiernemu spychaniu artykułów z innych kanałów.
 
 ###### `item-link-prefix`
-If an RSS feed isn't returning item links with a base domain and Glance has failed to automatically detect the correct domain you can manually add a prefix to each link with this property.
+Jeśli kanał RSS nie zwraca linków do wpisów z domeną bazową, a Glance nie zdołał automatycznie wykryć prawidłowej domeny, możesz ręcznie dodać prefiks do każdego linku za pomocą tej właściwości.
 
 ###### `headers`
-Optionally specify the headers that will be sent with the request. Example:
+Opcjonalnie określa nagłówki wysyłane z żądaniem. Przykład:
 
 ```yaml
 - type: rss
@@ -851,10 +869,11 @@ Optionally specify the headers that will be sent with the request. Example:
         User-Agent: Custom User Agent
 ```
 
-### Videos
-Display a list of the latest videos from specific YouTube channels.
+<a id="videos"></a>
+### Wideo
+Wyświetla listę najnowszych filmów z określonych kanałów YouTube.
 
-Example:
+Przykład:
 
 ```yaml
 - type: videos
@@ -864,35 +883,35 @@ Example:
     - UCHnyfMqiRRG1u-2MsSQLbXA
 ```
 
-Preview:
+Podgląd:
 ![](images/videos-widget-preview.png)
 
-#### Properties
-| Name | Type | Required | Default |
+#### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| channels | array | yes | |
-| playlists | array | no | |
-| limit | integer | no | 25 |
-| style | string | no | horizontal-cards |
-| collapse-after | integer | no | 7 |
-| collapse-after-rows | integer | no | 4 |
-| include-shorts | boolean | no | false |
-| video-url-template | string | no | https://www.youtube.com/watch?v={VIDEO-ID} |
+| channels | array | tak | |
+| playlists | array | nie | |
+| limit | integer | nie | 25 |
+| style | string | nie | horizontal-cards |
+| collapse-after | integer | nie | 7 |
+| collapse-after-rows | integer | nie | 4 |
+| include-shorts | boolean | nie | false |
+| video-url-template | string | nie | https://www.youtube.com/watch?v={VIDEO-ID} |
 
 ##### `channels`
-A list of channels IDs.
+Lista identyfikatorów kanałów.
 
-One way of getting the ID of a channel is going to the channel's page and clicking on its description:
+Jednym ze sposobów uzyskania identyfikatora kanału jest przejście na stronę kanału i kliknięcie jego opisu:
 
 ![](images/videos-channel-description-example.png)
 
-Then scroll down and click on "Share channel", then "Copy channel ID":
+Następnie przewiń w dół, kliknij „Share channel”, a potem „Copy channel ID”:
 
 ![](images/videos-copy-channel-id-example.png)
 
 ##### `playlists`
 
-A list of playlist IDs:
+Lista identyfikatorów playlist:
 
 ```yaml
 - type: videos
@@ -901,46 +920,47 @@ A list of playlist IDs:
     - PL8mG-RkN2uTxTK4m_Vl2dYR9yE41kRdBg
 ```
 
-The playlist ID can be found in its link which is in the form of
+Identyfikator playlisty można znaleźć w jej linku, który ma postać:
 ```
 https://www.youtube.com...&list={ID}&...
 ```
 
 ##### `limit`
-The maximum number of videos to show.
+Maksymalna liczba filmów do wyświetlenia.
 
 ##### `collapse-after`
-Specify the number of videos to show when using the `vertical-list` style before the "SHOW MORE" button appears.
+Określa liczbę filmów wyświetlanych w stylu `vertical-list` przed pojawieniem się przycisku „SHOW MORE”.
 
 ##### `collapse-after-rows`
-Specify the number of rows to show when using the `grid-cards` style before the "SHOW MORE" button appears.
+Określa liczbę wierszy wyświetlanych w stylu `grid-cards` przed pojawieniem się przycisku „SHOW MORE”.
 
 ##### `style`
-Used to change the appearance of the widget. Possible values are `horizontal-cards`, `vertical-list` and `grid-cards`.
+Służy do zmiany wyglądu widgetu. Możliwe wartości: `horizontal-cards`, `vertical-list` i `grid-cards`.
 
-Preview of `vertical-list`:
+Podgląd `vertical-list`:
 
 ![](images/videos-widget-vertical-list-preview.png)
 
-Preview of `grid-cards`:
+Podgląd `grid-cards`:
 
 ![](images/videos-widget-grid-cards-preview.png)
 
 ##### `video-url-template`
-Used to replace the default link for videos. Useful when you're running your own YouTube front-end. Example:
+Służy do zastąpienia domyślnego linku do filmów. Przydatne, gdy używasz własnego frontendu YouTube. Przykład:
 
 ```yaml
 video-url-template: https://invidious.your-domain.com/watch?v={VIDEO-ID}
 ```
 
-Placeholders:
+Placeholdery:
 
-`{VIDEO-ID}` - the ID of the video
+`{VIDEO-ID}` — identyfikator filmu
 
+<a id="hacker-news"></a>
 ### Hacker News
-Display a list of posts from [Hacker News](https://news.ycombinator.com/).
+Wyświetla listę wpisów z [Hacker News](https://news.ycombinator.com/).
 
-Example:
+Przykład:
 
 ```yaml
 - type: hacker-news
@@ -948,41 +968,42 @@ Example:
   collapse-after: 5
 ```
 
-Preview:
+Podgląd:
 ![](images/hacker-news-widget-preview.png)
 
-#### Properties
-| Name | Type | Required | Default |
+#### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| limit | integer | no | 15 |
-| collapse-after | integer | no | 5 |
-| comments-url-template | string | no | https://news.ycombinator.com/item?id={POST-ID} |
-| sort-by | string | no | top |
-| extra-sort-by | string | no | |
+| limit | integer | nie | 15 |
+| collapse-after | integer | nie | 5 |
+| comments-url-template | string | nie | https://news.ycombinator.com/item?id={POST-ID} |
+| sort-by | string | nie | top |
+| extra-sort-by | string | nie | |
 
 ##### `comments-url-template`
-Used to replace the default link for post comments. Useful if you want to use an alternative front-end. Example:
+Służy do zastąpienia domyślnego linku do komentarzy wpisu. Przydatne, jeśli chcesz użyć alternatywnego frontendu. Przykład:
 
 ```yaml
 comments-url-template: https://www.hckrnws.com/stories/{POST-ID}
 ```
 
-Placeholders:
+Placeholdery:
 
-`{POST-ID}` - the ID of the post
+`{POST-ID}` — identyfikator wpisu
 
 ##### `sort-by`
-Used to specify the order in which the posts should get returned. Possible values are `top`, `new`, and `best`.
+Służy do określenia kolejności zwracanych wpisów. Możliwe wartości: `top`, `new` i `best`.
 
 ##### `extra-sort-by`
-Can be used to specify an additional sort which will be applied on top of the already sorted posts. By default does not apply any extra sorting and the only available option is `engagement`.
+Może służyć do określenia dodatkowego sortowania, które zostanie zastosowane na już posortowanych wpisach. Domyślnie nie stosuje się żadnego dodatkowego sortowania; jedyną dostępną opcją jest `engagement`.
 
-The `engagement` sort tries to place the posts with the most points and comments on top, also prioritizing recent over old posts.
+Sortowanie `engagement` stara się umieścić na górze wpisy z największą liczbą punktów i komentarzy, preferując również nowsze wpisy nad starszymi.
 
+<a id="lobsters"></a>
 ### Lobsters
-Display a list of posts from [Lobsters](https://lobste.rs).
+Wyświetla listę wpisów z [Lobsters](https://lobste.rs).
 
-Example:
+Przykład:
 
 ```yaml
 - type: lobsters
@@ -995,81 +1016,81 @@ Example:
   collapse-after: 5
 ```
 
-Preview:
+Podgląd:
 ![](images/lobsters-widget-preview.png)
 
-#### Properties
-| Name | Type | Required | Default |
+#### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| instance-url | string | no | https://lobste.rs/ |
-| custom-url | string | no | |
-| limit | integer | no | 15 |
-| collapse-after | integer | no | 5 |
-| sort-by | string | no | hot |
-| tags | array | no | |
+| instance-url | string | nie | https://lobste.rs/ |
+| custom-url | string | nie | |
+| limit | integer | nie | 15 |
+| collapse-after | integer | nie | 5 |
+| sort-by | string | nie | hot |
+| tags | array | nie | |
 
 ##### `instance-url`
-The base URL for a lobsters instance hosted somewhere other than on lobste.rs. Example:
+Bazowy adres URL instancji Lobsters hostowanej gdzie indziej niż na lobste.rs. Przykład:
 
 ```yaml
 instance-url: https://www.journalduhacker.net/
 ```
 
 ##### `custom-url`
-A custom URL to retrieve lobsters posts from. If this is specified, the `instance-url`, `sort-by` and `tags` properties are ignored.
+Niestandardowy adres URL do pobierania wpisów Lobsters. Jeśli zostanie podany, właściwości `instance-url`, `sort-by` i `tags` są ignorowane.
 
 ##### `limit`
-The maximum number of posts to show.
+Maksymalna liczba wpisów do wyświetlenia.
 
 ##### `collapse-after`
-How many posts are visible before the "SHOW MORE" button appears. Set to `-1` to never collapse.
+Liczba widocznych wpisów, po której pojawia się przycisk „SHOW MORE”. Ustaw `-1`, aby nigdy nie zwijać.
 
 ##### `sort-by`
-The sort order in which posts are returned. Possible options are `hot` and `new`.
+Kolejność sortowania zwracanych wpisów. Możliwe opcje: `hot` i `new`.
 
 ##### `tags`
-Limit to posts containing one of the given tags. **You cannot specify a sort order when filtering by tags, it will default to `hot`.**
+Ogranicza wpisy do zawierających jeden z podanych tagów. **Nie można określić kolejności sortowania podczas filtrowania po tagach — domyślnie zostanie użyte `hot`.**
 
+<a id="reddit"></a>
 ### Reddit
-Display a list of posts from a specific subreddit.
+Wyświetla listę wpisów z określonego subreddita.
 
 > [!WARNING]
 >
-> Reddit does not allow unauthorized API access from VPS IPs, if you're hosting Glance on a VPS you will get a 403
-> response. As a workaround you can either [register an app on Reddit](https://ssl.reddit.com/prefs/apps/) and use the
-> generated ID and secret in the widget configuration to authenticate your requests (see `app-auth` property), use a proxy
-> (see `proxy` property) or route the traffic from Glance through a VPN.
+> Reddit nie zezwala na nieuwierzytelniony dostęp do API z adresów IP VPS. Jeśli hostujesz Glance na VPS, otrzymasz odpowiedź 403.
+> Jako obejście możesz [zarejestrować aplikację na Reddicie](https://ssl.reddit.com/prefs/apps/) i użyć wygenerowanego ID oraz sekretu w konfiguracji widgetu, aby uwierzytelnić żądania (patrz właściwość `app-auth`), użyć proxy
+> (patrz właściwość `proxy`) albo skierować ruch z Glance przez VPN.
 
-Example:
+Przykład:
 
 ```yaml
 - type: reddit
   subreddit: technology
 ```
 
-#### Properties
-| Name | Type | Required | Default |
+#### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| subreddit | string | yes |  |
-| style | string | no | vertical-list |
-| show-thumbnails | boolean | no | false |
-| show-flairs | boolean | no | false |
-| limit | integer | no | 15 |
-| collapse-after | integer | no | 5 |
-| comments-url-template | string | no | https://www.reddit.com/{POST-PATH} |
-| request-url-template | string | no |  |
-| proxy | string or multiple parameters | no |  |
-| sort-by | string | no | hot |
-| top-period | string | no | day |
-| search | string | no | |
-| extra-sort-by | string | no | |
-| app-auth | object | no | |
+| subreddit | string | tak |  |
+| style | string | nie | vertical-list |
+| show-thumbnails | boolean | nie | false |
+| show-flairs | boolean | nie | false |
+| limit | integer | nie | 15 |
+| collapse-after | integer | nie | 5 |
+| comments-url-template | string | nie | https://www.reddit.com/{POST-PATH} |
+| request-url-template | string | nie |  |
+| proxy | string lub wiele parametrów | nie |  |
+| sort-by | string | nie | hot |
+| top-period | string | nie | day |
+| search | string | nie | |
+| extra-sort-by | string | nie | |
+| app-auth | object | nie | |
 
 ##### `subreddit`
-The subreddit for which to fetch the posts from.
+Subreddit, z którego mają być pobierane wpisy.
 
 ##### `style`
-Used to change the appearance of the widget. Possible values are `vertical-list`, `horizontal-cards` and `vertical-cards`. The first two were designed for full columns and the last for small columns.
+Służy do zmiany wyglądu widgetu. Możliwe wartości: `vertical-list`, `horizontal-cards` i `vertical-cards`. Pierwsze dwa są przeznaczone dla pełnych kolumn, a ostatni dla małych kolumn.
 
 `vertical-list`
 
@@ -1084,48 +1105,48 @@ Used to change the appearance of the widget. Possible values are `vertical-list`
 ![](images/reddit-widget-vertical-cards-preview.png)
 
 ##### `show-thumbnails`
-Shows or hides thumbnails next to the post. This only works if the `style` is `vertical-list`. Preview:
+Pokazuje lub ukrywa miniatury obok wpisu. Działa tylko wtedy, gdy `style` ma wartość `vertical-list`. Podgląd:
 
 ![](images/reddit-widget-vertical-list-thumbnails.png)
 
 > [!NOTE]
 >
-> Thumbnails don't work for some subreddits due to Reddit's API not returning the thumbnail URL. No workaround for this yet.
+> Miniatury nie działają w przypadku niektórych subredditów, ponieważ API Reddita nie zwraca adresu URL miniatury. Nie ma na to jeszcze obejścia.
 
 ##### `show-flairs`
-Shows post flairs when set to `true`.
+Pokazuje oznaczenia wpisów (flairy) po ustawieniu na `true`.
 
 ##### `limit`
-The maximum number of posts to show.
+Maksymalna liczba wpisów do wyświetlenia.
 
 ##### `collapse-after`
-How many posts are visible before the "SHOW MORE" button appears. Set to `-1` to never collapse. Not available when using the `vertical-cards` and `horizontal-cards` styles.
+Liczba widocznych wpisów, po której pojawia się przycisk „SHOW MORE”. Ustaw `-1`, aby nigdy nie zwijać. Niedostępne w stylach `vertical-cards` i `horizontal-cards`.
 
 ##### `comments-url-template`
-Used to replace the default link for post comments. Useful if you want to use the old Reddit design or any other 3rd party front-end. Example:
+Służy do zastąpienia domyślnego linku do komentarzy wpisu. Przydatne, jeśli chcesz użyć starego wyglądu Reddita lub innego frontendu. Przykład:
 
 ```yaml
 comments-url-template: https://old.reddit.com/{POST-PATH}
 ```
 
-Placeholders:
+Placeholdery:
 
-`{POST-PATH}` - the full path to the post, such as:
+`{POST-PATH}` — pełna ścieżka do wpisu, na przykład:
 
 ```
 r/selfhosted/comments/bsp01i/welcome_to_rselfhosted_please_read_this_first/
 ```
 
-`{POST-ID}` - the ID that comes after `/comments/`
+`{POST-ID}` — identyfikator znajdujący się po `/comments/`
 
-`{SUBREDDIT}` - the subreddit name
+`{SUBREDDIT}` — nazwa subreddita
 
 ##### `request-url-template`
-A custom request URL that will be used to fetch the data. This is useful when you're hosting Glance on a VPS where Reddit is blocking the requests and you want to route them through a proxy that accepts the URL as either a part of the path or a query parameter.
+Niestandardowy adres URL żądania używany do pobierania danych. Przydatne, gdy hostujesz Glance na VPS, gdzie Reddit blokuje żądania, i chcesz skierować je przez proxy akceptujące adres URL jako część ścieżki lub parametr zapytania.
 
-Placeholders:
+Placeholdery:
 
-`{REQUEST-URL}` - will be templated and replaced with the expanded request URL (i.e. https://www.reddit.com/r/selfhosted/hot.json). Example:
+`{REQUEST-URL}` — zostanie zastąpiony rozwiniętym adresem URL żądania (np. https://www.reddit.com/r/selfhosted/hot.json). Przykład:
 
 ```
 https://proxy/{REQUEST-URL}
@@ -1133,14 +1154,14 @@ https://your.proxy/?url={REQUEST-URL}
 ```
 
 ##### `proxy`
-A custom HTTP/HTTPS proxy URL that will be used to fetch the data. This is useful when you're hosting Glance on a VPS where Reddit is blocking the requests and you want to bypass the restriction by routing the requests through a proxy. Example:
+Niestandardowy adres URL proxy HTTP/HTTPS używany do pobierania danych. Przydatne, gdy hostujesz Glance na VPS, gdzie Reddit blokuje żądania, i chcesz obejść ograniczenie, kierując żądania przez proxy. Przykład:
 
 ```yaml
 proxy: http://user:pass@proxy.com:8080
 proxy: https://user:pass@proxy.com:443
 ```
 
-Alternatively, you can specify the proxy URL as well as additional options by using multiple parameters:
+Alternatywnie możesz podać adres URL proxy oraz dodatkowe opcje za pomocą wielu parametrów:
 
 ```yaml
 proxy:
@@ -1150,26 +1171,26 @@ proxy:
 ```
 
 ###### `allow-insecure`
-When set to `true`, allows the use of insecure connections such as when the proxy has a self-signed certificate.
+Po ustawieniu na `true` zezwala na używanie niezabezpieczonych połączeń, na przykład gdy proxy ma certyfikat z podpisem własnym.
 
 ###### `timeout`
-The maximum time to wait for a response from the proxy. The value is a string and must be a number followed by one of s, m, h, d. Example: `10s` for 10 seconds, `1m` for 1 minute, etc
+Maksymalny czas oczekiwania na odpowiedź proxy. Wartość jest ciągiem znaków i musi być liczbą, po której następuje jedna z liter s, m, h, d. Przykład: `10s` dla 10 sekund, `1m` dla 1 minuty itp.
 
 ##### `sort-by`
-Can be used to specify the order in which the posts should get returned. Possible values are `hot`, `new`, `top` and `rising`.
+Może służyć do określenia kolejności zwracanych wpisów. Możliwe wartości: `hot`, `new`, `top` i `rising`.
 
 ##### `top-period`
-Available only when `sort-by` is set to `top`. Possible values are `hour`, `day`, `week`, `month`, `year` and `all`.
+Dostępne tylko wtedy, gdy `sort-by` jest ustawione na `top`. Możliwe wartości: `hour`, `day`, `week`, `month`, `year` i `all`.
 
 ##### `search`
-Keywords to search for. Searching within specific fields is also possible, **though keep in mind that Reddit may remove the ability to use any of these at any time**:
+Słowa kluczowe do wyszukania. Możliwe jest również wyszukiwanie w określonych polach, **pamiętaj jednak, że Reddit może w każdej chwili usunąć możliwość korzystania z nich**:
 
 ![](images/reddit-field-search.png)
 
 ##### `extra-sort-by`
-Can be used to specify an additional sort which will be applied on top of the already sorted posts. By default does not apply any extra sorting and the only available option is `engagement`.
+Może służyć do określenia dodatkowego sortowania, które zostanie zastosowane na już posortowanych wpisach. Domyślnie nie stosuje się żadnego dodatkowego sortowania; jedyną dostępną opcją jest `engagement`.
 
-The `engagement` sort tries to place the posts with the most points and comments on top, also prioritizing recent over old posts.
+Sortowanie `engagement` stara się umieścić na górze wpisy z największą liczbą punktów i komentarzy, preferując również nowsze wpisy nad starszymi.
 
 ##### `app-auth`
 ```yaml
@@ -1182,12 +1203,13 @@ widgets:
       secret: ${REDDIT_APP_SECRET}
 ```
 
-To register an app on Reddit, go to [this page](https://ssl.reddit.com/prefs/apps/).
+Aby zarejestrować aplikację na Reddicie, przejdź na [tę stronę](https://ssl.reddit.com/prefs/apps/).
 
-### Search Widget
-Display a search bar that can be used to search for specific terms on various search engines.
+<a id="search-widget"></a>
+### Wyszukiwarka
+Wyświetla pasek wyszukiwania, który można wykorzystać do wyszukiwania określonych fraz w różnych wyszukiwarkach.
 
-Example:
+Przykład:
 
 ```yaml
 - type: search
@@ -1202,39 +1224,39 @@ Example:
       subtitle: Search on YouTube
 ```
 
-Preview:
+Podgląd:
 
 ![](images/search-widget-preview.png)
 
-#### Keyboard shortcuts
-| Keys | Action | Condition |
+#### Skróty klawiszowe
+| Klawisze | Akcja | Warunek |
 | ---- | ------ | --------- |
-| <kbd>S</kbd> | Focus the search bar | Not already focused on another input field |
-| <kbd>Enter</kbd> | Perform search in the same tab | Search input is focused and not empty |
-| <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | Perform search in a new tab | Search input is focused and not empty |
-| <kbd>Escape</kbd> | Leave focus | Search input is focused |
-| <kbd>Up</kbd> | Insert the last search query since the page was opened into the input field | Search input is focused |
+| <kbd>S</kbd> | Ustawia fokus na pasku wyszukiwania | Fokus nie jest już ustawiony na innym polu wprowadzania |
+| <kbd>Enter</kbd> | Wykonuje wyszukiwanie w tej samej karcie | Pole wyszukiwania ma fokus i nie jest puste |
+| <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | Wykonuje wyszukiwanie w nowej karcie | Pole wyszukiwania ma fokus i nie jest puste |
+| <kbd>Escape</kbd> | Opuszcza pole | Pole wyszukiwania ma fokus |
+| <kbd>Up</kbd> | Wstawia do pola ostatnie zapytanie od otwarcia strony | Pole wyszukiwania ma fokus |
 
 > [!TIP]
 >
-> You can use the property `new-tab` with a value of `true` if you want to show search results in a new tab by default. <kbd>Ctrl</kbd> + <kbd>Enter</kbd> will then show results in the same tab.
+> Możesz użyć właściwości `new-tab` z wartością `true`, jeśli chcesz domyślnie wyświetlać wyniki wyszukiwania w nowej karcie. Wtedy <kbd>Ctrl</kbd> + <kbd>Enter</kbd> wyświetli wyniki w tej samej karcie.
 
-#### Properties
-| Name | Type | Required | Default |
+#### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| search-engine | string | no | duckduckgo |
-| new-tab | boolean | no | false |
-| autofocus | boolean | no | false |
-| target | string | no | _blank |
-| placeholder | string | no | Type here to search… |
-| hide-dropdown | boolean | no | false |
-| recent-bangs-count | number | no | 3 |
-| bangs | array | no | |
+| search-engine | string | nie | duckduckgo |
+| new-tab | boolean | nie | false |
+| autofocus | boolean | nie | false |
+| target | string | nie | _blank |
+| placeholder | string | nie | Type here to search… |
+| hide-dropdown | boolean | nie | false |
+| recent-bangs-count | number | nie | 3 |
+| bangs | array | nie | |
 
 ##### `search-engine`
-Either a value from the table below or a URL to a custom search engine. Use `{QUERY}` to indicate where the query value gets placed.
+Wartość z poniższej tabeli lub adres URL niestandardowej wyszukiwarki. Użyj `{QUERY}`, aby wskazać miejsce wstawienia zapytania.
 
-| Name | URL |
+| Nazwa | URL |
 | ---- | --- |
 | duckduckgo | `https://duckduckgo.com/?q={QUERY}` |
 | google | `https://www.google.com/search?q={QUERY}` |
@@ -1244,58 +1266,58 @@ Either a value from the table below or a URL to a custom search engine. Use `{QU
 | startpage | `https://www.startpage.com/search?q={QUERY}` |
 
 ##### `new-tab`
-When set to `true`, swaps the shortcuts for showing results in the same or new tab, defaulting to showing results in a new tab.
+Po ustawieniu na `true` zamienia skróty odpowiedzialne za wyświetlanie wyników w tej samej lub nowej karcie, domyślnie otwierając wyniki w nowej karcie.
 
 ##### `autofocus`
-When set to `true`, automatically focuses the search input on page load.
+Po ustawieniu na `true` automatycznie ustawia fokus na polu wyszukiwania po załadowaniu strony.
 
 ##### `target`
-The target to use when opening the search results in a new tab. Possible values are `_blank`, `_self`, `_parent` and `_top`.
+Wartość atrybutu `target` używana przy otwieraniu wyników wyszukiwania w nowej karcie. Możliwe wartości: `_blank`, `_self`, `_parent` i `_top`.
 
 ##### `placeholder`
-When set, modifies the text displayed in the input field before typing.
+Po ustawieniu zmienia tekst wyświetlany w polu przed wpisaniem zapytania.
 
 ##### `hide-dropdown`
-When set to `true`, hides the dropdown with available bangs when the search input is focused. When set to `false`, the dropdown is shown. Default is `false`.
+Po ustawieniu na `true` ukrywa listę rozwijaną z dostępnymi bangami, gdy pole wyszukiwania ma fokus. Po ustawieniu na `false` lista jest widoczna. Domyślnie `false`.
 
 ##### `recent-bangs-count`
-Controls how many recently used bangs appear in the "Recent" section of the dropdown. Default is `3`. Maximum is 10. When set to `0`, the "Recent" section is completely hidden.
+Określa, ile ostatnio używanych bangów pojawia się w sekcji „Recent” listy rozwijanej. Domyślnie `3`. Maksymalnie 10. Po ustawieniu na `0` sekcja „Recent” jest całkowicie ukryta.
 
 ##### `bangs`
-What now? [Bangs](https://duckduckgo.com/bangs). They're shortcuts that allow you to use the same search box for many different sites. Assuming you have it configured, if for example you start your search input with `!yt` you'd be able to perform a search on YouTube:
+Co teraz? [Bangi](https://duckduckgo.com/bangs). To skróty, które pozwalają używać tego samego pola wyszukiwania dla wielu różnych witryn. Zakładając, że masz je skonfigurowane, jeśli na przykład rozpoczniesz wpisywanie od `!yt`, będziesz mógł wyszukać coś na YouTube:
 
 ![](images/search-widget-bangs-preview.png)
 
-##### Properties for each bang
-| Name | Type | Required |
+##### Właściwości każdego bangu
+| Nazwa | Typ | Wymagane |
 | ---- | ---- | -------- |
-| title | string | no |
-| subtitle | string | no |
-| shortcut | string | yes |
-| url | string | yes |
-| icon | string | no |
+| title | string | nie |
+| subtitle | string | nie |
+| shortcut | string | tak |
+| url | string | tak |
+| icon | string | nie |
 
 ###### `title`
-Optional title that will appear on the right side of the search bar when the query starts with the associated shortcut.
+Opcjonalny tytuł, który pojawi się po prawej stronie paska wyszukiwania, gdy zapytanie rozpoczyna się od powiązanego skrótu.
 
 ###### `subtitle`
-Optional subtitle displayed below the title in the dropdown.
+Opcjonalny podtytuł wyświetlany pod tytułem na liście rozwijanej.
 
 ###### `title`
-Optional title that will appear on the right side of the search bar when the query starts with the associated shortcut.
+Opcjonalny tytuł, który pojawi się po prawej stronie paska wyszukiwania, gdy zapytanie rozpoczyna się od powiązanego skrótu.
 
 ###### `shortcut`
-Any value you wish to use as the shortcut for the search engine. It does not have to start with `!`.
+Dowolna wartość, której chcesz użyć jako skrótu wyszukiwarki. Nie musi zaczynać się od `!`.
 
 > [!IMPORTANT]
 >
-> In YAML some characters have special meaning when placed in the beginning of a value. If your shortcut starts with `!` (and potentially some other special characters) you'll have to wrap the value in quotes:
+> W YAML niektóre znaki mają specjalne znaczenie, gdy znajdują się na początku wartości. Jeśli Twój skrót zaczyna się od `!` (i potencjalnie innych znaków specjalnych), musisz ująć wartość w cudzysłów:
 > ```yaml
 > shortcut: "!yt"
 >```
 
 ###### `url`
-The URL of the search engine. Use `{QUERY}` to indicate where the query value gets placed. Examples:
+Adres URL wyszukiwarki. Użyj `{QUERY}`, aby wskazać miejsce wstawienia zapytania. Przykłady:
 
 ```yaml
 url: https://www.reddit.com/search?q={QUERY}
@@ -1303,10 +1325,11 @@ url: https://store.steampowered.com/search/?term={QUERY}
 url: https://www.amazon.com/s?k={QUERY}
 ```
 
+<a id="group"></a>
 ### Group
-Group multiple widgets into one using tabs. Widgets are defined using a `widgets` property exactly as you would on a page column. The only limitation is that you cannot place a group widget or a split column widget within a group widget.
+Grupuje wiele widgetów w jeden za pomocą kart. Widgety definiuje się za pomocą właściwości `widgets`, dokładnie tak jak w kolumnie strony. Jedynym ograniczeniem jest to, że nie można umieścić widgetu group ani widgetu split-column wewnątrz widgetu group.
 
-Example:
+Przykład:
 
 ```yaml
 - type: group
@@ -1322,15 +1345,15 @@ Example:
       show-thumbnails: true
 ```
 
-Preview:
+Podgląd:
 
 ![](images/group-widget-preview.png)
 
-#### Sharing properties
+#### Współdzielenie właściwości
 
-To avoid repetition you can use [YAML anchors](https://support.atlassian.com/bitbucket-cloud/docs/yaml-anchors/) and share properties between widgets.
+Aby uniknąć powtarzania, możesz użyć [kotwic YAML](https://support.atlassian.com/bitbucket-cloud/docs/yaml-anchors/) i współdzielić właściwości między widgetami.
 
-Example:
+Przykład:
 
 ```yaml
 - type: group
@@ -1347,15 +1370,16 @@ Example:
       <<: *shared-properties
 ```
 
+<a id="split-column"></a>
 ### Split Column
-Splits a full sized column in half, allowing you to place widgets side by side horizontally. This is converted to a single column on mobile devices or if not enough width is available. Widgets are defined using a `widgets` property exactly as you would on a page column.
+Dzieli kolumnę pełnej szerokości na pół, umożliwiając umieszczenie widgetów obok siebie w poziomie. Na urządzeniach mobilnych lub przy niewystarczającej szerokości jest to zamieniane na jedną kolumnę. Widgety definiuje się za pomocą właściwości `widgets`, dokładnie tak jak w kolumnie strony.
 
-Two widgets side by side in a `full` column:
+Dwa widgety obok siebie w kolumnie `full`:
 
 ![](images/split-column-widget-preview.png)
 
 <details>
-<summary>View <code>glance.yml</code></summary>
+<summary>Pokaż <code>glance.yml</code></summary>
 <br>
 
 ```yaml
@@ -1375,14 +1399,14 @@ Two widgets side by side in a `full` column:
 </details>
 <br>
 
-You can also achieve a number of different full page layouts using just this widget, such as:
+Za pomocą samego tego widgetu możesz również uzyskać różne układy pełnej strony, na przykład:
 
-3 column layout where all columns have equal width:
+Układ 3 kolumn o równej szerokości:
 
 ![](images/split-column-widget-3-columns.png)
 
 <details>
-<summary>View <code>glance.yml</code></summary>
+<summary>Pokaż <code>glance.yml</code></summary>
 <br>
 
 ```yaml
@@ -1407,12 +1431,12 @@ pages:
 </details>
 <br>
 
-4 column layout where all columns have equal width (and the page is set to `width: wide`):
+Układ 4 kolumn o równej szerokości (a strona ustawiona na `width: wide`):
 
 ![](images/split-column-widget-4-columns.png)
 
 <details>
-<summary>View <code>glance.yml</code></summary>
+<summary>Pokaż <code>glance.yml</code></summary>
 <br>
 
 ```yaml
@@ -1441,12 +1465,12 @@ pages:
 </details>
 <br>
 
-Masonry layout with up to 5 columns where all columns have equal width (and the page is set to `width: wide`):
+Układ kaskadowy (masonry) z maksymalnie 5 kolumnami o równej szerokości (a strona ustawiona na `width: wide`):
 
 ![](images/split-column-widget-masonry.png)
 
 <details>
-<summary>View <code>glance.yml</code></summary>
+<summary>Pokaż <code>glance.yml</code></summary>
 <br>
 
 ```yaml
@@ -1488,23 +1512,24 @@ pages:
 </details>
 <br>
 
-Just like the `group` widget, you can insert any widget type, you can even insert a `group` widget inside of a `split-column` widget, but you can't insert a `split-column` widget inside of a `group` widget.
+Podobnie jak w widgecie `group`, możesz wstawić dowolny typ widgetu — możesz nawet wstawić widget `group` do widgetu `split-column`, ale nie możesz wstawić widgetu `split-column` do widgetu `group`.
 
 
+<a id="custom-api"></a>
 ### Custom API
 
-Display data from a JSON API using a custom template.
+Wyświetla dane z API JSON za pomocą niestandardowego szablonu.
 
 > [!NOTE]
 >
-> The configuration of this widget requires some basic knowledge of programming, HTML, CSS, the Go template language and Glance-specific concepts.
+> Konfiguracja tego widgetu wymaga podstawowej znajomości programowania, HTML, CSS, języka szablonów Go oraz koncepcji specyficznych dla Glance.
 
-Examples:
+Przykłady:
 
 ![](images/custom-api-preview-1.png)
 
 <details>
-<summary>View <code>glance.yml</code></summary>
+<summary>Pokaż <code>glance.yml</code></summary>
 <br>
 
 ```yaml
@@ -1521,7 +1546,7 @@ Examples:
 ![](images/custom-api-preview-2.png)
 
 <details>
-<summary>View <code>glance.yml</code></summary>
+<summary>Pokaż <code>glance.yml</code></summary>
 <br>
 
 ```yaml
@@ -1554,7 +1579,7 @@ Examples:
 ![](images/custom-api-preview-3.png)
 
 <details>
-<summary>View <code>glance.yml</code></summary>
+<summary>Pokaż <code>glance.yml</code></summary>
 <br>
 
 ```yaml
@@ -1578,27 +1603,27 @@ Examples:
 ```
 </details>
 
-#### Properties
-| Name | Type | Required | Default |
+#### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| url | string | no | |
-| headers | key (string) & value (string) | no | |
-| method | string | no | GET |
-| body-type | string | no | json |
-| body | any | no | |
-| frameless | boolean | no | false |
-| allow-insecure | boolean | no | false |
-| skip-json-validation | boolean | no | false |
-| template | string | yes | |
-| options | map | no | |
-| parameters | key (string) & value (string|array) | no | |
-| subrequests | map of requests | no | |
+| url | string | nie | |
+| headers | klucz (string) i wartość (string) | nie | |
+| method | string | nie | GET |
+| body-type | string | nie | json |
+| body | any | nie | |
+| frameless | boolean | nie | false |
+| allow-insecure | boolean | nie | false |
+| skip-json-validation | boolean | nie | false |
+| template | string | tak | |
+| options | map | nie | |
+| parameters | klucz (string) i wartość (string|array) | nie | |
+| subrequests | mapa żądań | nie | |
 
 ##### `url`
-The URL to fetch the data from. It must be accessible from the server that Glance is running on.
+Adres URL, z którego mają być pobrane dane. Musi być dostępny z serwera, na którym działa Glance.
 
 ##### `headers`
-Optionally specify the headers that will be sent with the request. Example:
+Opcjonalnie określa nagłówki wysyłane z żądaniem. Przykład:
 
 ```yaml
 headers:
@@ -1607,13 +1632,13 @@ headers:
 ```
 
 ##### `method`
-The HTTP method to use when making the request. Possible values are `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS` and `HEAD`.
+Metoda HTTP używana podczas wykonywania żądania. Możliwe wartości: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS` i `HEAD`.
 
 ##### `body-type`
-The type of the body that will be sent with the request. Possible values are `json`, and `string`.
+Typ treści wysyłanej z żądaniem. Możliwe wartości: `json` i `string`.
 
 ##### `body`
-The body that will be sent with the request. It can be a string or a map. Example:
+Treść wysyłana z żądaniem. Może to być ciąg znaków lub mapa. Przykład:
 
 ```yaml
 body-type: json
@@ -1632,31 +1657,31 @@ body: |
 ```
 
 ##### `frameless`
-When set to `true`, removes the border and padding around the widget.
+Po ustawieniu na `true` usuwa obramowanie i wewnętrzny odstęp wokół widgetu.
 
 ##### `allow-insecure`
-Whether to ignore invalid/self-signed certificates.
+Określa, czy ignorować nieprawidłowe certyfikaty lub certyfikaty z podpisem własnym.
 
 ##### `skip-json-validation`
-When set to `true`, skips the JSON validation step. This is useful when the API returns JSON Lines/newline-delimited JSON, which is a format that consists of several JSON objects separated by newlines.
+Po ustawieniu na `true` pomija sprawdzanie poprawności JSON. Jest to przydatne, gdy API zwraca JSON Lines / newline-delimited JSON, czyli format składający się z kilku obiektów JSON oddzielonych znakami nowej linii.
 
 ##### `template`
-The template that will be used to display the data. It relies on Go's `html/template` package so it's recommended to go through [its documentation](https://pkg.go.dev/text/template) to understand how to do basic things such as conditionals, loops, etc. In addition, it also uses [tidwall's gjson](https://github.com/tidwall/gjson) package to parse the JSON data so it's worth going through its documentation if you want to use more advanced JSON selectors. You can view additional examples with explanations and function definitions [here](custom-api.md).
+Szablon używany do wyświetlania danych. Opiera się na pakiecie `html/template` Go, dlatego zaleca się zapoznanie z [jego dokumentacją](https://pkg.go.dev/text/template), aby zrozumieć podstawy, takie jak warunki i pętle. Ponadto używa pakietu [tidwall's gjson](https://github.com/tidwall/gjson) do parsowania danych JSON, więc warto przejrzeć jego dokumentację, jeśli chcesz używać bardziej zaawansowanych selektorów JSON. Więcej przykładów z wyjaśnieniami i definicjami funkcji znajdziesz [tutaj](custom-api.md).
 
 ##### `options`
-A map of options that will be passed to the template and can be used to modify the behavior of the widget.
+Mapa opcji przekazywanych do szablonu, które można wykorzystać do zmiany zachowania widgetu.
 
 <details>
-<summary>View examples</summary>
+<summary>Pokaż przykłady</summary>
 
 <br>
 
-Instead of defining options within the template and having to modify the template itself like such:
+Zamiast definiować opcje wewnątrz szablonu i modyfikować sam szablon w następujący sposób:
 
 ```yaml
 - type: custom-api
   template: |
-    {{ /* User configurable options */ }}
+    {{ /* Opcje konfigurowane przez użytkownika */ }}
     {{ $collapseAfter := 5 }}
     {{ $showThumbnails := true }}
     {{ $showFlairs := false }}
@@ -1675,7 +1700,7 @@ Instead of defining options within the template and having to modify the templat
      </ul>
 ```
 
-You can use the `options` property to retrieve and define default values for these variables:
+Możesz użyć właściwości `options`, aby pobrać i zdefiniować wartości domyślne dla tych zmiennych:
 
 ```yaml
 - type: custom-api
@@ -1694,7 +1719,7 @@ You can use the `options` property to retrieve and define default values for the
     </ul>
 ```
 
-This way, you can optionally specify the `collapse-after`, `show-thumbnails` and `show-flairs` properties in the widget configuration:
+Dzięki temu możesz opcjonalnie określić właściwości `collapse-after`, `show-thumbnails` i `show-flairs` w konfiguracji widgetu:
 
 ```yaml
 - type: custom-api
@@ -1704,10 +1729,10 @@ This way, you can optionally specify the `collapse-after`, `show-thumbnails` and
     show-flairs: false
 ```
 
-Which means you can reuse the same template for multiple widgets with different options:
+Co oznacza, że możesz ponownie użyć tego samego szablonu w wielu widgetach z różnymi opcjami:
 
 ```yaml
-# Note that `custom-widgets` isn't a special property, it's just used to define the reusable "anchor", see https://support.atlassian.com/bitbucket-cloud/docs/yaml-anchors/
+# Pamiętaj, że `custom-widgets` nie jest specjalną właściwością — służy jedynie do zdefiniowania wielokrotnie używanego „anchor”, patrz https://support.atlassian.com/bitbucket-cloud/docs/yaml-anchors/
 custom-widgets:
   - &example-widget
     type: custom-api
@@ -1728,15 +1753,15 @@ pages:
               custom-option: "Value 2"
 ```
 
-Currently, the available methods on the `.Options` object are: `StringOr`, `IntOr`, `BoolOr` and `FloatOr`.
+Obecnie dostępne metody obiektu `.Options` to: `StringOr`, `IntOr`, `BoolOr` i `FloatOr`.
 
 </details>
 
 ##### `parameters`
-A list of keys and values that will be sent to the custom-api as query paramters.
+Lista kluczy i wartości wysyłanych do custom-api jako parametry zapytania.
 
 ##### `subrequests`
-A map of additional requests that will be executed concurrently and then made available in the template via the `.Subrequest` property. Example:
+Mapa dodatkowych żądań, które zostaną wykonane równolegle, a następnie udostępnione w szablonie przez właściwość `.Subrequest`. Przykład:
 
 ```yaml
 - type: custom-api
@@ -1751,9 +1776,9 @@ A map of additional requests that will be executed concurrently and then made av
     <p class="size-h4 color-paragraph margin-top-15">{{ (.Subrequest "another-one").JSON.String "text" }}</p>
 ```
 
-The subrequests support all the same properties as the main request, except for `subrequests` itself, so you can use `headers`, `parameters`, etc.
+Podżądania obsługują te same właściwości co żądanie główne, z wyjątkiem samego `subrequests`, więc możesz używać `headers`, `parameters` itp.
 
-`(.Subrequest "key")` can be a little cumbersome to write, so you can define a variable to make it easier:
+Zapis `(.Subrequest "key")` może być nieco uciążliwy, dlatego możesz zdefiniować zmienną, aby go uprościć:
 
 ```yaml
   template: |
@@ -1761,7 +1786,7 @@ The subrequests support all the same properties as the main request, except for 
     <p>{{ $anotherOne.JSON.String "text" }}</p>
 ```
 
-You can also access the `.Response` property of a subrequest as you would with the main request:
+Możesz również uzyskać dostęp do właściwości `.Response` podżądania, tak jak w przypadku żądania głównego:
 
 ```yaml
   template: |
@@ -1771,7 +1796,7 @@ You can also access the `.Response` property of a subrequest as you would with t
 
 > [!NOTE]
 >
-> Setting this property will override any query parameters that are already in the URL.
+> Ustawienie tej właściwości nadpisze wszelkie parametry zapytania znajdujące się już w adresie URL.
 
 ```yaml
 parameters:
@@ -1781,56 +1806,58 @@ parameters:
     - item2
 ```
 
+<a id="opencode-go"></a>
 ### OpenCode Go
-Display the usage of your [OpenCode Go](https://opencode.ai/) subscription. The widget shows the rolling (5 hour), weekly and monthly usage windows with their reset time, using data from the official quota API `https://opencode.ai/zen/go/v1/usage`.
+Wyświetla wykorzystanie subskrypcji [OpenCode Go](https://opencode.ai/). Widget pokazuje okna zużycia kroczącego (5 godzin), tygodniowego i miesięcznego wraz z czasem resetu, korzystając z danych z oficjalnego API limitów `https://opencode.ai/zen/go/v1/usage`.
 
-For the monthly window it can also show a forecast of where the usage will end up at the end of the billing cycle, together with the average daily usage.
+Dla okna miesięcznego może również pokazać prognozę wykorzystania na koniec cyklu rozliczeniowego wraz ze średnim dziennym zużyciem.
 
-Example:
+Przykład:
 
 ```yaml
 - type: opencode-go
   api-key: ${OPENCODE_GO_KEY}
 ```
 
-Preview:
+Podgląd:
 
-(Three usage bars: 5 godzin, Tydzień and Miesiąc, each with a percentage and a reset time; the monthly bar also has a hatched projection segment and a `PROGNOZA 61% · 2.0%/dzień` badge)
+(Trzy paski zużycia: 5 godzin, Tydzień i Miesiąc, każdy z procentem i czasem resetu; pasek miesięczny ma dodatkowo kreskowany odcinek prognozy oraz plakietkę `PROGNOZA 61% · 2.0%/dzień`)
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| api-key | string | yes | |
-| url | string | no | https://opencode.ai/zen/go/v1/usage |
-| warning-threshold | number | no | 85 |
-| show-forecast | boolean | no | true |
-| cache | duration | no | 5m |
+| api-key | string | tak | |
+| url | string | nie | https://opencode.ai/zen/go/v1/usage |
+| warning-threshold | number | nie | 85 |
+| show-forecast | boolean | nie | true |
+| cache | duration | nie | 5m |
 
 ##### `title-url`
-By default the widget title is a clickable link to the [OpenCode console](https://opencode.ai/console). Use the standard `title-url` property to point it somewhere else.
+Domyślnie tytuł widgetu jest klikalnym linkiem do [konsoli OpenCode](https://opencode.ai/console). Użyj standardowej właściwości `title-url`, aby wskazać inne miejsce.
 
 ##### `api-key`
-Your OpenCode Go API key (the same key used for the API). It is sent as a `Bearer` token. It is recommended to provide it through an [environment variable](#environment-variables) or a [secret](#other-ways-of-providing-tokenspasswordsecrets), for example `api-key: ${OPENCODE_GO_KEY}`.
+Twój klucz API OpenCode Go (ten sam, którego używasz do API). Jest wysyłany jako token `Bearer`. Zaleca się przekazywanie go przez [zmienną środowiskową](#environment-variables) lub [sekret](#other-ways-of-providing-tokenspasswordssecrets), na przykład `api-key: ${OPENCODE_GO_KEY}`.
 
 ##### `url`
-The URL of the usage endpoint. You only need to change this if you are pointing at a different (e.g. self-hosted or proxy) endpoint.
+Adres URL endpointu zużycia. Zmieniaj go tylko wtedy, gdy chcesz wskazać inny endpoint (np. własny lub za proxy).
 
 ##### `warning-threshold`
-The usage percentage at which a window's bar turns into the negative (warning) color. Defaults to `85`.
+Procent wykorzystania, przy którym pasek danego okna zmienia kolor na negatywny (ostrzegawczy). Domyślnie `85`.
 
 ##### `show-forecast`
-Whether to show the estimated end-of-cycle usage for the monthly window. Defaults to `true`.
+Określa, czy pokazywać szacowane zużycie na koniec cyklu dla okna miesięcznego. Domyślnie `true`.
 
 > [!NOTE]
 >
-> The quota API does not expose a forecast. It only returns the current percentage (floored to a whole number) and the reset time, while the OpenCode console uses the exact micro-cent usage and the exact start of the billing period. The widget therefore estimates the forecast locally: it assumes the billing cycle is one calendar month long, adds half a percentage point to compensate for the flooring, and linearly extrapolates the average daily usage. A small difference from the console is expected — usually 1–2 percentage points, and more at very low usage. The forecast is hidden during the first day of a cycle, when there is not enough data.
+> API limitów nie udostępnia prognozy. Zwraca jedynie bieżący procent (ucinany do liczby całkowitej) oraz czas resetu, podczas gdy konsola OpenCode używa dokładnego zużycia w mikrogroszach i dokładnego początku okresu rozliczeniowego. Widget szacuje więc prognozę lokalnie: zakłada, że cykl rozliczeniowy trwa jeden miesiąc kalendarzowy, dodaje pół punktu procentowego, aby skompensować ucinanie, i liniowo ekstrapoluje średnie dzienne zużycie. Niewielka różnica względem konsoli jest oczekiwana — zwykle 1–2 punkty procentowe, a przy bardzo niskim zużyciu większa. Prognoza jest ukryta przez pierwszy dzień cyklu, gdy danych jest zbyt mało.
 
 ##### `cache`
-How long to cache the response before fetching it again. Defaults to `5m`.
+Jak długo cache'ować odpowiedź przed ponownym pobraniem. Domyślnie `5m`.
 
+<a id="extension"></a>
 ### Extension
-Display a widget provided by an external source (3rd party). If you want to learn more about developing extensions, checkout the [extensions documentation](extensions.md) (WIP).
+Wyświetla widget dostarczany przez zewnętrzne źródło (stronę trzecią). Jeśli chcesz dowiedzieć się więcej o tworzeniu rozszerzeń, zapoznaj się z [dokumentacją rozszerzeń](extensions.md) (WIP).
 
 ```yaml
 - type: extension
@@ -1840,23 +1867,23 @@ Display a widget provided by an external source (3rd party). If you want to lear
     message: Hello, world!
 ```
 
-#### Properties
-| Name | Type | Required | Default |
+#### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| url | string | yes | |
-| fallback-content-type | string | no | |
-| allow-potentially-dangerous-html | boolean | no | false |
-| headers | key & value | no | |
-| parameters | key & value | no | |
+| url | string | tak | |
+| fallback-content-type | string | nie | |
+| allow-potentially-dangerous-html | boolean | nie | false |
+| headers | klucz i wartość | nie | |
+| parameters | klucz i wartość | nie | |
 
 ##### `url`
-The URL of the extension. **Note that the query gets stripped from this URL and the one defined by `parameters` gets used instead.**
+Adres URL rozszerzenia. **Pamiętaj, że zapytanie jest usuwane z tego adresu URL, a zamiast niego używane są parametry zdefiniowane w `parameters`.**
 
 ##### `fallback-content-type`
-Optionally specify the fallback content type of the extension if the URL does not return a valid `Widget-Content-Type` header. Currently the only supported value for this property is `html`.
+Opcjonalnie określa zapasowy typ zawartości rozszerzenia, jeśli adres URL nie zwraca prawidłowego nagłówka `Widget-Content-Type`. Obecnie jedyną obsługiwaną wartością tej właściwości jest `html`.
 
 ##### `headers`
-Optionally specify the headers that will be sent with the request. Example:
+Opcjonalnie określa nagłówki wysyłane z żądaniem. Przykład:
 
 ```yaml
 headers:
@@ -1864,19 +1891,20 @@ headers:
 ```
 
 ##### `allow-potentially-dangerous-html`
-Whether to allow the extension to display HTML.
+Określa, czy zezwolić rozszerzeniu na wyświetlanie HTML.
 
 > [!WARNING]
 >
-> There's a reason this property is scary-sounding. It's intended to be used by developers who are comfortable with developing and using their own extensions. Do not enable it if you have no idea what it means or if you're not **absolutely sure** that the extension URL you're using is safe.
+> Ta właściwość ma przerażająco brzmiącą nazwę nie bez powodu. Jest przeznaczona dla programistów, którzy czują się swobodnie w tworzeniu i używaniu własnych rozszerzeń. Nie włączaj jej, jeśli nie wiesz, co oznacza, albo jeśli nie masz **absolutnej pewności**, że adres URL używanego rozszerzenia jest bezpieczny.
 
 ##### `parameters`
-A list of keys and values that will be sent to the extension as query paramters.
+Lista kluczy i wartości wysyłanych do rozszerzenia jako parametry zapytania.
 
-### Weather
-Display weather information for a specific location. The data is provided by https://open-meteo.com/.
+<a id="weather"></a>
+### Pogoda
+Wyświetla informacje o pogodzie dla określonej lokalizacji. Dane dostarcza https://open-meteo.com/.
 
-Example:
+Przykład:
 
 ```yaml
 - type: weather
@@ -1887,114 +1915,116 @@ Example:
 
 > [!NOTE]
 >
-> US cities which have common names can have their state specified as the second parameter as such:
+> W przypadku miast w USA o popularnych nazwach można podać stan jako drugi parametr:
 >
 > * Greenville, North Carolina, United States
 > * Greenville, South Carolina, United States
 > * Greenville, Mississippi, United States
 
 
-Preview:
+Podgląd:
 
 ![](images/weather-widget-preview.png)
 
-Each bar represents a 2 hour interval. The yellow background represents sunrise and sunset. The blue dots represent the times of the day where there is a high chance for precipitation. You can hover over the bars to view the exact temperature for that time.
+Każdy pasek reprezentuje 2-godzinny przedział. Żółte tło oznacza wschód i zachód słońca. Niebieskie kropki oznaczają pory dnia, w których istnieje duża szansa na opady. Najedź kursorem na paski, aby zobaczyć dokładną temperaturę dla danego czasu.
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| location | string | yes |  |
-| units | string | no | metric |
-| hour-format | string | no | 12h |
-| hide-location | boolean | no | false |
-| show-area-name | boolean | no | false |
-| use-brightsky | boolean | no | false | 
-| lat | string | no | |
-| lon | string | no | |
+| location | string | tak |  |
+| units | string | nie | metric |
+| hour-format | string | nie | 12h |
+| hide-location | boolean | nie | false |
+| show-area-name | boolean | nie | false |
+| use-brightsky | boolean | nie | false |
+| lat | string | nie | |
+| lon | string | nie | |
 
 ##### `location`
-The name of the city and country to fetch weather information for. Attempting to launch the applcation with an invalid location will result in an error. You can use the [gecoding API page](https://open-meteo.com/en/docs/geocoding-api) to search for your specific location. Glance will use the first result from the list if there are multiple.
+Nazwa miasta i kraju, dla których mają być pobierane informacje o pogodzie. Próba uruchomienia aplikacji z nieprawidłową lokalizacją zakończy się błędem. Możesz użyć [strony API geokodowania](https://open-meteo.com/en/docs/geocoding-api), aby wyszukać swoją lokalizację. Jeśli wyników jest wiele, Glance użyje pierwszego z listy.
 
 #### `use-brightsky`
-If set to true, you don't need the `location` property, but you must specify `lat` and `lon`.
+Po ustawieniu na `true` nie musisz podawać właściwości `location`, ale musisz określić `lat` i `lon`.
 
 #### `lat`
-Your Latitude.
+Twoja szerokość geograficzna.
 ```
 lat: 21.37
 ```
 
-#### `lan`
-Your Longitude.
+#### `lon`
+Twoja długość geograficzna.
 ```
 lon: 21.37
 ```
 
 ##### `units`
-Whether to show the temperature in celsius or fahrenheit, possible values are `metric` or `imperial`.
+Określa, czy wyświetlać temperaturę w stopniach Celsjusza, czy Fahrenheita. Możliwe wartości: `metric` lub `imperial`.
 
 #### `hour-format`
-Whether to show the hours of the day in 12-hour format or 24-hour format. Possible values are `12h` and `24h`.
+Określa, czy wyświetlać godziny w formacie 12- czy 24-godzinnym. Możliwe wartości: `12h` i `24h`.
 
 ##### `hide-location`
-Optionally don't display the location name on the widget.
+Opcjonalnie ukrywa nazwę lokalizacji w widgecie.
 
 ##### `show-area-name`
-Whether to display the state/administrative area in the location name. If set to `true` the location will be displayed as:
+Określa, czy wyświetlać stan/region administracyjny w nazwie lokalizacji. Po ustawieniu na `true` lokalizacja będzie wyświetlana jako:
 
 ```
 Greenville, North Carolina, United States
 ```
 
-Otherwise, if set to `false` (which is the default) it'll be displayed as:
+W przeciwnym razie, po ustawieniu na `false` (wartość domyślna), będzie wyświetlana jako:
 
 ```
 Greenville, United States
 ```
 
+<a id="todo"></a>
 ### Todo
 
-A simple to-do list that allows you to add, edit and delete tasks. The tasks are stored in the browser's local storage.
+Prosta lista zadań umożliwiająca dodawanie, edytowanie i usuwanie zadań. Zadania są przechowywane w pamięci lokalnej przeglądarki.
 
-Example:
+Przykład:
 
 ```yaml
 - type: to-do
 ```
 
-Preview:
+Podgląd:
 
 ![](images/todo-widget-preview.png)
 
-To reorder tasks, drag and drop them by grabbing the top side of the task:
+Aby zmienić kolejność zadań, przeciągnij je, chwytając za górną część zadania:
 
 ![](images/reorder-todo-tasks-prevew.gif)
 
-To delete a task, hover over it and click on the trash icon.
+Aby usunąć zadanie, najedź na nie kursorem i kliknij ikonę kosza.
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| id | string | no | |
+| id | string | nie | |
 
 ##### `id`
 
-The ID of the todo list. If you want to have multiple todo lists, you must specify a different ID for each one. The ID is used to store the tasks in the browser's local storage. This means that if you have multiple todo lists with the same ID, they will share the same tasks.
+Identyfikator listy zadań. Jeśli chcesz mieć wiele list zadań, musisz podać inny identyfikator dla każdej z nich. Identyfikator służy do przechowywania zadań w pamięci lokalnej przeglądarki. Oznacza to, że jeśli masz wiele list zadań o tym samym identyfikatorze, będą one współdzielić te same zadania.
 
-#### Keyboard shortcuts
-| Keys | Action | Condition |
+#### Skróty klawiszowe
+| Klawisze | Akcja | Warunek |
 | ---- | ------ | --------- |
-| <kbd>Enter</kbd> | Add a task to the bottom of the list | When the "Add a task" field is focused |
-| <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | Add a task to the top of the list | When the "Add a task" field is focused |
-| <kbd>Down Arrow</kbd> | Focus the last task that was added | When the "Add a task" field is focused |
-| <kbd>Escape</kbd> | Focus the "Add a task" field | When a task is focused |
+| <kbd>Enter</kbd> | Dodaje zadanie na dół listy | Gdy pole „Add a task” ma fokus |
+| <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | Dodaje zadanie na górę listy | Gdy pole „Add a task” ma fokus |
+| <kbd>Down Arrow</kbd> | Ustawia fokus na ostatnio dodanym zadaniu | Gdy pole „Add a task” ma fokus |
+| <kbd>Escape</kbd> | Ustawia fokus na polu „Add a task” | Gdy zadanie ma fokus |
 
+<a id="monitor"></a>
 ### Monitor
-Display a list of sites and whether they are reachable (online) or not. This is determined by sending a GET request to the specified URL, if the response is 200 then the site is OK. The time it took to receive a response is also shown in milliseconds.
+Wyświetla listę witryn i informację, czy są osiągalne (online), czy nie. Określa się to, wysyłając żądanie GET pod podany adres URL — jeśli odpowiedź ma kod 200, witryna działa. Wyświetlany jest również czas otrzymania odpowiedzi w milisekundach.
 
-Example:
+Przykład:
 
 ```yaml
 - type: monitor
@@ -2018,82 +2048,82 @@ Example:
       icon: /assets/vaultwarden-logo.png
 ```
 
-Preview:
+Podgląd:
 
 ![](images/monitor-widget-preview.png)
 
-You can hover over the "ERROR" text to view more information.
+Najedź kursorem na tekst „ERROR”, aby zobaczyć więcej informacji.
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| sites | array | yes | |
-| style | string | no | |
-| show-failing-only | boolean | no | false |
+| sites | array | tak | |
+| style | string | nie | |
+| show-failing-only | boolean | nie | false |
 
 ##### `show-failing-only`
-Shows only a list of failing sites when set to `true`.
+Po ustawieniu na `true` pokazuje tylko listę niedziałających witryn.
 
 ##### `style`
-Used to change the appearance of the widget. Possible values are `compact`.
+Służy do zmiany wyglądu widgetu. Możliwa wartość: `compact`.
 
-Preview of `compact`:
+Podgląd `compact`:
 
 ![](images/monitor-widget-compact-preview.png)
 
 ##### `sites`
 
-Properties for each site:
+Właściwości każdej witryny:
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| title | string | yes | |
-| url | string | yes | |
-| check-url | string | no | |
-| error-url | string | no | |
-| icon | string | no | |
-| timeout | string | no | 3s |
-| allow-insecure | boolean | no | false |
-| same-tab | boolean | no | false |
-| alt-status-codes | array | no | |
-| basic-auth | object | no | |
+| title | string | tak | |
+| url | string | tak | |
+| check-url | string | nie | |
+| error-url | string | nie | |
+| icon | string | nie | |
+| timeout | string | nie | 3s |
+| allow-insecure | boolean | nie | false |
+| same-tab | boolean | nie | false |
+| alt-status-codes | array | nie | |
+| basic-auth | object | nie | |
 
 `title`
 
-The title used to indicate the site.
+Tytuł używany do oznaczenia witryny.
 
 `url`
 
-The URL of the monitored service, which must be reachable by Glance, and will be used as the link to go to when clicking on the title. If `check-url` is not specified, this is used as the status check.
+Adres URL monitorowanej usługi, który musi być osiągalny dla Glance. Będzie on używany jako link otwierany po kliknięciu tytułu. Jeśli `check-url` nie jest określony, ten adres jest używany do sprawdzania statusu.
 
 `check-url`
 
-The URL which will be requested and its response will determine the status of the site. If not specified, the `url` property is used.
+Adres URL, do którego zostanie wysłane żądanie, a jego odpowiedź określi status witryny. Jeśli nie zostanie podany, używana jest właściwość `url`.
 
 `error-url`
 
-If the monitored service returns an error, the user will be redirected here. If not specified, the `url` property is used.
+Jeśli monitorowana usługa zwróci błąd, użytkownik zostanie przekierowany tutaj. Jeśli nie zostanie podany, używana jest właściwość `url`.
 
 `icon`
 
-See [Icons](#icons) for more information on how to specify icons.
+Więcej informacji o określaniu ikon znajdziesz w sekcji [Ikony](#icons).
 
 `timeout`
 
-How long to wait for a response from the server before considering it unreachable. The value is a string and must be a number followed by one of s, m, h, d. Example: `5s` for 5 seconds, `1m` for 1 minute, etc.
+Jak długo czekać na odpowiedź serwera, zanim uzna się go za nieosiągalny. Wartość jest ciągiem znaków i musi być liczbą, po której następuje jedna z liter s, m, h, d. Przykład: `5s` dla 5 sekund, `1m` dla 1 minuty itp.
 
 `allow-insecure`
 
-Whether to ignore invalid/self-signed certificates.
+Określa, czy ignorować nieprawidłowe certyfikaty lub certyfikaty z podpisem własnym.
 
 `same-tab`
 
-Whether to open the link in the same or a new tab.
+Określa, czy otwierać link w tej samej, czy w nowej karcie.
 
 `alt-status-codes`
 
-Status codes other than 200 that you want to return "OK".
+Kody statusu inne niż 200, które mają być traktowane jako „OK”.
 
 ```yaml
 alt-status-codes:
@@ -2102,7 +2132,7 @@ alt-status-codes:
 
 `basic-auth`
 
-HTTP Basic Authentication credentials for protected sites.
+Dane uwierzytelniania HTTP Basic dla chronionych witryn.
 
 ```yaml
 basic-auth:
@@ -2110,10 +2140,11 @@ basic-auth:
   password: your-password
 ```
 
+<a id="releases"></a>
 ### Releases
-Display a list of latest releases for specific repositories on Github, GitLab, Codeberg or Docker Hub.
+Wyświetla listę najnowszych wydań dla określonych repozytoriów na GitHubie, GitLabie, Codebergu lub Docker Hubie.
 
-Example:
+Przykład:
 
 ```yaml
 - type: releases
@@ -2127,23 +2158,23 @@ Example:
     - dockerhub:gotify/server
 ```
 
-Preview:
+Podgląd:
 
 ![](images/releases-widget-preview.png)
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| repositories | array | yes |  |
-| show-source-icon | boolean | no | false |  |
-| token | string | no | |
-| gitlab-token | string | no | |
-| limit | integer | no | 10 |
-| collapse-after | integer | no | 5 |
+| repositories | array | tak |  |
+| show-source-icon | boolean | nie | false |  |
+| token | string | nie | |
+| gitlab-token | string | nie | |
+| limit | integer | nie | 10 |
+| collapse-after | integer | nie | 5 |
 
 ##### `repositories`
-A list of repositores to fetch the latest release for. Only the name/repo is required, not the full URL. A prefix can be specified for repositories hosted elsewhere such as GitLab, Codeberg and Docker Hub. Example:
+Lista repozytoriów, dla których mają być pobierane najnowsze wydania. Wymagana jest tylko nazwa/repo, a nie pełny adres URL. Dla repozytoriów hostowanych gdzie indziej, takich jak GitLab, Codeberg i Docker Hub, można podać prefiks. Przykład:
 
 ```yaml
 repositories:
@@ -2152,7 +2183,7 @@ repositories:
   - codeberg:redict/redict
 ```
 
-Official images on Docker Hub can be specified by omitting the owner:
+Oficjalne obrazy na Docker Hubie można określić, pomijając właściciela:
 
 ```yaml
 repositories:
@@ -2161,7 +2192,7 @@ repositories:
   - dockerhub:alpine
 ```
 
-You can also specify exact tags for Docker Hub images:
+Możesz również podać dokładne tagi obrazów Docker Hub:
 
 ```yaml
 repositories:
@@ -2169,9 +2200,9 @@ repositories:
   - dockerhub:nginx:stable-alpine
 ```
 
-To include prereleases you can specify the repository as an object and use the `include-prereleases` property:
+Aby uwzględnić wersje przedpremierowe, możesz podać repozytorium jako obiekt i użyć właściwości `include-prereleases`:
 
-**Note: This feature is currently only available for GitHub repositories.**
+**Uwaga: ta funkcja jest obecnie dostępna tylko dla repozytoriów GitHub.**
 
 ```yaml
 repositories:
@@ -2182,12 +2213,12 @@ repositories:
 ```
 
 ##### `show-source-icon`
-Shows an icon of the source (GitHub/GitLab/Codeberg/Docker Hub) next to the repository name when set to `true`.
+Po ustawieniu na `true` pokazuje ikonę źródła (GitHub/GitLab/Codeberg/Docker Hub) obok nazwy repozytorium.
 
 ##### `token`
-Without authentication Github allows for up to 60 requests per hour. You can easily exceed this limit and start seeing errors if you're tracking lots of repositories or your cache time is low. To circumvent this you can [create a read only token from your Github account](https://github.com/settings/personal-access-tokens/new) and provide it here.
+Bez uwierzytelniania GitHub zezwala na maksymalnie 60 żądań na godzinę. Łatwo przekroczyć ten limit i zacząć widzieć błędy, jeśli śledzisz wiele repozytoriów lub masz krótki czas cache. Aby temu zaradzić, możesz [utworzyć token tylko do odczytu na swoim koncie GitHub](https://github.com/settings/personal-access-tokens/new) i podać go tutaj.
 
-You can also specify the value for this token through an ENV variable using the syntax `${GITHUB_TOKEN}` where `GITHUB_TOKEN` is the name of the variable that holds the token. If you've installed Glance through docker you can specify the token in your docker-compose:
+Możesz również podać wartość tego tokena przez zmienną środowiskową, używając składni `${GITHUB_TOKEN}`, gdzie `GITHUB_TOKEN` to nazwa zmiennej przechowującej token. Jeśli zainstalowałeś Glance przez Docker, możesz podać token w `docker-compose`:
 
 ```yaml
 services:
@@ -2197,7 +2228,7 @@ services:
       - GITHUB_TOKEN=<your token>
 ```
 
-and then use it in your `glance.yml` like this:
+a następnie użyć go w `glance.yml` w następujący sposób:
 
 ```yaml
 - type: releases
@@ -2205,20 +2236,21 @@ and then use it in your `glance.yml` like this:
   repositories: ...
 ```
 
-This way you can safely check your `glance.yml` in version control without exposing the token.
+Dzięki temu możesz bezpiecznie przechowywać `glance.yml` w systemie kontroli wersji bez ujawniania tokena.
 
 ##### `gitlab-token`
-Same as the above but used when fetching GitLab releases.
+Działa jak powyższy, ale jest używany podczas pobierania wydań z GitLaba.
 
 ##### `limit`
-The maximum number of releases to show.
+Maksymalna liczba wydań do wyświetlenia.
 
 #### `collapse-after`
-How many releases are visible before the "SHOW MORE" button appears. Set to `-1` to never collapse.
+Liczba widocznych wydań, po której pojawia się przycisk „SHOW MORE”. Ustaw `-1`, aby nigdy nie zwijać.
 
+<a id="docker-containers"></a>
 ### Docker Containers
 
-Display the status of your Docker containers along with an icon and an optional short description.
+Wyświetla status kontenerów Docker wraz z ikoną i opcjonalnym krótkim opisem.
 
 ![](images/docker-containers-preview.png)
 
@@ -2229,7 +2261,7 @@ Display the status of your Docker containers along with an icon and an optional 
 
 > [!NOTE]
 >
-> The widget requires access to `docker.sock`. If you're running Glance inside a container, this can be done by mounting the socket as a volume:
+> Widget wymaga dostępu do `docker.sock`. Jeśli uruchamiasz Glance w kontenerze, możesz to zrobić, montując gniazdo jako wolumen:
 >
 > ```yaml
 > services:
@@ -2239,7 +2271,7 @@ Display the status of your Docker containers along with an icon and an optional 
 >       - /var/run/docker.sock:/var/run/docker.sock
 > ```
 
-Configuration of the containers is done via labels applied to each container:
+Konfiguracja kontenerów odbywa się za pomocą etykiet (labels) przypisanych do każdego kontenera:
 
 ```yaml
   jellyfin:
@@ -2251,7 +2283,7 @@ Configuration of the containers is done via labels applied to each container:
       glance.description: Movies & shows
 ```
 
-Alternatively, you can also define the values within your `glance.yml` via the `containers` property, where the key is the container name and each value is the same as the labels but without the "glance." prefix:
+Alternatywnie możesz zdefiniować wartości w `glance.yml` za pomocą właściwości `containers`, gdzie kluczem jest nazwa kontenera, a każda wartość odpowiada etykietom, ale bez prefiksu „glance.”:
 
 ```yaml
 - type: docker-containers
@@ -2264,10 +2296,10 @@ Alternatively, you can also define the values within your `glance.yml` via the `
       hide: false
 ```
 
-For services with multiple containers you can specify a `glance.id` on the "main" container and `glance.parent` on each "child" container:
+W przypadku usług składających się z wielu kontenerów możesz podać `glance.id` na kontenerze „głównym” i `glance.parent` na każdym kontenerze „podrzędnym”:
 
 <details>
-<summary>View <code>docker-compose.yml</code></summary>
+<summary>Pokaż <code>docker-compose.yml</code></summary>
 <br>
 
 ```yaml
@@ -2302,38 +2334,38 @@ services:
 </details>
 <br>
 
-This will place all child containers under the `Immich` container when hovering over its icon:
+Spowoduje to umieszczenie wszystkich kontenerów podrzędnych pod kontenerem `Immich` po najechaniu na jego ikonę:
 
 ![](images/docker-container-parent.png)
 
-If any of the child containers are down, their status will propagate up to the parent container:
+Jeśli którykolwiek z kontenerów podrzędnych nie działa, jego status zostanie przekazany do kontenera nadrzędnego:
 
 ![](images/docker-container-parent2.png)
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| hide-by-default | boolean | no | false |
-| format-container-names | boolean | no | false |
-| sock-path | string | no | /var/run/docker.sock |
-| category | string | no | |
-| running-only | boolean | no | false |
+| hide-by-default | boolean | nie | false |
+| format-container-names | boolean | nie | false |
+| sock-path | string | nie | /var/run/docker.sock |
+| category | string | nie | |
+| running-only | boolean | nie | false |
 
 ##### `hide-by-default`
-Whether to hide the containers by default. If set to `true` you'll have to manually add a `glance.hide: false` label to each container you want to display. By default all containers will be shown and if you want to hide a specific container you can add a `glance.hide: true` label.
+Określa, czy domyślnie ukrywać kontenery. Po ustawieniu na `true` musisz ręcznie dodać etykietę `glance.hide: false` do każdego kontenera, który chcesz wyświetlić. Domyślnie wszystkie kontenery są pokazywane, a aby ukryć konkretny kontener, możesz dodać etykietę `glance.hide: true`.
 
 ##### `format-container-names`
-When set to `true`, automatically converts container names such as `container_name_1` into `Container Name 1`.
+Po ustawieniu na `true` automatycznie konwertuje nazwy kontenerów, takie jak `container_name_1`, na `Container Name 1`.
 
 ##### `sock-path`
-The path to the Docker socket. This can also be a [remote socket](https://docs.docker.com/engine/daemon/remote-access/) or proxied socket using something like [docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy).
+Ścieżka do gniazda Docker. Może to być również [zdalne gniazdo](https://docs.docker.com/engine/daemon/remote-access/) lub gniazdo za proxy, np. za pomocą [docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy).
 
 ###### `category`
-Filter to only the containers which have this category specified via the `glance.category` label. Useful if you want to have multiple containers widgets, each showing a different set of containers.
+Filtruje kontenery tylko do tych, które mają kategorię określoną etykietą `glance.category`. Przydatne, jeśli chcesz mieć wiele widgetów kontenerów, z których każdy pokazuje inny zestaw kontenerów.
 
 <details>
-<summary>View example</summary>
+<summary>Pokaż przykład</summary>
 <br>
 
 
@@ -2364,7 +2396,7 @@ services:
       glance.category: dev-tools
 ```
 
-Then you can use the `category` property to filter the containers:
+Następnie możesz użyć właściwości `category`, aby filtrować kontenery:
 
 ```yaml
 - type: docker-containers
@@ -2379,23 +2411,24 @@ Then you can use the `category` property to filter the containers:
 </details>
 
 ##### `running-only`
-Whether to only show running containers. If set to `true` only containers that are currently running will be displayed. If set to `false` all containers will be displayed regardless of their state.
+Określa, czy pokazywać tylko działające kontenery. Po ustawieniu na `true` wyświetlane będą tylko kontenery aktualnie działające. Po ustawieniu na `false` wyświetlane będą wszystkie kontenery niezależnie od stanu.
 
-#### Labels
-| Name | Description |
+#### Etykiety
+| Nazwa | Opis |
 | ---- | ----------- |
-| glance.name | The name displayed in the UI. If not specified, the name of the container will be used. |
-| glance.icon | See [Icons](#icons) for more information on how to specify icons |
-| glance.url | The URL that the user will be redirected to when clicking on the container. |
-| glance.same-tab | Whether to open the link in the same or a new tab. Default is `false`. |
-| glance.description | A short description displayed in the UI. Default is empty. |
-| glance.hide | Whether to hide the container. If set to `true` the container will not be displayed. Defaults to `false`. |
-| glance.id | The custom ID of the container. Used to group containers under a single parent. |
-| glance.parent | The ID of the parent container. Used to group containers under a single parent. |
-| glance.category | The category of the container. Used to filter containers by category. |
+| glance.name | Nazwa wyświetlana w interfejsie. Jeśli nie zostanie podana, użyta zostanie nazwa kontenera. |
+| glance.icon | Więcej informacji o określaniu ikon znajdziesz w sekcji [Ikony](#icons). |
+| glance.url | Adres URL, na który użytkownik zostanie przekierowany po kliknięciu kontenera. |
+| glance.same-tab | Określa, czy otwierać link w tej samej, czy w nowej karcie. Domyślnie `false`. |
+| glance.description | Krótki opis wyświetlany w interfejsie. Domyślnie pusty. |
+| glance.hide | Określa, czy ukryć kontener. Po ustawieniu na `true` kontener nie będzie wyświetlany. Domyślnie `false`. |
+| glance.id | Niestandardowy identyfikator kontenera. Używany do grupowania kontenerów pod jednym elementem nadrzędnym. |
+| glance.parent | Identyfikator kontenera nadrzędnego. Używany do grupowania kontenerów pod jednym elementem nadrzędnym. |
+| glance.category | Kategoria kontenera. Używana do filtrowania kontenerów według kategorii. |
 
+<a id="google-compute-engine"></a>
 ### Google Compute Engine
-Displays Google Compute Engine instances for a project and lets you start, restart or stop them directly from Glance.
+Wyświetla instancje Google Compute Engine dla projektu i pozwala uruchamiać, restartować lub zatrzymywać je bezpośrednio z Glance.
 
 ```yaml
 - type: google-compute
@@ -2407,18 +2440,19 @@ Displays Google Compute Engine instances for a project and lets you start, resta
 ```
 
 ##### `project-id`
-Google Cloud project ID to read instances from.
+Identyfikator projektu Google Cloud, z którego mają być odczytywane instancje.
 
 ##### `service-account-key`
-Service account key with permissions to list instances and perform `start`, `stop` and `reset` operations. You can provide a file path, a base64 encoded JSON key, or the raw JSON value.
+Klucz konta usługi z uprawnieniami do listowania instancji oraz wykonywania operacji `start`, `stop` i `reset`. Możesz podać ścieżkę do pliku, klucz JSON zakodowany w base64 lub surową wartość JSON.
 
 ##### `zones`
-Optional list of zones. When provided, the widget only shows and controls instances from these zones.
+Opcjonalna lista stref. Po podaniu widget wyświetla i kontroluje tylko instancje z tych stref.
 
+<a id="dns-stats"></a>
 ### DNS Stats
-Display statistics from a self-hosted ad-blocking DNS resolver such as AdGuard Home, Pi-hole, or Technitium.
+Wyświetla statystyki z samodzielnie hostowanego resolvera DNS blokującego reklamy, takiego jak AdGuard Home, Pi-hole lub Technitium.
 
-Example:
+Przykład:
 
 ```yaml
 - type: dns-stats
@@ -2428,63 +2462,64 @@ Example:
   password: ${ADGUARD_PASSWORD}
 ```
 
-Preview:
+Podgląd:
 
 ![](images/dns-stats-widget-preview.png)
 
 > [!NOTE]
 >
-> When using AdGuard Home the 3rd statistic on top will be the average latency and when using Pi-hole or Technitium it will be the total number of blocked domains from all adlists.
+> W przypadku AdGuard Home trzecią statystyką u góry będzie średnie opóźnienie, a w przypadku Pi-hole lub Technitium — łączna liczba zablokowanych domen ze wszystkich list reklamowych.
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| service | string | no | pihole |
-| allow-insecure | bool | no | false |
-| url | string | yes |  |
-| username | string | when service is `adguard` |  |
-| password | string | when service is `adguard` or `pihole-v6` |  |
-| token | string | when service is `pihole` |  |
-| hide-graph | bool | no | false |
-| hide-top-domains | bool | no | false |
-| hour-format | string | no | 12h |
+| service | string | nie | pihole |
+| allow-insecure | bool | nie | false |
+| url | string | tak |  |
+| username | string | gdy `service` to `adguard` |  |
+| password | string | gdy `service` to `adguard` lub `pihole-v6` |  |
+| token | string | gdy `service` to `pihole` |  |
+| hide-graph | bool | nie | false |
+| hide-top-domains | bool | nie | false |
+| hour-format | string | nie | 12h |
 
 ##### `service`
-Either `adguard`, `technitium`, or `pihole` (major version 5 and below) or `pihole-v6` (major version 6 and above).
+Jedna z wartości: `adguard`, `technitium`, `pihole` (wersja główna 5 i starsze) lub `pihole-v6` (wersja główna 6 i nowsze).
 
 ##### `allow-insecure`
-Whether to allow invalid/self-signed certificates when making the request to the service.
+Określa, czy zezwalać na nieprawidłowe certyfikaty lub certyfikaty z podpisem własnym podczas wysyłania żądania do usługi.
 
 ##### `url`
-The base URL of the service.
+Bazowy adres URL usługi.
 
 ##### `username`
-Only required when using AdGuard Home. The username used to log into the admin dashboard.
+Wymagane tylko w przypadku AdGuard Home. Nazwa użytkownika używana do logowania się do panelu administracyjnego.
 
 ##### `password`
-Required when using AdGuard Home, where the password is the one used to log into the admin dashboard.
+Wymagane w przypadku AdGuard Home — hasło używane do logowania się do panelu administracyjnego.
 
-Also required when using Pi-hole major version 6 and above, where the password is the one used to log into the admin dashboard or the application password, which can be found in `Settings -> Web Interface / API -> Configure app password`.
+Wymagane również w przypadku Pi-hole w wersji głównej 6 i nowszej; jest to hasło używane do logowania się do panelu administracyjnego lub hasło aplikacji, które można znaleźć w `Settings -> Web Interface / API -> Configure app password`.
 
 ##### `token`
-Required when using Pi-hole major version 5 or earlier. The API token which can be found in `Settings -> API -> Show API token`.
+Wymagane w przypadku Pi-hole w wersji głównej 5 lub starszej. Token API, który można znaleźć w `Settings -> API -> Show API token`.
 
-Also required when using Technitium, an API token can be generated at `Administration -> Sessions -> Create Token`.
+Wymagane również w przypadku Technitium — token API można wygenerować w `Administration -> Sessions -> Create Token`.
 
 ##### `hide-graph`
-Whether to hide the graph showing the number of queries over time.
+Określa, czy ukryć wykres liczby zapytań w czasie.
 
 ##### `hide-top-domains`
-Whether to hide the list of top blocked domains.
+Określa, czy ukryć listę najczęściej blokowanych domen.
 
 ##### `hour-format`
-Whether to display the relative time in the graph in `12h` or `24h` format.
+Określa, czy wyświetlać czas względny na wykresie w formacie `12h`, czy `24h`.
 
+<a id="server-stats"></a>
 ### Server Stats
-Display statistics such as CPU usage, memory usage and disk usage of the server Glance is running on or other servers.
+Wyświetla statystyki, takie jak użycie procesora, pamięci i dysku, serwera, na którym działa Glance, lub innych serwerów.
 
-Example:
+Przykład:
 
 ```yaml
 - type: server-stats
@@ -2493,56 +2528,56 @@ Example:
       name: Services
 ```
 
-Preview:
+Podgląd:
 
 ![](images/server-stats-preview.gif)
 
 > [!NOTE]
 >
-> This widget is currently under development, some features might not function as expected or may change.
+> Ten widget jest obecnie w fazie rozwoju — niektóre funkcje mogą nie działać zgodnie z oczekiwaniami lub mogą się zmienić.
 
-To display data from a remote server you need to have the Glance Agent running on that server. You can download the agent from [here](https://github.com/glanceapp/agent), though keep in mind that it is still in development and may not work as expected. Support for other providers such as Glances will be added in the future.
+Aby wyświetlać dane z zdalnego serwera, musisz mieć uruchomionego agenta Glance na tym serwerze. Agenta możesz pobrać [tutaj](https://github.com/glanceapp/agent), pamiętaj jednak, że jest on wciąż w fazie rozwoju i może nie działać zgodnie z oczekiwaniami. Wsparcie dla innych dostawców, takich jak Glances, zostanie dodane w przyszłości.
 
-In the event that the CPU temperature goes over 80°C, a flame icon will appear next to the CPU. The progress indicators will also turn red (or the equivalent of your negative color) to hopefully grab your attention if anything is unusually high:
+Jeśli temperatura procesora przekroczy 80°C, obok procesora pojawi się ikona płomienia. Wskaźniki postępu zmienią również kolor na czerwony (lub odpowiednik Twojego koloru negatywnego), aby zwrócić uwagę na nietypowo wysokie wartości:
 
 ![](images/server-stats-flame-icon.png)
 
-#### Properties
-| Name | Type | Required | Default |
+#### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| servers | array | no |  |
+| servers | array | nie |  |
 
 ##### `servers`
-If not provided it will display the statistics of the server Glance is running on.
+Jeśli nie zostanie podane, wyświetlane będą statystyki serwera, na którym działa Glance.
 
-##### Properties for both `local` and `remote` servers
-| Name | Type | Required | Default |
+##### Właściwości serwerów `local` i `remote`
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| type | string | yes |  |
-| name | string | no |  |
-| hide-swap | boolean | no | false |
+| type | string | tak |  |
+| name | string | nie |  |
+| hide-swap | boolean | nie | false |
 
 ###### `type`
-Whether to display statistics for the local server or a remote server. Possible values are `local` and `remote`.
+Określa, czy wyświetlać statystyki serwera lokalnego, czy zdalnego. Możliwe wartości: `local` i `remote`.
 
 ###### `name`
-The name of the server which will be displayed on the widget. If not provided it will default to the server's hostname.
+Nazwa serwera wyświetlana w widgecie. Jeśli nie zostanie podana, użyta zostanie nazwa hosta serwera.
 
 ###### `hide-swap`
-Whether to hide the swap usage.
+Określa, czy ukryć użycie pamięci swap.
 
-##### Properties for the `local` server
-| Name | Type | Required | Default |
+##### Właściwości serwera `local`
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| cpu-temp-sensor | string | no |  |
-| hide-mountpoints-by-default | boolean | no | false |
-| mountpoints | map\[string\]object | no |  |
+| cpu-temp-sensor | string | nie |  |
+| hide-mountpoints-by-default | boolean | nie | false |
+| mountpoints | map\[string\]object | nie |  |
 
 ###### `cpu-temp-sensor`
-The name of the sensor to use for the CPU temperature. When not provided the widget will attempt to find the correct one, if it fails to do so the temperature will not be displayed. To view the available sensors you can use `sensors` command.
+Nazwa czujnika używanego do odczytu temperatury procesora. Jeśli nie zostanie podana, widget spróbuje znaleźć właściwy czujnik; jeśli mu się to nie uda, temperatura nie będzie wyświetlana. Dostępne czujniki możesz wyświetlić poleceniem `sensors`.
 
 ###### `hide-mountpoints-by-default`
-If set to `true` you'll have to manually make each mountpoint visible by adding a `hide: false` property to it like so:
+Po ustawieniu na `true` musisz ręcznie uczynić każdy punkt montowania widocznym, dodając do niego właściwość `hide: false` w następujący sposób:
 
 ```yaml
 - type: server-stats
@@ -2556,10 +2591,10 @@ If set to `true` you'll have to manually make each mountpoint visible by adding 
           hide: false
 ```
 
-This is useful if you're running Glance inside of a container which usually mounts a lot of irrelevant filesystems.
+Jest to przydatne, jeśli uruchamiasz Glance w kontenerze, który zwykle montuje wiele nieistotnych systemów plików.
 
 ###### `mountpoints`
-A map of mountpoints to display disk usage for. The key is the path to the mountpoint and the value is an object with optional properties. Example:
+Mapa punktów montowania, dla których ma być wyświetlane użycie dysku. Kluczem jest ścieżka punktu montowania, a wartością obiekt z opcjonalnymi właściwościami. Przykład:
 
 ```yaml
 mountpoints:
@@ -2571,38 +2606,39 @@ mountpoints:
     hide: true
 ```
 
-##### Properties for each `mountpoint`
-| Name | Type | Required | Default |
+##### Właściwości każdego `mountpoint`
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| name | string | no |  |
-| hide | boolean | no | false |
+| name | string | nie |  |
+| hide | boolean | nie | false |
 
 ###### `name`
-The name of the mountpoint which will be displayed on the widget. If not provided it will default to the mountpoint's path.
+Nazwa punktu montowania wyświetlana w widgecie. Jeśli nie zostanie podana, użyta zostanie ścieżka punktu montowania.
 
 ###### `hide`
-Whether to hide this mountpoint from the widget.
+Określa, czy ukryć ten punkt montowania w widgecie.
 
-##### Properties for `remote` servers
-| Name | Type | Required | Default |
+##### Właściwości serwerów `remote`
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| url | string | yes |  |
-| token | string | no |  |
-| timeout | string | no | 3s |
+| url | string | tak |  |
+| token | string | nie |  |
+| timeout | string | nie | 3s |
 
 ###### `url`
-The URL and port of the server to fetch the statistics from.
+Adres URL i port serwera, z którego mają być pobierane statystyki.
 
 ###### `token`
-The authentication token to use when fetching the statistics.
+Token uwierzytelniający używany podczas pobierania statystyk.
 
 ###### `timeout`
-The maximum time to wait for a response from the server. The value is a string and must be a number followed by one of s, m, h, d. Example: `10s` for 10 seconds, `1m` for 1 minute, etc
+Maksymalny czas oczekiwania na odpowiedź serwera. Wartość jest ciągiem znaków i musi być liczbą, po której następuje jedna z liter s, m, h, d. Przykład: `10s` dla 10 sekund, `1m` dla 1 minuty itp.
 
+<a id="repository"></a>
 ### Repository
-Display general information about a repository as well as a list of the latest open pull requests and issues.
+Wyświetla ogólne informacje o repozytorium oraz listę najnowszych otwartych pull requestów i zgłoszeń.
 
-Example:
+Przykład:
 
 ```yaml
 - type: repository
@@ -2612,68 +2648,70 @@ Example:
   commits-limit: 3
 ```
 
-Preview:
+Podgląd:
 
 ![](images/repository-preview.png)
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| repository | string | yes |  |
-| token | string | no | |
-| pull-requests-limit | integer | no | 3 |
-| issues-limit | integer | no | 3 |
-| commits-limit | integer | no | -1 |
+| repository | string | tak |  |
+| token | string | nie | |
+| pull-requests-limit | integer | nie | 3 |
+| issues-limit | integer | nie | 3 |
+| commits-limit | integer | nie | -1 |
 
 ##### `repository`
-The owner and repository name that will have their information displayed.
+Nazwa właściciela i repozytorium, których informacje mają być wyświetlane.
 
 ##### `token`
-Without authentication Github allows for up to 60 requests per hour. You can easily exceed this limit and start seeing errors if your cache time is low or you have many instances of this widget. To circumvent this you can [create a read only token from your Github account](https://github.com/settings/personal-access-tokens/new) and provide it here.
+Bez uwierzytelniania GitHub zezwala na maksymalnie 60 żądań na godzinę. Łatwo przekroczyć ten limit i zacząć widzieć błędy, jeśli masz krótki czas cache lub wiele instancji tego widgetu. Aby temu zaradzić, możesz [utworzyć token tylko do odczytu na swoim koncie GitHub](https://github.com/settings/personal-access-tokens/new) i podać go tutaj.
 
 ##### `pull-requests-limit`
-The maximum number of latest open pull requests to show. Set to `-1` to not show any.
+Maksymalna liczba najnowszych otwartych pull requestów do wyświetlenia. Ustaw `-1`, aby nie wyświetlać żadnych.
 
 ##### `issues-limit`
-The maximum number of latest open issues to show. Set to `-1` to not show any.
+Maksymalna liczba najnowszych otwartych zgłoszeń do wyświetlenia. Ustaw `-1`, aby nie wyświetlać żadnych.
 
 ##### `commits-limit`
-The maximum number of lastest commits to show from the default branch. Set to `-1` to not show any.
+Maksymalna liczba najnowszych commitów z gałęzi domyślnej do wyświetlenia. Ustaw `-1`, aby nie wyświetlać żadnych.
 
+<a id="radyjko"></a>
 ### Radyjko
-Display a radio player with a list of streaming radio stations. This widget provides a Spotify/YouTube Music-like interface for listening to Polish and international radio stations.
+Wyświetla odtwarzacz radia z listą stacji radiowych streamingowych. Widget zapewnia interfejs przypominający Spotify/YouTube Music do słuchania polskich i zagranicznych stacji radiowych.
 
-Example:
+Przykład:
 
 ```yaml
 - type: radyjko
 ```
 
-Preview:
+Podgląd:
 
-(Player widget with station list, play/pause button, and volume control)
+(Widget odtwarzacza z listą stacji, przyciskiem odtwarzania/pauzy i regulacją głośności)
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
 
-Currently, this widget has no configurable properties. It automatically fetches the list of available radio stations from the configured API proxy and displays them in an intuitive player interface.
+Obecnie widget nie ma konfigurowalnych właściwości. Automatycznie pobiera listę dostępnych stacji radiowych ze skonfigurowanego proxy API i wyświetla je w intuicyjnym interfejsie odtwarzacza.
 
-#### Features
+#### Funkcje
 
-- **Play/Pause Control**: Click the play button to start/stop playback
-- **Station Selection**: Click on any station in the list to select it and play
-- **Volume Control**: Adjust playback volume using the volume slider
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
-- **HLS Stream Support**: Supports both HLS (m3u8) and standard audio streams
-- **Visual Feedback**: Active station is highlighted for easy identification
+- **Odtwarzanie/pauza**: kliknij przycisk odtwarzania, aby rozpocząć lub zatrzymać odtwarzanie
+- **Wybór stacji**: kliknij dowolną stację na liście, aby ją wybrać i odtworzyć
+- **Regulacja głośności**: dostosuj głośność za pomocą suwaka
+- **Responsywny design**: działa bezproblemowo na komputerach, tabletach i urządzeniach mobilnych
+- **Obsługa strumieni HLS**: obsługuje zarówno strumienie HLS (m3u8), jak i standardowe strumienie audio
+- **Informacja zwrotna**: aktywna stacja jest wyróżniona, aby ułatwić jej identyfikację
 
-### Bookmarks
-Display a list of links which can be grouped.
+<a id="bookmarks"></a>
+### Zakładki
+Wyświetla listę linków, które można grupować.
 
-Example:
+Przykład:
 
 ```yaml
 - type: bookmarks
@@ -2709,65 +2747,66 @@ Example:
           url: https://www.instagram.com/
 ```
 
-Preview:
+Podgląd:
 
 ![](images/bookmarks-widget-preview.png)
 
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required |
+| Nazwa | Typ | Wymagane |
 | ---- | ---- | -------- |
-| groups | array | yes |
+| groups | array | tak |
 
 ##### `groups`
-An array of groups which can optionally have a title and a custom color.
+Tablica grup, które mogą opcjonalnie mieć tytuł i własny kolor.
 
-###### Properties for each group
-| Name | Type | Required | Default |
+###### Właściwości każdej grupy
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| title | string | no | |
-| color | HSL | no | the primary color of the theme |
-| links | array | yes | |
-| same-tab | boolean | no | false |
-| hide-arrow | boolean | no | false |
-| target | string | no | |
+| title | string | nie | |
+| color | HSL | nie | kolor primary motywu |
+| links | array | tak | |
+| same-tab | boolean | nie | false |
+| hide-arrow | boolean | nie | false |
+| target | string | nie | |
 
 > [!TIP]
 >
-> You can set `same-tab`, `hide-arrow` and `target` either on the group which will apply them to all links in that group, or on each individual link which will override the value set on the group.
+> Właściwości `same-tab`, `hide-arrow` i `target` możesz ustawić albo na grupie — wtedy będą miały zastosowanie do wszystkich linków w tej grupie — albo na poszczególnych linkach, co nadpisze wartość ustawioną na grupie.
 
-###### Properties for each link
-| Name | Type | Required | Default |
+###### Właściwości każdego linku
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| title | string | yes | |
-| url | string | yes | |
-| description | string | no | |
-| icon | string | no | |
-| same-tab | boolean | no | false |
-| hide-arrow | boolean | no | false |
-| target | string | no | |
+| title | string | tak | |
+| url | string | tak | |
+| description | string | nie | |
+| icon | string | nie | |
+| same-tab | boolean | nie | false |
+| hide-arrow | boolean | nie | false |
+| target | string | nie | |
 
 `icon`
 
-See [Icons](#icons) for more information on how to specify icons.
+Więcej informacji o określaniu ikon znajdziesz w sekcji [Ikony](#icons).
 
 `same-tab`
 
-Whether to open the link in the same tab or a new one.
+Określa, czy otwierać link w tej samej, czy w nowej karcie.
 
 `hide-arrow`
 
-Whether to hide the colored arrow on each link.
+Określa, czy ukryć kolorową strzałkę przy każdym linku.
 
 `target`
 
-Set a custom value for the link's `target` attribute. Possible values are `_blank`, `_self`, `_parent` and `_top`, you can read more about what they do [here](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#target). This property has precedence over `same-tab`.
+Ustawia niestandardową wartość atrybutu `target` linku. Możliwe wartości: `_blank`, `_self`, `_parent` i `_top`. Więcej o ich działaniu przeczytasz [tutaj](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#target). Ta właściwość ma pierwszeństwo przed `same-tab`.
 
+<a id="changedetectionio"></a>
 ### ChangeDetection.io
-Display a list watches from changedetection.io.
+Wyświetla listę obserwowanych stron z changedetection.io.
 
-Example
+Przykład
 
 ```yaml
 - type: change-detection
@@ -2775,34 +2814,34 @@ Example
   token: ${CHANGE_DETECTION_TOKEN}
 ```
 
-Preview:
+Podgląd:
 
 ![](images/change-detection-widget-preview.png)
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| instance-url | string | no | `https://www.changedetection.io` |
-| token | string | no |  |
-| limit | integer | no | 10 |
-| collapse-after | integer | no | 5 |
-| watches | array of strings | no |  |
+| instance-url | string | nie | `https://www.changedetection.io` |
+| token | string | nie |  |
+| limit | integer | nie | 10 |
+| collapse-after | integer | nie | 5 |
+| watches | array of strings | nie |  |
 
 ##### `instance-url`
-The URL pointing to your instance of `changedetection.io`.
+Adres URL wskazujący Twoją instancję `changedetection.io`.
 
 ##### `token`
-The API access token which can be found in `SETTINGS > API`. Optionally, you can specify this using an environment variable with the syntax `${VARIABLE_NAME}`.
+Token dostępu do API, który można znaleźć w `SETTINGS > API`. Opcjonalnie możesz podać go za pomocą zmiennej środowiskowej, używając składni `${VARIABLE_NAME}`.
 
 ##### `limit`
-The maximum number of watches to show.
+Maksymalna liczba obserwowanych stron do wyświetlenia.
 
 ##### `collapse-after`
-How many watches are visible before the "SHOW MORE" button appears. Set to `-1` to never collapse.
+Liczba widocznych obserwowanych stron, po której pojawia się przycisk „SHOW MORE”. Ustaw `-1`, aby nigdy nie zwijać.
 
 ##### `watches`
-By default all of the configured watches will be shown. Optionally, you can specify a list of UUIDs for the specific watches you want to have listed:
+Domyślnie wyświetlane są wszystkie skonfigurowane obserwowane strony. Opcjonalnie możesz podać listę UUID konkretnych stron, które chcesz wyświetlić:
 
 ```yaml
   - type: change-detection
@@ -2811,10 +2850,11 @@ By default all of the configured watches will be shown. Optionally, you can spec
       - 705ed3e4-ea86-4d25-a064-822a6425be2c
 ```
 
-### Clock
-Display a clock showing the current time and date. Optionally, also display the the time in other timezones.
+<a id="clock"></a>
+### Zegar
+Wyświetla zegar pokazujący aktualny czas i datę. Opcjonalnie wyświetla również czas w innych strefach czasowych.
 
-Example:
+Przykład:
 
 ```yaml
 - type: clock
@@ -2828,92 +2868,95 @@ Example:
       label: Tokyo
 ```
 
-Preview:
+Podgląd:
 
 ![](images/clock-widget-preview.png)
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| hour-format | string | no | 24h |
-| timezones | array | no |  |
+| hour-format | string | nie | 24h |
+| timezones | array | nie |  |
 
 ##### `hour-format`
-Whether to show the time in 12 or 24 hour format. Possible values are `12h` and `24h`.
+Określa, czy wyświetlać czas w formacie 12- czy 24-godzinnym. Możliwe wartości: `12h` i `24h`.
 
-#### Properties for each timezone
+#### Właściwości każdej strefy czasowej
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| timezone | string | yes | |
-| label | string | no | |
+| timezone | string | tak | |
+| label | string | nie | |
 
 ##### `timezone`
-A timezone identifier such as `Europe/London`, `America/New_York`, etc. The full list of available identifiers can be found [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+Identyfikator strefy czasowej, taki jak `Europe/London`, `America/New_York` itp. Pełną listę dostępnych identyfikatorów znajdziesz [tutaj](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
 
 ##### `label`
-Optionally, override the display value for the timezone to something more meaningful such as "Home", "Work" or anything else.
+Opcjonalnie nadpisuje wartość wyświetlaną dla strefy czasowej na coś bardziej zrozumiałego, np. „Home”, „Work” lub cokolwiek innego.
 
 
-### Calendar
-Display a calendar.
+<a id="calendar"></a>
+### Kalendarz
+Wyświetla kalendarz.
 
-Example:
+Przykład:
 
 ```yaml
 - type: calendar
   first-day-of-week: monday
 ```
 
-Preview:
+Podgląd:
 
 ![](images/calendar-widget-preview.png)
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| first-day-of-week | string | no | monday |
+| first-day-of-week | string | nie | monday |
 
 ##### `first-day-of-week`
-The day of the week that the calendar starts on. All week days are available as possible values.
+Dzień tygodnia, od którego zaczyna się kalendarz. Jako wartości można podać wszystkie dni tygodnia.
 
-### Calendar (legacy)
-Display a calendar.
+<a id="calendar-legacy"></a>
+### Kalendarz (legacy)
+Wyświetla kalendarz.
 
-Example:
+Przykład:
 
 ```yaml
 - type: calendar-legacy
   start-sunday: false
 ```
 
-Preview:
+Podgląd:
 
 ![](images/calendar-legacy-widget-preview.png)
 
 > [!NOTE]
 >
-> This widget is deprecated and may be removed in a future version.
+> Ten widget jest przestarzały i może zostać usunięty w przyszłej wersji.
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required | Default |
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| start-sunday | boolean | no | false |
+| start-sunday | boolean | nie | false |
 
 ##### `start-sunday`
-Whether calendar weeks start on Sunday or Monday.
+Określa, czy tygodnie kalendarza zaczynają się w niedzielę, czy w poniedziałek.
 
 > [!NOTE]
 >
-> There is currently little customizability available for the calendar. Extra features will be added in the future.
+> Obecnie kalendarz oferuje niewiele możliwości dostosowania. Dodatkowe funkcje zostaną dodane w przyszłości.
 
+<a id="markets"></a>
 ### Markets
-Display a list of markets, their current value, change for the day and a small 21d chart. Data is taken from Yahoo Finance.
+Wyświetla listę rynków, ich aktualną wartość, zmianę w ciągu dnia oraz mały wykres 21-dniowy. Dane pochodzą z Yahoo Finance.
 
-Example:
+Przykład:
 
 ```yaml
 - type: markets
@@ -2930,67 +2973,68 @@ Example:
       name: Apple
 ```
 
-Preview:
+Podgląd:
 
 ![](images/markets-widget-preview.png)
 
-#### Properties
+#### Właściwości
 
-| Name | Type | Required |
+| Nazwa | Typ | Wymagane |
 | ---- | ---- | -------- |
-| markets | array | yes |
-| sort-by | string | no |
-| chart-link-template | string | no |
-| symbol-link-template | string | no |
+| markets | array | tak |
+| sort-by | string | nie |
+| chart-link-template | string | nie |
+| symbol-link-template | string | nie |
 
 ##### `markets`
-An array of markets for which to display information about.
+Tablica rynków, dla których mają być wyświetlane informacje.
 
 ##### `sort-by`
-By default the markets are displayed in the order they were defined. You can customize their ordering by setting the `sort-by` property to `change` for descending order based on the stock's percentage change (e.g. 1% would be sorted higher than -1%) or `absolute-change` for descending order based on the stock's absolute price change (e.g. -1% would be sorted higher than +0.5%).
+Domyślnie rynki są wyświetlane w kolejności ich zdefiniowania. Możesz dostosować kolejność, ustawiając właściwość `sort-by` na `change` (sortowanie malejąco według procentowej zmiany ceny akcji, np. 1% będzie wyżej niż -1%) lub `absolute-change` (sortowanie malejąco według bezwzględnej zmiany ceny, np. -1% będzie wyżej niż +0.5%).
 
 ##### `chart-link-template`
-A template for the link to go to when clicking on the chart that will be applied to all markets. The value `{SYMBOL}` will be replaced with the symbol of the market. You can override this on a per-market basis by specifying a `chart-link` property. Example:
+Szablon linku otwieranego po kliknięciu wykresu, stosowany do wszystkich rynków. Wartość `{SYMBOL}` zostanie zastąpiona symbolem rynku. Możesz to nadpisać dla konkretnego rynku, podając właściwość `chart-link`. Przykład:
 
 ```yaml
 chart-link-template: https://www.tradingview.com/chart/?symbol={SYMBOL}
 ```
 
 ##### `symbol-link-template`
-A template for the link to go to when clicking on the symbol that will be applied to all markets. The value `{SYMBOL}` will be replaced with the symbol of the market. You can override this on a per-market basis by specifying a `symbol-link` property. Example:
+Szablon linku otwieranego po kliknięciu symbolu, stosowany do wszystkich rynków. Wartość `{SYMBOL}` zostanie zastąpiona symbolem rynku. Możesz to nadpisać dla konkretnego rynku, podając właściwość `symbol-link`. Przykład:
 
 ```yaml
 symbol-link-template: https://www.google.com/search?tbm=nws&q={SYMBOL}
 ```
 
-###### Properties for each market
-| Name | Type | Required |
+###### Właściwości każdego rynku
+| Nazwa | Typ | Wymagane |
 | ---- | ---- | -------- |
-| symbol | string | yes |
-| name | string | no |
-| symbol-link | string | no |
-| chart-link | string | no |
+| symbol | string | tak |
+| name | string | nie |
+| symbol-link | string | nie |
+| chart-link | string | nie |
 
 `symbol`
 
-The symbol, as seen in Yahoo Finance.
+Symbol widoczny w Yahoo Finance.
 
 `name`
 
-The name that will be displayed under the symbol.
+Nazwa wyświetlana pod symbolem.
 
 `symbol-link`
 
-The link to go to when clicking on the symbol.
+Link otwierany po kliknięciu symbolu.
 
 `chart-link`
 
-The link to go to when clicking on the chart.
+Link otwierany po kliknięciu wykresu.
 
+<a id="twitch-channels"></a>
 ### Twitch Channels
-Display a list of channels from Twitch.
+Wyświetla listę kanałów z Twitcha.
 
-Example:
+Przykład:
 
 ```yaml
 - type: twitch-channels
@@ -3003,30 +3047,31 @@ Example:
     - xQc
 ```
 
-Preview:
+Podgląd:
 
 ![](images/twitch-channels-widget-preview.png)
 
-#### Properties
-| Name | Type | Required | Default |
+#### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| channels | array | yes | |
-| collapse-after | integer | no | 5 |
-| sort-by | string | no | viewers |
+| channels | array | tak | |
+| collapse-after | integer | nie | 5 |
+| sort-by | string | nie | viewers |
 
 ##### `channels`
-A list of channels to display.
+Lista kanałów do wyświetlenia.
 
 ##### `collapse-after`
-How many channels are visible before the "SHOW MORE" button appears. Set to `-1` to never collapse.
+Liczba widocznych kanałów, po której pojawia się przycisk „SHOW MORE”. Ustaw `-1`, aby nigdy nie zwijać.
 
 ##### `sort-by`
-Can be used to specify the order in which the channels are displayed. Possible values are `viewers` and `live`.
+Może służyć do określenia kolejności wyświetlania kanałów. Możliwe wartości: `viewers` i `live`.
 
+<a id="twitch-top-games"></a>
 ### Twitch top games
-Display a list of games with the most viewers on Twitch.
+Wyświetla listę gier z największą liczbą widzów na Twitchu.
 
-Example:
+Przykład:
 
 ```yaml
 - type: twitch-top-games
@@ -3038,19 +3083,19 @@ Example:
     - asmr
 ```
 
-Preview:
+Podgląd:
 
 ![](images/twitch-top-games-widget-preview.png)
 
-#### Properties
-| Name | Type | Required | Default |
+#### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| exclude | array | no | |
-| limit | integer | no | 10 |
-| collapse-after | integer | no | 5 |
+| exclude | array | nie | |
+| limit | integer | nie | 10 |
+| collapse-after | integer | nie | 5 |
 
 ##### `exclude`
-A list of categories that will never be shown. You must provide the slug found by clicking on the category and looking at the URL:
+Lista kategorii, które nigdy nie będą wyświetlane. Musisz podać slug znaleziony po kliknięciu kategorii i sprawdzeniu adresu URL:
 
 ```
 https://www.twitch.tv/directory/category/grand-theft-auto-v
@@ -3058,15 +3103,16 @@ https://www.twitch.tv/directory/category/grand-theft-auto-v
 ```
 
 ##### `limit`
-The maximum number of games to show.
+Maksymalna liczba gier do wyświetlenia.
 
 ##### `collapse-after`
-How many games are visible before the "SHOW MORE" button appears. Set to `-1` to never collapse.
+Liczba widocznych gier, po której pojawia się przycisk „SHOW MORE”. Ustaw `-1`, aby nigdy nie zwijać.
 
+<a id="iframe"></a>
 ### iframe
-Embed an iframe as a widget.
+Osadza iframe jako widget.
 
-Example:
+Przykład:
 
 ```yaml
 - type: iframe
@@ -3074,22 +3120,23 @@ Example:
   height: 400
 ```
 
-#### Properties
-| Name | Type | Required | Default |
+#### Właściwości
+| Nazwa | Typ | Wymagane | Domyślnie |
 | ---- | ---- | -------- | ------- |
-| source | string | yes | |
-| height | integer | no | 300 |
+| source | string | tak | |
+| height | integer | nie | 300 |
 
 ##### `source`
-The source of the iframe.
+Źródło iframe'a.
 
 ##### `height`
-The height of the iframe. The minimum allowed height is 50.
+Wysokość iframe'a. Minimalna dozwolona wysokość to 50.
 
+<a id="html"></a>
 ### HTML
-Embed any HTML.
+Osadza dowolny kod HTML.
 
-Example:
+Przykład:
 
 ```yaml
 - type: html
@@ -3097,10 +3144,11 @@ Example:
     <p>Hello, <span class="color-primary">World</span>!</p>
 ```
 
+<a id="debugowanie"></a>
 ## Debugowanie
 
 ### API Timing
-Jeśli Glance ładuje się wolniej niż powinien, możesz włączyć debugowanie requestów API ustawiając zmienną środowiskową `DEBUG_API_TIMING`:
+Jeśli Glance ładuje się wolniej niż powinien, możesz włączyć debugowanie requestów API, ustawiając zmienną środowiskową `DEBUG_API_TIMING`:
 
 ```yaml
 # docker-compose.yml
@@ -3110,7 +3158,7 @@ services:
       - DEBUG_API_TIMING=true
 ```
 
-Lub jako comment w docker-compose (odkomentuj aby włączyć):
+Lub jako komentarz w docker-compose (odkomentuj, aby włączyć):
 
 ```yaml
 environment:
@@ -3127,11 +3175,11 @@ Każdy request API będzie wtedy logowany w formacie:
 ```
 
 Gdzie:
-- `#1` - kolejność wykonania requestu
-- `GET/POST` - metoda HTTP
-- `200` - kod odpowiedzi
-- `234ms` - czas wykonania requestu
+- `#1` — kolejność wykonania requestu
+- `GET/POST` — metoda HTTP
+- `200` — kod odpowiedzi
+- `234ms` — czas wykonania requestu
 
 To pozwala zidentyfikować, które widgety/API wydłużają czas ładowania panelu.
 
-Note the use of `|` after `source:`, this allows you to insert a multi-line string.
+Zwróć uwagę na użycie `|` po `source:` — pozwala to wstawić ciąg znaków wielowierszowy.

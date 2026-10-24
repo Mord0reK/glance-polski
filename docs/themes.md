@@ -1,9 +1,9 @@
-# Themes
+# Motywy
 
-## Dark
+## Ciemne
 
 ### Teal City
-![screenshot](images/themes/teal-city.png)
+![zrzut ekranu](images/themes/teal-city.png)
 ```yaml
 theme:
   background-color: 225 14 15
@@ -12,7 +12,7 @@ theme:
 ```
 
 ### Catppuccin Frappe
-![screenshot](images/themes/catppuccin-frappe.png)
+![zrzut ekranu](images/themes/catppuccin-frappe.png)
 ```yaml
 theme:
   background-color: 229 19 23
@@ -23,7 +23,7 @@ theme:
 ```
 
 ### Catppuccin Macchiato
-![screenshot](images/themes/catppuccin-macchiato.png)
+![zrzut ekranu](images/themes/catppuccin-macchiato.png)
 ```yaml
 theme:
   background-color: 232 23 18
@@ -34,7 +34,7 @@ theme:
 ```
 
 ### Catppuccin Mocha
-![screenshot](images/themes/catppuccin-mocha.png)
+![zrzut ekranu](images/themes/catppuccin-mocha.png)
 ```yaml
 theme:
   background-color: 240 21 15
@@ -45,7 +45,7 @@ theme:
 ```
 
 ### Camouflage
-![screenshot](images/themes/camouflage.png)
+![zrzut ekranu](images/themes/camouflage.png)
 ```yaml
 theme:
   background-color: 186 21 20
@@ -54,7 +54,7 @@ theme:
 ```
 
 ### Gruvbox Dark
-![screenshot](images/themes/gruvbox.png)
+![zrzut ekranu](images/themes/gruvbox.png)
 ```yaml
 theme:
   background-color: 0 0 16
@@ -64,7 +64,7 @@ theme:
 ```
 
 ### Kanagawa Dark
-![screenshot](images/themes/kanagawa-dark.png)
+![zrzut ekranu](images/themes/kanagawa-dark.png)
 ```yaml
 theme:
   background-color: 240 13 14
@@ -74,7 +74,7 @@ theme:
 ```
 
 ### Tucan
-![screenshot](images/themes/tucan.png)
+![zrzut ekranu](images/themes/tucan.png)
 ```yaml
 theme:
   background-color: 50 1 6
@@ -83,7 +83,7 @@ theme:
 ```
 
 ### Dracula
-![screenshot](images/themes/dracula.png)
+![zrzut ekranu](images/themes/dracula.png)
 ```yaml
 theme:
   background-color: 231 15 21
@@ -94,7 +94,7 @@ theme:
 ```
 
 ### Shades of Purple
-![screenshot](images/themes/shades-of-purple.png)
+![zrzut ekranu](images/themes/shades-of-purple.png)
 ```yaml
 theme:
   background-color: 243 33 25
@@ -105,7 +105,7 @@ theme:
 ```
 
 ### Neon Pink 
-![screenshot](images/themes/neon-pink.png)
+![zrzut ekranu](images/themes/neon-pink.png)
 ```yaml
 theme:
   background-color: 240 27 11
@@ -115,10 +115,10 @@ theme:
   negative-color: 360 100 71
 ```
 
-## Light
+## Jasne
 
 ### Catppuccin Latte
-![screenshot](images/themes/catppuccin-latte.png)
+![zrzut ekranu](images/themes/catppuccin-latte.png)
 ```yaml
 theme:
   light: true
@@ -130,7 +130,7 @@ theme:
 ```
 
 ### Peachy
-![screenshot](images/themes/peachy.png)
+![zrzut ekranu](images/themes/peachy.png)
 ```yaml
 theme:
   light: true
@@ -142,7 +142,7 @@ theme:
 ```
 
 ### Zebra
-![screenshot](images/themes/zebra.png)
+![zrzut ekranu](images/themes/zebra.png)
 ```yaml
 theme:
   light: true

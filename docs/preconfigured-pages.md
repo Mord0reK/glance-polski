@@ -1,19 +1,19 @@
-# Preconfigured pages
+# Gotowe strony
 
-Don't want to spend time configuring pages from scratch? No problem! Simply copy the config from the ones below.
+Nie chcesz tracić czasu na konfigurowanie stron od zera? Nie ma problemu! Po prostu skopiuj konfigurację z poniższych przykładów.
 
-Pull requests with your page configurations are welcome!
+Pull requesty z Twoimi konfiguracjami stron są mile widziane!
 
 > [!NOTE]
 >
-> Pages must be placed under a top level `pages:` key, you can read more about that [here](configuration.md#pages).
+> Strony muszą znajdować się pod kluczem najwyższego poziomu `pages:`. Więcej informacji znajdziesz [tutaj](configuration.md#pages--columns).
 
-## Startpage
+## Strona startowa
 
 ![](images/startpage-preview.png)
 
 <details>
-<summary>View config (requires Glance <code>v0.6.0</code> or higher)</summary>
+<summary>Pokaż konfigurację (wymaga Glance <code>v0.6.0</code> lub nowszego)</summary>
 
 ```yaml
 - name: Startpage
@@ -36,7 +36,7 @@ Pull requests with your page configurations are welcome!
             - title: Gitea
               url: https://yourdomain.com/
               icon: si:gitea
-            - title: qBittorrent # only for Linux ISOs, of course
+            - title: qBittorrent # tylko dla Linux ISO, oczywiście
               url: https://yourdomain.com/
               icon: si:qbittorrent
             - title: Immich
@@ -78,12 +78,12 @@ Pull requests with your page configurations are welcome!
 ```
 </details>
 
-## Markets
+## Rynki
 
 ![](images/markets-page-preview.png)
 
 <details>
-<summary>View config (requires Glance <code>v0.6.0</code> or higher)</summary>
+<summary>Pokaż konfigurację (wymaga Glance <code>v0.6.0</code> lub nowszego)</summary>
 
 ```yaml
 - name: Markets
@@ -175,12 +175,12 @@ Pull requests with your page configurations are welcome!
 ```
 </details>
 
-## Gaming
+## Gry
 
 ![](images/gaming-page-preview.png)
 
 <details>
-<summary>View config (requires Glance <code>v0.6.0</code> or higher)</summary>
+<summary>Pokaż konfigurację (wymaga Glance <code>v0.6.0</code> lub nowszego)</summary>
 
 ```yaml
 - name: Gaming

@@ -1,8 +1,8 @@
 pages:
   - name: Home
-    # Optionally, if you only have a single page you can hide the desktop navigation for a cleaner look
+    # Opcjonalnie: jeśli masz tylko jedną stronę, możesz ukryć nawigację desktopową dla czystszego wyglądu
     # hide-desktop-navigation: true
-    # Optionally, set page width: default (1600px), wide (1920px), slim (1100px), or full-width (100% browser width)
+    # Opcjonalnie ustaw szerokość strony: default (1600px), wide (1920px), slim (1100px) lub full-width (100% szerokości przeglądarki)
     # width: full-width
     columns:
       - size: small
@@ -64,7 +64,7 @@ pages:
             location: London, United Kingdom
             units: metric # alternatively "imperial"
             hour-format: 12h # alternatively "24h"
-            # Optionally hide the location from being displayed in the widget
+            # Opcjonalnie ukryj lokalizację w widgecie
             # hide-location: true
 
           - type: markets
@@ -82,8 +82,8 @@ pages:
 
           - type: releases
             cache: 1d
-            # Without authentication the Github API allows for up to 60 requests per hour. You can create a
-            # read-only token from your Github account settings and use it here to increase the limit.
+            # Bez uwierzytelniania API GitHuba pozwala na maksymalnie 60 żądań na godzinę. Możesz utworzyć
+            # token tylko do odczytu w ustawieniach konta GitHub i użyć go tutaj, aby zwiększyć limit.
             # token: ...
             repositories:
               - glanceapp/glance
@@ -91,17 +91,17 @@ pages:
               - immich-app/immich
               - syncthing/syncthing
 
-  # Add more pages here:
-  # - name: Your page name
+  # Dodaj więcej stron tutaj:
+  # - name: Nazwa Twojej strony
   #   columns:
   #     - size: small
   #       widgets:
-  #         # Add widgets here
+  #         # Dodaj tutaj widgety
 
   #     - size: full
   #       widgets:
-  #         # Add widgets here
+  #         # Dodaj tutaj widgety
 
   #     - size: small
   #       widgets:
-  #         # Add widgets here
+  #         # Dodaj tutaj widgety
