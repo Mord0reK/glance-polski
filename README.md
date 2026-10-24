@@ -1,80 +1,85 @@
-<h1>To jest zmodyfikowana wersja dashboard Glance, z przetłumaczonimi elementami na Język Polski</h1>
-<p>Wersja ta posiada także następujące zmiany</p>
-<li> Widget Radyjko <br>
-<li> Widget Cloudflare <br>
-<li> Widget Navidrome <br>
-<li> Natywny widget Vikunja <br>
-<li> Natywny widget Beszel <br>
-<li> Natywny widget Tailscale <br>
-<li> Natywny widget qBittorrent <br>
-<li> Integracja z Affine <br>
-<li> Poprawiony widget pogody <br>
-<li> Możliwość przesuwania między lewą częścią, środkową i prawą poprzez przesunięcie na urządzeniach mobilnych
+<h1>To jest zmodyfikowana wersja dashboardu Glance, z elementami przetłumaczonymi na język polski</h1>
+<p>Wersja ta zawiera także następujące zmiany:</p>
+<ul>
+  <li>Widget Radyjko</li>
+  <li>Natywny widget Cloudflare</li>
+  <li>Natywny widget Navidrome</li>
+  <li>Natywny widget Vikunja</li>
+  <li>Natywny widget Beszel</li>
+  <li>Natywny widget Tailscale</li>
+  <li>Natywny widget qBittorrent</li>
+  <li>Natywny widget GitHub</li>
+  <li>Widget OpenCode Go z prognozą zużycia</li>
+  <li>Integracja z Affine</li>
+  <li>Poprawiony widget pogody</li>
+  <li>Możliwość przesuwania widgetów między lewą, środkową i prawą kolumną na urządzeniach mobilnych</li>
+  <li>Przetłumaczona dokumentacja w katalogu <code>docs/</code></li>
+</ul>
 
-<h1>Poniżej znajduje się reszta oryginalnego pliku README.md z oficjalnego repozytorium glanceapp/glance</h1>
+<h1>Poniżej znajduje się przetłumaczona reszta oryginalnego pliku README.md z repozytorium glanceapp/glance</h1>
 
 <p align="center"><img src="docs/logo.png"></p>
 <h1 align="center">Glance</h1>
 <p align="center">
-  <a href="#installation">Install</a> •
-  <a href="docs/configuration.md#configuring-glance">Configuration</a> •
+  <a href="#instalacja">Instalacja</a> •
+  <a href="docs/configuration.md#configuring-glance">Konfiguracja</a> •
   <a href="https://discord.com/invite/7KQ7Xa9kJd">Discord</a> •
-  <a href="https://github.com/sponsors/glanceapp">Sponsor</a>
+  <a href="https://github.com/sponsors/glanceapp">Wesprzyj projekt</a>
 </p>
 <p align="center">
-  <a href="https://github.com/glanceapp/community-widgets">Community widgets</a> •
-  <a href="docs/preconfigured-pages.md">Preconfigured pages</a> •
-  <a href="docs/themes.md">Themes</a>
+  <a href="https://github.com/glanceapp/community-widgets">Widgety społeczności</a> •
+  <a href="docs/preconfigured-pages.md">Gotowe strony</a> •
+  <a href="docs/themes.md">Motywy</a>
 </p>
 
-<p align="center">A lightweight, highly customizable dashboard that displays<br> your feeds in a beautiful, streamlined interface</p>
+<p align="center">Lekki, wysoce konfigurowalny dashboard, który wyświetla<br> Twoje kanały w pięknym, przejrzystym interfejsie</p>
 
 ![](docs/images/readme-main-image.png)
 
-## Features
-### Various widgets
-* RSS feeds
-* Subreddit posts
-* Hacker News posts
-* Weather forecasts
-* YouTube channel uploads
-* Twitch channels
-* Market prices
-* Docker containers status
-* Server stats
-* Custom widgets
-* [and many more...](docs/configuration.md#configuring-glance)
+## Funkcje
+### Różnorodne widgety
+* Kanały RSS
+* Wpisy z subredditów
+* Wpisy z Hacker News
+* Prognoza pogody
+* Filmy z kanałów YouTube
+* Kanały Twitch
+* Ceny rynkowe
+* Status kontenerów Docker
+* Statystyki serwera
+* Własne widgety
+* [I wiele więcej...](docs/configuration.md#configuring-glance)
 
-### Fast and lightweight
-* Low memory usage
-* Few dependencies
-* Minimal vanilla JS
-* Single <20mb binary available for multiple OSs & architectures and just as small Docker container
-* Uncached pages usually load within ~1s (depending on internet speed and number of widgets)
+### Szybki i lekki
+* Niskie zużycie pamięci
+* Niewiele zależności
+* Minimalna ilość czystego JavaScriptu
+* Pojedyncza binarka mniejsza niż 20 MB dostępna dla wielu systemów i architektur oraz równie mały kontener Docker
+* Niezcache'owane strony zwykle ładują się w około 1 sekundę (w zależności od prędkości internetu i liczby widgetów)
 
-### Tons of customizability
-* Different layouts
-* As many pages/tabs as you need
-* Numerous configuration options for each widget
-* Multiple styles for some widgets
-* Custom CSS
+### Ogromne możliwości dostosowania
+* Różne układy
+* Dowolna liczba stron i kart
+* Liczne opcje konfiguracji każdego widgetu
+* Wiele stylów dla niektórych widgetów
+* Własny CSS
 
-### Optimized for mobile devices
-Because you'll want to take it with you on the go.
+### Zoptymalizowany pod urządzenia mobilne
+Ponieważ z pewnością zechcesz zabrać go ze sobą w drogę.
 
 ![](docs/images/mobile-preview.png)
 
-### Themeable
-Easily create your own theme by tweaking a few numbers or choose from one of the [already available themes](docs/themes.md).
+### Motywy
+Łatwo stwórz własny motyw, zmieniając kilka liczb, albo wybierz jeden z [gotowych motywów](docs/themes.md).
 
 ![](docs/images/themes-example.png)
 
 <br>
 
-## Configuration
-Configuration is done through YAML files, to learn more about how the layout works, how to add more pages and how to configure widgets, visit the [configuration documentation](docs/configuration.md#configuring-glance).
+## Konfiguracja
+Konfiguracja odbywa się za pomocą plików YAML. Aby dowiedzieć się więcej o układzie strony, dodawaniu kolejnych stron i konfiguracji widgetów, zajrzyj do [dokumentacji konfiguracji](docs/configuration.md#configuring-glance).
 <details>
-<summary><strong>Preview example configuration file</strong></summary>
+<summary><strong>Podgląd przykładowego pliku konfiguracyjnego</strong></summary>
 <br>
 
 ```yaml
@@ -166,41 +171,53 @@ pages:
 
 <br>
 
-## Installation
+## Instalacja
 
-Choose one of the following methods:
+Wybierz jedną z poniższych metod:
+
+> [!NOTE]
+>
+> Ten fork jest publikowany jako obraz Docker `ghcr.io/mord0rek/glance-polski`. Poniższe przykłady korzystają właśnie z niego, a nie z obrazu upstreamowego `glanceapp/glance`.
 
 <details>
-<summary><strong>Docker compose using provided directory structure (recommended)</strong></summary>
+<summary><strong>Docker Compose z gotową strukturą katalogów (zalecane)</strong></summary>
 <br>
 
-Create a new directory called `glance` as well as the template files within it by running:
+Utwórz nowy katalog o nazwie `glance` wraz z plikami szablonu, uruchamiając:
 
 ```bash
 mkdir glance && cd glance && curl -sL https://github.com/glanceapp/docker-compose-template/archive/refs/heads/main.tar.gz | tar -xzf - --strip-components 2
 ```
 
-*[click here to view the files that will be created](https://github.com/glanceapp/docker-compose-template/tree/main/root)*
+*[Kliknij tutaj, aby zobaczyć pliki, które zostaną utworzone](https://github.com/glanceapp/docker-compose-template/tree/main/root)*
 
-Then, edit the following files as desired:
-* `docker-compose.yml` to configure the port, volumes and other containery things
-* `config/home.yml` to configure the widgets or layout of the home page
-* `config/glance.yml` if you want to change the theme or add more pages
+Następnie w pliku `docker-compose.yml` ustaw obraz na wersję z tego forka:
+
+```yaml
+services:
+  glance:
+    image: ghcr.io/mord0rek/glance-polski
+```
+
+Następnie edytuj pliki według potrzeb:
+* `docker-compose.yml`, aby skonfigurować port, wolumeny i inne ustawienia kontenera
+* `config/home.yml`, aby skonfigurować widgety lub układ strony głównej
+* `config/glance.yml`, jeśli chcesz zmienić motyw lub dodać kolejne strony
 
 <details>
-<summary>Other files you may want to edit</summary>
+<summary>Inne pliki, które możesz chcieć edytować</summary>
 
-* `.env` to configure environment variables that will be available inside configuration files
-* `assets/user.css` to add custom CSS
+* `.env`, aby skonfigurować zmienne środowiskowe dostępne w plikach konfiguracyjnych
+* `assets/user.css`, aby dodać własny CSS
 </details>
 
-When ready, run:
+Gdy wszystko będzie gotowe, uruchom:
 
 ```bash
 docker compose up -d
 ```
 
-If you encounter any issues, you can check the logs by running:
+Jeśli napotkasz problemy, możesz sprawdzić logi, uruchamiając:
 
 ```bash
 docker compose logs
@@ -210,16 +227,16 @@ docker compose logs
 </details>
 
 <details>
-<summary><strong>Docker compose manual</strong></summary>
+<summary><strong>Docker Compose — konfiguracja ręczna</strong></summary>
 <br>
 
-Create a `docker-compose.yml` file with the following contents:
+Utwórz plik `docker-compose.yml` o następującej zawartości:
 
 ```yaml
 services:
   glance:
     container_name: glance
-    image: glanceapp/glance
+    image: ghcr.io/mord0rek/glance-polski
     restart: unless-stopped
     volumes:
       - ./config:/app/config
@@ -227,19 +244,19 @@ services:
       - 8080:8080
 ```
 
-Then, create a new directory called `config` and download the example starting [`glance.yml`](https://github.com/glanceapp/glance/blob/main/docs/glance.yml) file into it by running:
+Następnie utwórz katalog o nazwie `config` i pobierz do niego przykładowy plik [`glance.yml`](https://github.com/glanceapp/glance/blob/main/docs/glance.yml), uruchamiając:
 
 ```bash
 mkdir config && wget -O config/glance.yml https://raw.githubusercontent.com/glanceapp/glance/refs/heads/main/docs/glance.yml
 ```
 
-Feel free to edit the `glance.yml` file to your liking, and when ready run:
+Możesz swobodnie edytować plik `glance.yml` według własnych potrzeb. Gdy wszystko będzie gotowe, uruchom:
 
 ```bash
 docker compose up -d
 ```
 
-If you encounter any issues, you can check the logs by running:
+Jeśli napotkasz problemy, możesz sprawdzić logi, uruchamiając:
 
 ```bash
 docker logs glance
@@ -249,55 +266,47 @@ docker logs glance
 </details>
 
 <details>
-<summary><strong>Manual binary installation</strong></summary>
+<summary><strong>Ręczna instalacja binarki</strong></summary>
 <br>
 
-Precompiled binaries are available for Linux, Windows and macOS (x86, x86_64, ARM and ARM64 architectures).
+Ten fork nie publikuje gotowych binarek. Możesz zbudować go ze źródeł (patrz sekcja [Budowanie ze źródeł](#budowanie-ze-zrodel)) albo użyć obrazu Docker opisanego powyżej.
 
-### Linux
-
-Visit the [latest release page](https://github.com/glanceapp/glance/releases/latest) for available binaries. You can place the binary in `/opt/glance/` and have it start with your server via a [systemd service](https://linuxhandbook.com/create-systemd-services/). By default, when running the binary, it will look for a `glance.yml` file in the directory it's placed in. To specify a different path for the config file, use the `--config` option:
+Jeśli budujesz binarkę samodzielnie, domyślnie będzie ona szukać pliku `glance.yml` w katalogu, w którym się znajduje. Aby wskazać inną ścieżkę do pliku konfiguracyjnego, użyj opcji `--config`:
 
 ```bash
 /opt/glance/glance --config /etc/glance.yml
 ```
 
-To grab a starting template for the config file, run:
-
-```bash
-wget https://raw.githubusercontent.com/glanceapp/glance/refs/heads/main/docs/glance.yml
-```
-
-### Windows
-
-Download and extract the executable from the [latest release](https://github.com/glanceapp/glance/releases/latest) (most likely the file called `glance-windows-amd64.zip` if you're on a 64-bit system) and place it in a folder of your choice. Then, create a new text file called `glance.yml` in the same folder and paste the content from [here](https://raw.githubusercontent.com/glanceapp/glance/refs/heads/main/docs/glance.yml) in it. You should then be able to run the executable and access the dashboard by visiting `http://localhost:8080` in your browser.
-
-
-
 <hr>
 </details>
 
 <details>
-<summary><strong>Other</strong></summary>
+<summary><strong>Inne</strong></summary>
 <br>
 
-Glance can also be installed through the following 3rd party channels:
+Glance można również zainstalować za pośrednictwem następujących kanałów firm trzecich:
+
 * [Proxmox VE Helper Script](https://community-scripts.github.io/ProxmoxVE/scripts?id=glance)
-* [NixOS package](https://search.nixos.org/packages?channel=unstable&show=glance)
+* [Pakiet NixOS](https://search.nixos.org/packages?channel=unstable&show=glance)
 * [Coolify.io](https://coolify.io/docs/services/glance/)
 
+> [!NOTE]
+>
+> Powyższe kanały instalują wersję upstreamową Glance, a nie ten fork. Aby korzystać z polskiej wersji, użyj obrazu Docker `ghcr.io/mord0rek/glance-polski`.
+
 <hr>
 </details>
 
 <br>
 
-## Common issues
+## Częste problemy
 <details>
-<summary><strong>Requests timing out</strong></summary>
+<summary><strong>Przekroczenia czasu żądań</strong></summary>
 
-The most common cause of this is when using Pi-Hole, AdGuard Home or other ad-blocking DNS services, which by default have a fairly low rate limit. Depending on the number of widgets you have in a single page, this limit can very easily be exceeded. To fix this, increase the rate limit in the settings of your DNS service.
+Najczęstszą przyczyną jest korzystanie z Pi-hole, AdGuard Home lub innych usług DNS blokujących reklamy, które domyślnie mają dość niski limit zapytań. W zależności od liczby widgetów na jednej stronie limit ten można bardzo łatwo przekroczyć. Aby to naprawić, zwiększ limit zapytań w ustawieniach swojej usługi DNS.
 
-If using Podman, in some rare cases the timeout can be caused by an unknown issue, in which case it may be resolved by adding the following to the bottom of your `docker-compose.yml` file:
+Jeśli używasz Podmana, w rzadkich przypadkach przekroczenie czasu może być spowodowane nieznanym problemem — może je rozwiązać dodanie następującego fragmentu na końcu pliku `docker-compose.yml`:
+
 ```yaml
 networks:
   podman:
@@ -306,15 +315,15 @@ networks:
 </details>
 
 <details>
-<summary><strong>Broken layout for markets, bookmarks or other widgets</strong></summary>
+<summary><strong>Zepsuty układ widgetów markets, bookmarks lub innych</strong></summary>
 
-This is almost always caused by the browser extension Dark Reader. To fix this, disable dark mode for the domain where Glance is hosted.
+Prawie zawsze jest to spowodowane rozszerzeniem przeglądarki Dark Reader. Aby to naprawić, wyłącz tryb ciemny dla domeny, na której hostowany jest Glance.
 </details>
 
 <details>
 <summary><strong>cannot unmarshal !!map into []glance.page</strong></summary>
 
-The most common cause of this is having a `pages` key in your `glance.yml` and then also having a `pages` key inside one of your included pages. To fix this, remove the `pages` key from the top of your included pages.
+Najczęstszą przyczyną jest posiadanie klucza `pages` w pliku `glance.yml`, a następnie także klucza `pages` w jednym z dołączanych plików. Aby to naprawić, usuń klucz `pages` z góry dołączanych stron.
 
 </details>
 
@@ -322,29 +331,32 @@ The most common cause of this is having a `pages` key in your `glance.yml` and t
 
 ## FAQ
 <details>
-<summary><strong>Does the information on the page update automatically?</strong></summary>
-No, a page refresh is required to update the information. Some things do dynamically update where it makes sense, like the clock widget and the relative time showing how long ago something happened.
+<summary><strong>Czy informacje na stronie aktualizują się automatycznie?</strong></summary>
+
+Nie, aby zaktualizować informacje, trzeba odświeżyć stronę. Niektóre elementy aktualizują się dynamicznie, tam gdzie ma to sens — na przykład widget zegara oraz czas względny pokazujący, jak dawno coś się wydarzyło.
 </details>
 
 <details>
-<summary><strong>How frequently do widgets update?</strong></summary>
-No requests are made periodically in the background, information is only fetched upon loading the page and then cached. The default cache lifetime is different for each widget and can be configured.
+<summary><strong>Jak często aktualizują się widgety?</strong></summary>
+
+W tle nie są wykonywane żadne cykliczne żądania — informacje są pobierane tylko przy ładowaniu strony, a następnie cache'owane. Domyślny czas życia cache jest inny dla każdego widgetu i można go skonfigurować.
 </details>
 
 <details>
-<summary><strong>Can I create my own widgets?</strong></summary>
+<summary><strong>Czy mogę tworzyć własne widgety?</strong></summary>
 
-Yes, there are multiple ways to create custom widgets:
-* `iframe` widget - allows you to embed things from other websites
-* `html` widget - allows you to insert your own static HTML
-* `extension` widget - fetch HTML from a URL
-* `custom-api` widget - fetch JSON from a URL and render it using custom HTML
+Tak, istnieje kilka sposobów tworzenia własnych widgetów:
+
+* widget `iframe` — umożliwia osadzanie treści z innych stron
+* widget `html` — umożliwia wstawienie własnego statycznego HTML
+* widget `extension` — pobiera HTML z adresu URL
+* widget `custom-api` — pobiera JSON z adresu URL i renderuje go za pomocą własnego HTML
 </details>
 
 <details>
-<summary><strong>Can I change the title of a widget?</strong></summary>
+<summary><strong>Czy mogę zmienić tytuł widgetu?</strong></summary>
 
-Yes, the title of all widgets can be changed by specifying the `title` property in the widget's configuration:
+Tak, tytuł każdego widgetu można zmienić, podając właściwość `title` w konfiguracji widgetu:
 
 ```yaml
 - type: rss
@@ -356,49 +368,50 @@ Yes, the title of all widgets can be changed by specifying the `title` property 
 - type: videos
   title: My custom title
 
-# and so on for all widgets...
+# i tak dalej dla wszystkich widgetów...
 ```
 </details>
 
 <br>
 
-## Feature requests
+## Propozycje funkcji
 
-New feature suggestions are always welcome and will be considered, though please keep in mind that some of them may be out of scope for what the project is trying to achieve (or is reasonably capable of). If you have an idea for a new feature and would like to share it, you can do so [here](https://github.com/glanceapp/glance/issues/new?template=feature_request.yml).
+Nowe propozycje funkcji są zawsze mile widziane i będą rozważane, pamiętaj jednak, że niektóre z nich mogą wykraczać poza zakres projektu (lub możliwości jego realizacji). Jeśli masz pomysł na nową funkcję i chcesz go zgłosić, możesz to zrobić [tutaj](https://github.com/Mord0rek/glance-polski/issues).
 
-Feature requests are tagged with one of the following:
+Propozycje funkcji są oznaczane jedną z następujących etykiet:
 
-* [Roadmap](https://github.com/glanceapp/glance/labels/roadmap) - will be implemented in a future release
-* [Backlog](https://github.com/glanceapp/glance/labels/backlog) - may be implemented in the future but needs further feedback or interest from the community
-* [Icebox](https://github.com/glanceapp/glance/labels/icebox) - no plans to implement as it doesn't currently align with the project's goals or capabilities, may be revised at a later date
+* [Roadmap](https://github.com/glanceapp/glance/labels/roadmap) — zostanie zrealizowana w przyszłym wydaniu
+* [Backlog](https://github.com/glanceapp/glance/labels/backlog) — może zostać zrealizowana w przyszłości, ale wymaga dalszych informacji zwrotnych lub zainteresowania społeczności
+* [Icebox](https://github.com/glanceapp/glance/labels/icebox) — brak planów realizacji, ponieważ nie jest obecnie zgodna z celami lub możliwościami projektu; może zostać ponownie rozważona w przyszłości
 
 <br>
 
-## Building from source
+<a id="budowanie-ze-zrodel"></a>
+## Budowanie ze źródeł
 
-Choose one of the following methods:
+Wybierz jedną z poniższych metod:
 
 <details>
-<summary><strong>Build binary with Go</strong></summary>
+<summary><strong>Budowanie binarki za pomocą Go</strong></summary>
 <br>
 
-Requirements: [Go](https://go.dev/dl/) >= v1.23
+Wymagania: [Go](https://go.dev/dl/) >= v1.23
 
-To build the project for your current OS and architecture, run:
+Aby zbudować projekt dla bieżącego systemu i architektury, uruchom:
 
 ```bash
 go build -o build/glance .
 ```
 
-To build for a specific OS and architecture, run:
+Aby zbudować dla konkretnego systemu i architektury, uruchom:
 
 ```bash
 GOOS=linux GOARCH=amd64 go build -o build/glance .
 ```
 
-[*click here for a full list of GOOS and GOARCH combinations*](https://go.dev/doc/install/source#:~:text=$GOOS%20and%20$GOARCH)
+[*Kliknij tutaj, aby zobaczyć pełną listę kombinacji GOOS i GOARCH*](https://go.dev/doc/install/source#:~:text=$GOOS%20and%20$GOARCH)
 
-Alternatively, if you just want to run the app without creating a binary, like when you're testing out changes, you can run:
+Alternatywnie, jeśli chcesz tylko uruchomić aplikację bez tworzenia binarki — na przykład podczas testowania zmian — możesz uruchomić:
 
 ```bash
 go run .
@@ -407,20 +420,20 @@ go run .
 </details>
 
 <details>
-<summary><strong>Build project and Docker image with Docker</strong></summary>
+<summary><strong>Budowanie projektu i obrazu Docker za pomocą Docker</strong></summary>
 <br>
 
-Requirements: [Docker](https://docs.docker.com/engine/install/)
+Wymagania: [Docker](https://docs.docker.com/engine/install/)
 
-To build the project and image using just Docker, run:
+Aby zbudować projekt i obraz wyłącznie za pomocą Docker, uruchom:
 
-*(replace `owner` with your name or organization)*
+*(zamień `owner` na swoją nazwę lub nazwę organizacji)*
 
 ```bash
 docker build -t owner/glance:latest .
 ```
 
-If you wish to push the image to a registry (by default Docker Hub), run:
+Jeśli chcesz wypchnąć obraz do rejestru (domyślnie Docker Hub), uruchom:
 
 ```bash
 docker push owner/glance:latest
@@ -431,31 +444,31 @@ docker push owner/glance:latest
 
 <br>
 
-## Contributing guidelines
+## Zasady współtworzenia
 
-* Before working on a new feature it's preferable to submit a feature request first and state that you'd like to implement it yourself
-* Please don't submit PRs for feature requests that are either in the roadmap<sup>[1]</sup>, backlog<sup>[2]</sup> or icebox<sup>[3]</sup>
-* Use `dev` for the base branch if you're adding new features or fixing bugs, otherwise use `main`
-* Avoid introducing new dependencies
-* Avoid making backwards-incompatible configuration changes
-* Avoid introducing new colors or hard-coding colors, use the standard `primary`, `positive` and `negative`
-* For icons, try to use [heroicons](https://heroicons.com/) where applicable
-* Provide a screenshot of the changes if UI related where possible
-* No `package.json`
+* Przed rozpoczęciem pracy nad nową funkcją najlepiej najpierw zgłosić propozycję funkcji i zaznaczyć, że chcesz ją zaimplementować samodzielnie
+* Nie zgłaszaj PR-ów dla propozycji funkcji, które znajdują się w roadmap<sup>[1]</sup>, backlog<sup>[2]</sup> lub icebox<sup>[3]</sup>
+* Jeśli dodajesz nowe funkcje lub poprawiasz błędy, używaj gałęzi `dev` jako bazowej; w przeciwnym razie używaj `main`
+* Unikaj wprowadzania nowych zależności
+* Unikaj wprowadzania niekompatybilnych wstecznie zmian konfiguracji
+* Unikaj wprowadzania nowych kolorów lub hardkodowania kolorów — używaj standardowych `primary`, `positive` i `negative`
+* W przypadku ikon staraj się używać [heroicons](https://heroicons.com/), gdzie to możliwe
+* Jeśli zmiany dotyczą interfejsu, w miarę możliwości dołącz zrzut ekranu
+* Nie dodawaj `package.json`
 
 <details>
 <summary><strong><sup>[1] [2] [3]</sup></strong></summary>
 
-[1] The feature likely already has work put into it that may conflict with your implementation
+[1] Funkcja prawdopodobnie ma już rozpoczęte prace, które mogą kolidować z Twoją implementacją
 
-[2] The demand, implementation or functionality for this feature is not yet clear
+[2] Popyt, implementacja lub funkcjonalność tej funkcji nie są jeszcze jasne
 
-[3] No plans to add this feature for the time being
+[3] Brak planów dodania tej funkcji w najbliższym czasie
 
 </details>
 
 <br>
 
-## Thank you
+## Podziękowania
 
-To all the people who were generous enough to [sponsor](https://github.com/sponsors/glanceapp) the project and to everyone who has contributed in any way, be it PRs, submitting issues, helping others in the discussions or Discord server, creating guides and tools or just mentioning Glance on social media. Your support is greatly appreciated and helps keep the project going.
+Dla wszystkich osób, które były wystarczająco hojne, aby [wesprzeć](https://github.com/sponsors/glanceapp) projekt, oraz dla wszystkich, którzy w jakikolwiek sposób przyczynili się do jego rozwoju — poprzez PR-y, zgłaszanie problemów, pomoc innym w dyskusjach lub na serwerze Discord, tworzenie poradników i narzędzi albo po prostu wspominanie o Glance w mediach społecznościowych. Wasze wsparcie jest bardzo doceniane i pomaga utrzymać projekt przy życiu.
