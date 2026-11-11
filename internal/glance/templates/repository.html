@@ -13,7 +13,7 @@
 <div class="flex gap-7 size-h5 size-base-on-mobile margin-top-3">
     <ul class="list list-gap-2">
         {{ range .Repository.Commits }}
-        <li {{ dynamicRelativeTimeAttrs .CreatedAt }}></li>
+        <li title="{{ .CreatedAt | formatPolishDateTime }}" {{ dynamicRelativeTimeAttrs .CreatedAt }}></li>
         {{ end }}
     </ul>
     <ul class="list list-gap-2 min-width-0">
@@ -30,7 +30,7 @@
 <div class="flex gap-7 size-h5 size-base-on-mobile margin-top-3">
     <ul class="list list-gap-2">
         {{ range .Repository.PullRequests }}
-        <li {{ dynamicRelativeTimeAttrs .CreatedAt }}></li>
+        <li title="{{ .CreatedAt | formatPolishDateTime }}" {{ dynamicRelativeTimeAttrs .CreatedAt }}></li>
         {{ end }}
     </ul>
     <ul class="list list-gap-2 min-width-0">
@@ -47,7 +47,7 @@
 <div class="flex gap-7 size-h5 size-base-on-mobile margin-top-3">
     <ul class="list list-gap-2">
         {{ range .Repository.Issues }}
-        <li {{ dynamicRelativeTimeAttrs .CreatedAt }}></li>
+        <li title="{{ .CreatedAt | formatPolishDateTime }}" {{ dynamicRelativeTimeAttrs .CreatedAt }}></li>
         {{ end }}
     </ul>
     <ul class="list list-gap-2 min-width-0">

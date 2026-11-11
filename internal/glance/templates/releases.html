@@ -11,7 +11,7 @@
             {{ end }}
         </div>
         <ul class="list-horizontal-text">
-            <li {{ dynamicRelativeTimeAttrs .TimeReleased }}></li>
+            <li title="{{ .TimeReleased | formatPolishDateTime }}" {{ dynamicRelativeTimeAttrs .TimeReleased }}></li>
             <li>{{ .Version }}</li>
             {{ if gt .Downvotes 3 }}
             <li>{{ .Downvotes | formatNumber }} ⚠</li>

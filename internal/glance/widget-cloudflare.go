@@ -13,17 +13,6 @@ import (
 
 var cloudflareWidgetTemplate = mustParseTemplate("cloudflare.html", "widget-base.html")
 
-// Use explicit Europe/Warsaw timezone instead of time.Local to ensure consistent behavior
-var defaultLocation *time.Location
-
-func init() {
-	var err error
-	defaultLocation, err = time.LoadLocation("Europe/Warsaw")
-	if err != nil {
-		defaultLocation = time.UTC
-	}
-}
-
 type cloudflareWidget struct {
 	widgetBase `yaml:",inline"`
 	ApiKey     string          `yaml:"api-key"`
@@ -153,7 +142,7 @@ func fetchCloudflareZoneDetails(apiKey, zoneID string) (*cloudflareZoneDetails, 
 }
 
 func fetchCloudflareData(apiKey, zoneID, timeRange string) (*cloudflareData, error) {
-	now := time.Now().In(defaultLocation)
+	now := time.Now().In(appTimeLocation)
 
 	startTime := now.Add(-24 * time.Hour).Format(time.RFC3339)
 	endTime := now.Format(time.RFC3339)
@@ -365,7 +354,7 @@ func formatTimeLabel(ts, timeRange string) string {
 		if len(ts) >= 19 {
 			t, err := time.Parse("2006-01-02T15:04:05Z", ts)
 			if err == nil {
-				hour := t.In(defaultLocation).Hour()
+				hour := t.In(appTimeLocation).Hour()
 				return fmt.Sprintf("%02d", hour)
 			}
 		}
@@ -377,7 +366,7 @@ func formatTimeLabel(ts, timeRange string) string {
 		if len(ts) >= 10 {
 			t, err := time.Parse("2006-01-02", ts[:10])
 			if err == nil {
-				return t.In(defaultLocation).Format("02.01")
+				return t.In(appTimeLocation).Format("02.01")
 			}
 		}
 		return ts
@@ -395,7 +384,7 @@ func buildCloudflareAxisLabels(series []cloudflareSeriesPoint, timeRange string)
 		for i, point := range series {
 			if len(point.Timestamp) >= 19 {
 				if t, err := time.Parse("2006-01-02T15:04:05Z", point.Timestamp); err == nil {
-					hour := t.In(defaultLocation).Hour()
+					hour := t.In(appTimeLocation).Hour()
 					// Keep the earliest occurrence of each hour
 					if _, exists := hourPositions[hour]; !exists {
 						hourPositions[hour] = i

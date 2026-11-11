@@ -50,6 +50,7 @@ var globalTemplateFunctions = template.FuncMap{
 	},
 	"dynamicRelativeTimeAttrs": dynamicRelativeTimeAttrs,
 	"formatPolishDate":         formatPolishDate,
+	"formatPolishDateTime":     formatPolishDateTime,
 	"formatPolishRelativeTime": formatPolishRelativeTime,
 	"languageIcon":             languageIcon,
 	"formatServerMegabytes": func(mb uint64) template.HTML {
@@ -108,22 +109,37 @@ func dynamicRelativeTimeAttrs(t interface{ Unix() int64 }) template.HTMLAttr {
 	return template.HTMLAttr(`data-dynamic-relative-time="` + strconv.FormatInt(t.Unix(), 10) + `"`)
 }
 
-func formatPolishDate(t interface{ Unix() int64 }) string {
-	days := []string{"niedziela", "poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota"}
-	months := []string{"stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca", "lipca", "sierpnia", "września", "października", "listopada", "grudnia"}
+var polishWeekdayNames = []string{"niedziela", "poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota"}
+var polishMonthNames = []string{"stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca", "lipca", "sierpnia", "września", "października", "listopada", "grudnia"}
 
+func formatPolishDate(t interface{ Unix() int64 }) string {
 	unix := t.Unix()
 	if unix == 0 {
 		return ""
 	}
 
-	timeObj := time.Unix(unix, 0)
-	weekday := days[timeObj.Weekday()]
+	timeObj := time.Unix(unix, 0).In(appTimeLocation)
+	weekday := polishWeekdayNames[timeObj.Weekday()]
 	day := timeObj.Day()
-	month := months[timeObj.Month()-1]
+	month := polishMonthNames[timeObj.Month()-1]
 	year := timeObj.Year()
 
 	return fmt.Sprintf("%s, %d %s %d", weekday, day, month, year)
+}
+
+func formatPolishDateTime(t interface{ Unix() int64 }) string {
+	unix := t.Unix()
+	if unix == 0 {
+		return ""
+	}
+
+	timeObj := time.Unix(unix, 0).In(appTimeLocation)
+	weekday := polishWeekdayNames[timeObj.Weekday()]
+	day := timeObj.Day()
+	month := polishMonthNames[timeObj.Month()-1]
+	year := timeObj.Year()
+
+	return fmt.Sprintf("%s, %d %s %d, %02d:%02d", weekday, day, month, year, timeObj.Hour(), timeObj.Minute())
 }
 
 func formatPolishRelativeTime(t interface{ Unix() int64 }) string {

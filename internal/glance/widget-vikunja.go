@@ -17,17 +17,6 @@ import (
 
 var vikunjaWidgetTemplate = mustParseTemplate("vikunja.html", "widget-base.html")
 
-// Use explicit Europe/Warsaw timezone instead of time.Local to ensure consistent behavior
-var vikunjaDefaultLocation *time.Location
-
-func init() {
-	var err error
-	vikunjaDefaultLocation, err = time.LoadLocation("Europe/Warsaw")
-	if err != nil {
-		vikunjaDefaultLocation = time.UTC
-	}
-}
-
 type vikunjaWidget struct {
 	widgetBase      `yaml:",inline"`
 	URL             string `yaml:"url"`
@@ -200,7 +189,7 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 	}
 
 	tasks := make([]vikunjaTask, 0)
-	now := time.Now().In(vikunjaDefaultLocation)
+	now := time.Now().In(appTimeLocation)
 
 	for _, apiTask := range apiTasks {
 		if apiTask.Done {
@@ -220,7 +209,7 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 			dueDate, err := time.Parse(time.RFC3339, apiTask.DueDate)
 			if err == nil {
 				// Convert from UTC to local timezone for display
-				dueDateLocal := dueDate.In(vikunjaDefaultLocation)
+				dueDateLocal := dueDate.In(appTimeLocation)
 				task.DueDate = dueDateLocal
 				task.DueDateStr = dueDateLocal.Format("2006-01-02 15:04")
 				task.TimeLeft = formatTimeLeft(now, dueDateLocal)
@@ -235,7 +224,7 @@ func (widget *vikunjaWidget) fetchTasks() ([]vikunjaTask, error) {
 			reminder, err := time.Parse(time.RFC3339, reminderStr)
 			if err == nil {
 				// Convert from UTC to local timezone for display
-				task.Reminder = reminder.In(vikunjaDefaultLocation)
+				task.Reminder = reminder.In(appTimeLocation)
 				task.ReminderStr = task.Reminder.Format("2006-01-02 15:04")
 			}
 		}

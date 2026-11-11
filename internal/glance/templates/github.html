@@ -18,7 +18,7 @@
         <p class="size-base-on-mobile margin-top-2 color-secondary text-truncate-2-lines">{{ .Description }}</p>
         {{ end }}
         <ul class="list-horizontal-text margin-top-3">
-            <li title="{{ .LastCommit | formatPolishDate }}">{{ .LastCommit | formatPolishRelativeTime }}</li>
+            <li title="{{ .LastCommit | formatPolishDateTime }}" {{ dynamicRelativeTimeAttrs .LastCommit }}>{{ .LastCommit | formatPolishRelativeTime }}</li>
             <li>{{ .Stars | formatNumber }} ★</li>
             {{ if .Language }}
             {{ $iconUrl := .Language | languageIcon }}
