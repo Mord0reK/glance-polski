@@ -6,6 +6,7 @@
   - [Automatyczne przeładowywanie](#auto-reload)
   - [Zmienne środowiskowe](#environment-variables)
     - [Inne sposoby przekazywania tokenów/haseł/sekretów](#other-ways-of-providing-tokenspasswordssecrets)
+  - [Strefa czasowa](#timezone)
   - [Dołączanie innych plików konfiguracyjnych](#including-other-config-files)
   - [Ikony](#icons)
   - [Schemat konfiguracji](#config-schema)
@@ -145,6 +146,20 @@ token: ${readFileFromEnv:TOKEN_FILE}
 > [!NOTE]
 >
 > Białe znaki na początku i końcu zawartości pliku zostaną usunięte przed użyciem.
+
+<a id="timezone"></a>
+### Strefa czasowa
+
+Czasy zwracane przez zewnętrzne API (m.in. GitHub) są wyświetlane w strefie czasowej hosta. Glance respektuje zmienną środowiskową `TZ`, a jeśli nie jest ona ustawiona i aplikacja działa w kontenerze (gdzie domyślną strefą jest UTC), używa strefy `Europe/Warsaw`. Dzięki temu daty i godziny nie są przesunięte względem czasu lokalnego.
+
+Aby wymusić inną strefę, ustaw `TZ` w środowisku kontenera, na przykład:
+
+```yaml
+services:
+  glance:
+    environment:
+      - TZ=Europe/Warsaw
+```
 
 <a id="including-other-config-files"></a>
 ### Dołączanie innych plików konfiguracyjnych
@@ -2288,6 +2303,8 @@ Podgląd:
 
 ![](images/releases-widget-preview.png)
 
+Czas od wydania jest aktualizowany po stronie przeglądarki. Pełną datę i godzinę wydania w strefie czasowej hosta znajdziesz w podpowiedzi po najechaniu kursorem na czas.
+
 #### Właściwości
 
 | Nazwa | Typ | Wymagane | Domyślnie |
@@ -3050,7 +3067,7 @@ Link otwierany po kliknięciu tytułu widgetu. Jeśli nie zostanie podany, tytu�
 
 #### Wyświetlane informacje
 
-Dla każdego repozytorium widget pokazuje nazwę z linkiem do GitHub, opis, czas od ostatniej aktywności, liczbę gwiazdek oraz główny język programowania.
+Dla każdego repozytorium widget pokazuje nazwę z linkiem do GitHub, opis, czas od ostatniej aktywności, liczbę gwiazdek oraz główny język programowania. Czas od ostatniej aktywności jest aktualizowany po stronie przeglądarki, a pełną datę i godzinę w strefie czasowej hosta znajdziesz w podpowiedzi po najechaniu kursorem.
 
 #### Rozwiązywanie problemów
 
@@ -3105,6 +3122,8 @@ Maksymalna liczba najnowszych otwartych zgłoszeń do wyświetlenia. Ustaw `-1`,
 
 ##### `commits-limit`
 Maksymalna liczba najnowszych commitów z gałęzi domyślnej do wyświetlenia. Ustaw `-1`, aby nie wyświetlać żadnych.
+
+Czasy commitów, pull requestów i zgłoszeń są aktualizowane po stronie przeglądarki. Pełną datę i godzinę w strefie czasowej hosta znajdziesz w podpowiedzi po najechaniu kursorem na czas.
 
 <a id="radyjko"></a>
 ### Radyjko
