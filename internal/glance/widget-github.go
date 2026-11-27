@@ -42,7 +42,7 @@ func (widget *githubWidget) initialize() error {
 	}
 
 	if widget.Sort == "" {
-		widget.Sort = "updated"
+		widget.Sort = "pushed"
 	}
 
 	return nil
@@ -72,8 +72,22 @@ type githubUserRepoResponseJson struct {
 	Stars       int    `json:"stargazers_count"`
 	Language    string `json:"language"`
 	UpdatedAt   string `json:"updated_at"`
+	PushedAt    string `json:"pushed_at"`
 	HTMLURL     string `json:"html_url"`
 	Visibility  string `json:"visibility"`
+}
+
+func githubRepoLastActivity(repo githubUserRepoResponseJson) time.Time {
+	// updated_at changes when repository metadata is updated (for example by
+	// GitHub Apps), while pushed_at reflects the last code push. Use the latter
+	// for the activity timestamp shown in the widget.
+	if repo.PushedAt != "" {
+		if pushedAt, err := time.Parse(time.RFC3339, repo.PushedAt); err == nil {
+			return pushedAt
+		}
+	}
+
+	return parseRFC3339Time(repo.UpdatedAt)
 }
 
 func fetchUserRepositoriesFromGithub(token string, sort string) ([]githubRepo, error) {
@@ -104,7 +118,7 @@ func fetchUserRepositoriesFromGithub(token string, sort string) ([]githubRepo, e
 			Description: r.Description,
 			Stars:       r.Stars,
 			Language:    r.Language,
-			LastCommit:  parseRFC3339Time(r.UpdatedAt),
+			LastCommit:  githubRepoLastActivity(r),
 			URL:         r.HTMLURL,
 			Visibility:  r.Visibility,
 		})
