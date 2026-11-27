@@ -50,3 +50,24 @@ func TestGithubRepoLastActivityPreservesInstantWithOffset(t *testing.T) {
 		t.Fatalf("githubRepoLastActivity() = %s, want %s", got, want)
 	}
 }
+
+func TestSortGithubReposByLastCommit(t *testing.T) {
+	oldest := time.Date(2026, time.November, 10, 12, 0, 0, 0, time.UTC)
+	newest := time.Date(2026, time.November, 27, 12, 0, 0, 0, time.UTC)
+	middle := time.Date(2026, time.November, 20, 12, 0, 0, 0, time.UTC)
+
+	repos := []githubRepo{
+		{FullName: "owner/oldest", LastCommit: oldest},
+		{FullName: "owner/newest", LastCommit: newest},
+		{FullName: "owner/middle", LastCommit: middle},
+	}
+
+	sortGithubReposByLastCommit(repos)
+
+	want := []string{"owner/newest", "owner/middle", "owner/oldest"}
+	for i := range want {
+		if repos[i].FullName != want[i] {
+			t.Fatalf("repos[%d] = %q, want %q", i, repos[i].FullName, want[i])
+		}
+	}
+}
