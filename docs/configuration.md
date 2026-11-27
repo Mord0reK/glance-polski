@@ -3060,14 +3060,14 @@ Aby utworzyć token, przejdź do **Settings → Developer settings → Personal 
 Liczba repozytoriów widocznych przed pojawieniem się przycisku „Pokaż więcej”.
 
 ##### `sort`
-Sposób sortowania repozytoriów. Możliwe wartości: `pushed` (ostatni push, zalecany), `updated` (ostatnia zmiana metadanych repozytorium), `created` i `full_name`.
+Sposób sortowania repozytoriów. Możliwe wartości: `pushed` (ostatni commit na gałęzi domyślnej, zalecany), `updated` (ostatnia zmiana metadanych repozytorium), `created` i `full_name`.
 
 ##### `title-link`
 Link otwierany po kliknięciu tytułu widgetu. Jeśli nie zostanie podany, tytuł nie jest klikalny.
 
 #### Wyświetlane informacje
 
-Dla każdego repozytorium widget pokazuje nazwę z linkiem do GitHub, opis, czas od ostatniego pushu, liczbę gwiazdek oraz główny język programowania. Czas od ostatniego pushu jest aktualizowany po stronie przeglądarki, a pełną datę i godzinę w strefie czasowej hosta znajdziesz w podpowiedzi po najechaniu kursorem.
+Dla każdego repozytorium widget pokazuje nazwę z linkiem do GitHub, opis, czas od ostatniego commita na gałęzi domyślnej, liczbę gwiazdek oraz główny język programowania. Czas od ostatniego commita jest aktualizowany po stronie przeglądarki, a pełną datę i godzinę w strefie czasowej hosta znajdziesz w podpowiedzi po najechaniu kursorem.
 
 #### Rozwiązywanie problemów
 
